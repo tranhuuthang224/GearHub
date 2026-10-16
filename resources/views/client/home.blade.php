@@ -43,33 +43,37 @@
         </div>
     </section>
 
-    <!-- 2. 6 FEATURED CATEGORIES SHOWCASE GRID (Matching Figma Page 1) -->
+    <!-- 2. 6 FEATURED CATEGORIES SHOWCASE GRID (Matching Figma Screenshot Exactly) -->
     <section>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             @foreach ($featuredCategories as $cat)
-                <div class="relative {{ $cat['bg'] }} rounded-3xl p-7 min-h-[220px] sm:min-h-[240px] flex flex-col justify-between overflow-hidden group transition duration-300 hover:shadow-xl">
-                    <!-- Text & CTA -->
-                    <div class="relative z-10 space-y-1 max-w-[55%]">
-                        <span class="text-xs font-semibold tracking-wider uppercase {{ !empty($cat['isLight']) ? 'text-gray-600' : 'text-white/80' }}">
-                            {{ $cat['title'] }}
+                <div class="relative {{ $cat['bg'] }} {{ $cat['colSpan'] }} rounded-3xl p-7 min-h-[250px] sm:min-h-[280px] flex flex-col justify-between overflow-hidden group transition duration-300 hover:shadow-2xl">
+                    <!-- Text & Typography (Subtitle + Title + Big 3D Keyword) -->
+                    <div class="relative z-10 max-w-[55%] space-y-0.5 select-none">
+                        <span class="text-xs sm:text-sm font-medium tracking-wide block {{ $cat['subtitleColor'] }}">
+                            {{ $cat['subtitle'] }}
                         </span>
-                        <h3 class="text-xl sm:text-2xl font-black tracking-tight uppercase leading-tight {{ !empty($cat['isLight']) ? 'text-gray-900' : 'text-white' }}">
-                            {{ $cat['name'] }}
+                        <h3 class="text-xl sm:text-2xl font-bold tracking-tight leading-tight {{ $cat['titleColor'] }}">
+                            {{ $cat['title'] }}
                         </h3>
+                        <div class="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none uppercase pt-0.5 {{ $cat['keywordColor'] }}">
+                            {{ $cat['keyword'] }}
+                        </div>
                     </div>
 
+                    <!-- Action Button -->
                     <div class="relative z-10 pt-4">
-                        <a href="{{ url('/shop?category=' . $cat['slug']) }}" class="inline-flex items-center justify-center px-5 py-2 rounded-full text-xs font-bold shadow-sm transition transform group-hover:scale-105 {{ $cat['btnColor'] }}">
+                        <a href="{{ url('/shop?category=' . $cat['slug']) }}" class="inline-flex items-center justify-center px-6 py-2 rounded-full text-xs font-bold transition transform group-hover:scale-105 {{ $cat['btnColor'] }}">
                             Browse
                         </a>
                     </div>
 
-                    <!-- Category Floating Image -->
-                    <div class="absolute -right-3 -bottom-3 w-[55%] h-[90%] flex items-end justify-end pointer-events-none">
+                    <!-- Floating Category Image -->
+                    <div class="absolute -right-1 sm:right-2 bottom-0 sm:bottom-2 max-w-[55%] max-h-[90%] flex items-end justify-end pointer-events-none">
                         <img 
                             src="{{ $cat['image'] }}" 
-                            alt="{{ $cat['name'] }}" 
-                            class="max-h-full max-w-full object-contain transform group-hover:scale-110 transition duration-500 drop-shadow-lg"
+                            alt="{{ $cat['keyword'] }}" 
+                            class="{{ $cat['imageClass'] }} transform group-hover:scale-105 transition duration-500 drop-shadow-xl"
                         >
                     </div>
                 </div>
