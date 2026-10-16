@@ -138,37 +138,39 @@
         </div>
     </section>
 
-    <!-- 4. PROMO BANNER: FINE SMILE / AUTUMN SALE (Matching Figma Page 1 & 3) -->
-    <section class="relative bg-primary rounded-3xl p-8 sm:p-14 lg:p-16 text-white overflow-hidden shadow-2xl">
+    <!-- 4. PROMO BANNER: FINE SMILE / AUTUMN SALE (Matching Figma Screenshot Exactly) -->
+    <section class="relative mt-8 sm:mt-16 bg-gradient-to-r from-[#E22A2D] to-[#7C1719] rounded-3xl p-8 sm:p-12 lg:p-14 text-white shadow-2xl">
         <div class="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
             
             <!-- Left: 20% OFF & FINE SMILE -->
-            <div class="md:col-span-5 space-y-2">
-                <span class="text-xs sm:text-sm font-bold tracking-widest uppercase opacity-90">20% OFF</span>
-                <h2 class="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-none uppercase">
+            <div class="md:col-span-4 space-y-1 sm:space-y-2">
+                <span class="text-xs sm:text-sm font-semibold tracking-wider uppercase opacity-90 block">20% OFF</span>
+                <h2 class="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-none uppercase text-white select-none">
                     FINE<br>SMILE
                 </h2>
-                <p class="text-xs sm:text-sm opacity-80 pt-2 font-medium">5 Apr to 22 Apr</p>
+                <p class="text-xs sm:text-sm opacity-80 pt-1 font-medium">5 Apr to 22 Apr</p>
             </div>
 
-            <!-- Center: Floating Headphone -->
-            <div class="md:col-span-3 flex items-center justify-center -my-6 md:-my-12">
+            <!-- Center: Floating Headphone (Overflowing on top like Figma) -->
+            <div class="md:col-span-4 flex items-center justify-center relative z-20 -my-6 md:-my-16 lg:-my-20">
                 <img 
-                    src="{{ asset('images/hero-headphone.png') }}" 
-                    alt="HyperX Headset Promo"
-                    class="max-h-[220px] sm:max-h-[280px] object-contain drop-shadow-2xl transform hover:scale-110 transition duration-500"
+                    src="{{ asset('images/png-transparent-playstation-4-headphones-hyperx-cloud-audio-video-game-headphones-electronics-video-game-playstation-4.png') }}" 
+                    alt="HyperX Cloud Headset"
+                    class="max-h-[260px] sm:max-h-[320px] lg:max-h-[380px] w-auto object-contain drop-shadow-2xl transform hover:scale-105 transition duration-500"
                 >
             </div>
 
-            <!-- Right: Autumn Sale & CTA -->
-            <div class="md:col-span-4 space-y-4 md:text-right">
-                <span class="text-xs font-semibold tracking-wider uppercase opacity-90 block">HyperX Cloud</span>
-                <h3 class="text-2xl sm:text-4xl font-black tracking-tight">Autumn Sale</h3>
-                <p class="text-xs sm:text-sm opacity-85 leading-relaxed max-w-sm md:ml-auto">
-                    Cơ hội nâng cấp dàn phụ kiện đỉnh cao với mức giá ưu đãi nhất mùa thu này.
+            <!-- Right: Autumn Sale & CTA (Left-aligned as in Figma screenshot) -->
+            <div class="md:col-span-4 space-y-2.5 sm:space-y-3 text-left">
+                <span class="text-xs sm:text-sm font-medium tracking-wide opacity-90 block">HyperX Cloud</span>
+                <h3 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
+                    Autumn Sale
+                </h3>
+                <p class="text-xs sm:text-sm opacity-85 leading-relaxed max-w-sm">
+                    Company That’s grow from 270 to 480 employees in the last 12 months.
                 </p>
                 <div class="pt-2">
-                    <a href="{{ url('/shop') }}" class="inline-flex items-center justify-center px-8 py-3 rounded-full bg-white text-primary font-bold text-sm shadow-md hover:bg-gray-100 transition transform hover:scale-105">
+                    <a href="{{ url('/shop') }}" class="inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-white text-[#E22A2D] font-bold text-sm shadow-md hover:bg-gray-50 transition transform hover:scale-105">
                         Shop
                     </a>
                 </div>
