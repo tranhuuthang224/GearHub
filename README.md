@@ -72,3 +72,13 @@ Truy cập: `http://localhost:8000`
 - Nhánh tính năng: `feature/<ten-chuc-nang>`
 - Tuân thủ **Conventional Commits**: `feat(...)`, `fix(...)`, `docs(...)`, `refactor(...)`, `test(...)`.
 - Mọi thay đổi vào `develop` đều đi qua Pull Request và được thành viên còn lại review.
+
+
+## 🔑 Tài khoản demo
+
+| Vai trò | Email | Mật khẩu |
+|---|---|---|
+| Admin | admin@gearhub.vn | Admin@123456 |
+| Khách hàng | khach1@gearhub.vn | Customer@123 |
+| Khách hàng | khach2@gearhub.vn | Customer@123 |
+| Khách hàng | khach3@gearhub.vn | Customer@123 |
