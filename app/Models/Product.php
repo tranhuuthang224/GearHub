@@ -42,7 +42,7 @@ class Product extends Model
     /** Giá bán thực tế: giá khuyến mãi nếu có, ngược lại là giá gốc. */
     protected function effectivePrice(): Attribute
     {
-        return Attribute::get(fn () => $this->sale_price ?? $this->price);
+        return Attribute::get(fn () => ($this->sale_price && $this->sale_price > 0) ? $this->sale_price : $this->price);
     }
 
     public function category(): BelongsTo
