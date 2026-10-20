@@ -20,4 +20,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        // Tạm thời, sẽ thay bằng Dashboard thật ở tuần 7
+        Route::get('/', fn () => 'Admin OK')->name('dashboard');
+    });
 require __DIR__.'/auth.php';
