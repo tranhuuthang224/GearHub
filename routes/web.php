@@ -5,6 +5,7 @@ use App\Http\Controllers\Client\ShopController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\BrandController;
 
 // Storefront Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -25,9 +26,12 @@ Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        // Tạm thời, sẽ thay bằng Dashboard thật ở tuần 7
-        Route::get('/', fn () => redirect()->route('admin.categories.index'))->name('dashboard');
+        Route::get('/', fn () => redirect()->route('admin.dashboard'));
+
+        // Tạm thời, Dashboard thật làm ở tuần 7
+        Route::get('/dashboard', fn () => view('admin.dashboard'))->name('dashboard');
 
         Route::resource('categories', CategoryController::class)->except(['show']);
+        Route::resource('brands', BrandController::class)->except(['show']);
     });
 require __DIR__.'/auth.php';
