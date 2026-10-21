@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Concerns\GeneratesSlug;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Category extends Model
 {
-    use HasFactory;
+    use HasFactory, GeneratesSlug;
 
     protected $fillable = ['parent_id', 'name', 'slug', 'image'];
 
@@ -27,4 +29,12 @@ class Category extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    protected function imageUrl(): Attribute
+    {
+        return Attribute::get(
+            fn () => $this->image ? asset('storage/' . $this->image) : null
+        );
+    }
+
 }
