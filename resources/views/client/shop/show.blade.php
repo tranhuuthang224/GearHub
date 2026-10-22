@@ -140,14 +140,46 @@
 
             <hr class="border-gray-100">
 
-            <!-- BỘ CHỌN SỐ LƯỢNG & NÚT CTA (Alpine.js) -->
+            <!-- BỘ CHỌN SỐ LƯỢNG & NÚT CTA (Alpine.js kết nối Cart Backend) -->
             <div class="space-y-5 pt-2" x-data="{ 
                 qty: 1, 
                 maxStock: {{ $product['stock_quantity'] > 0 ? $product['stock_quantity'] : 1 }},
                 addedToast: false,
-                addToCart() {
-                    this.addedToast = true;
-                    setTimeout(() => this.addedToast = false, 3000);
+                toastMessage: '',
+                loading: false,
+                addToCart(isBuyNow = false) {
+                    this.loading = true;
+                    fetch('{{ route('cart.add') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            product_id: {{ $product['id'] }},
+                            quantity: this.qty
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.loading = false;
+                        if (data.success) {
+                            if (isBuyNow) {
+                                window.location.href = '{{ route('cart.index') }}';
+                            } else {
+                                this.toastMessage = data.message || 'Đã thêm vào giỏ hàng!';
+                                this.addedToast = true;
+                                setTimeout(() => this.addedToast = false, 3500);
+                            }
+                        } else {
+                            alert(data.message || 'Không thể thêm sản phẩm vào giỏ.');
+                        }
+                    })
+                    .catch(() => {
+                        this.loading = false;
+                        alert('Có lỗi xảy ra khi kết nối máy chủ.');
+                    });
                 }
             }">
                 
@@ -160,7 +192,7 @@
                             <button 
                                 type="button" 
                                 @click="if (qty > 1) qty--" 
-                                :disabled="qty <= 1"
+                                :disabled="qty <= 1 || loading"
                                 class="w-9 h-9 rounded-xl flex items-center justify-center text-gray-700 hover:bg-white hover:text-black font-bold transition disabled:opacity-40 disabled:hover:bg-transparent"
                                 aria-label="Giảm số lượng"
                             >
@@ -179,7 +211,7 @@
                             <button 
                                 type="button" 
                                 @click="if (qty < maxStock) qty++" 
-                                :disabled="qty >= maxStock"
+                                :disabled="qty >= maxStock || loading"
                                 class="w-9 h-9 rounded-xl flex items-center justify-center text-gray-700 hover:bg-white hover:text-black font-bold transition disabled:opacity-40 disabled:hover:bg-transparent"
                                 aria-label="Tăng số lượng"
                             >
@@ -197,25 +229,28 @@
                         <!-- Nút 1: Thêm vào giỏ (Primary Red) -->
                         <button 
                             type="button" 
-                            @click="addToCart()"
-                            class="py-4 px-6 rounded-2xl bg-primary hover:bg-primary-hover text-white font-bold text-sm shadow-xl shadow-primary/25 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 group"
+                            @click="addToCart(false)"
+                            :disabled="loading"
+                            class="py-4 px-6 rounded-2xl bg-primary hover:bg-primary-hover text-white font-bold text-sm shadow-xl shadow-primary/25 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 group disabled:opacity-75"
                         >
                             <svg class="w-5 h-5 transition transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                             </svg>
-                            <span>Thêm vào giỏ</span>
+                            <span x-text="loading ? 'Đang thêm...' : 'Thêm vào giỏ'">Thêm vào giỏ</span>
                         </button>
 
                         <!-- Nút 2: Mua ngay (Secondary Dark) -->
-                        <a 
-                            href="{{ url('/shop') }}"
-                            class="py-4 px-6 rounded-2xl bg-[#18181B] hover:bg-black text-white font-bold text-sm text-center shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
+                        <button 
+                            type="button"
+                            @click="addToCart(true)"
+                            :disabled="loading"
+                            class="py-4 px-6 rounded-2xl bg-[#18181B] hover:bg-black text-white font-bold text-sm text-center shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 disabled:opacity-75"
                         >
                             <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                             </svg>
                             <span>Mua ngay</span>
-                        </a>
+                        </button>
                     @else
                         <!-- Trạng thái Hết hàng -->
                         <button 
@@ -238,9 +273,9 @@
                         <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
-                        <span>Đã thêm <strong x-text="qty"></strong> sản phẩm <strong>{{ $product['name'] }}</strong> vào giỏ!</span>
+                        <span x-text="toastMessage"></span>
                     </div>
-                    <a href="{{ url('/shop') }}" class="font-bold underline text-emerald-900 hover:text-emerald-700">Xem giỏ</a>
+                    <a href="{{ route('cart.index') }}" class="font-bold underline text-emerald-900 hover:text-emerald-700">Xem giỏ hàng</a>
                 </div>
 
             </div>

@@ -72,13 +72,14 @@
                     </button>
 
                     <!-- Cart Link with Badge -->
-                    <a href="{{ url('/cart') }}" class="relative text-gray-700 hover:text-primary transition flex items-center gap-1.5 p-1.5 rounded-full hover:bg-gray-100">
+                    <a href="{{ route('cart.index') }}" class="relative text-gray-700 hover:text-primary transition flex items-center gap-1.5 p-1.5 rounded-full hover:bg-gray-100">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
                         <span class="hidden sm:inline text-xs font-semibold">Cart</span>
                         @php
-                            $cartCount = count(session('cart', []));
+                            $cart = session('cart', []);
+                            $cartCount = array_sum(array_column($cart, 'quantity'));
                         @endphp
                         <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-primary rounded-full">
                             {{ $cartCount > 0 ? $cartCount : '0' }}
@@ -291,6 +292,53 @@
             </div>
         </div>
     </footer>
+
+    <!-- Global Cart Feedback Toast -->
+    <div 
+        x-data="{ show: false, message: '' }" 
+        x-on:cart-toast.window="message = $event.detail.message; show = true; setTimeout(() => show = false, 3500)"
+        x-show="show" 
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-4"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 translate-y-4"
+        class="fixed bottom-6 right-6 z-50 bg-[#18181B] text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-gray-800 flex items-center gap-3 text-xs"
+        style="display: none;"
+    >
+        <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">✓</span>
+        <span x-text="message" class="font-medium"></span>
+        <a href="{{ route('cart.index') }}" class="font-bold underline text-primary hover:text-white ml-2">Xem giỏ</a>
+    </div>
+
+    <script>
+        window.addEventListener('add-to-cart', function(e) {
+            const productId = e.detail?.id;
+            if (!productId) return;
+
+            fetch('{{ route('cart.add') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ product_id: productId, quantity: 1 })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.dispatchEvent(new CustomEvent('cart-toast', { detail: { message: data.message } }));
+                    const badge = document.querySelector('a[href*="cart"] span.bg-primary');
+                    if (badge && data.cartCount !== undefined) {
+                        badge.innerText = data.cartCount;
+                    }
+                }
+            })
+            .catch(console.error);
+        });
+    </script>
 
     @stack('scripts')
 </body>
