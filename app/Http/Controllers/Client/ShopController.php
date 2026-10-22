@@ -219,21 +219,32 @@ class ShopController extends Controller
                 'specs' => is_array($dbProduct->specs) ? $dbProduct->specs : (json_decode($dbProduct->specs, true) ?? []),
             ];
 
-            $relatedProducts = Product::where('category_id', $dbProduct->category_id)
+            $related = Product::where('category_id', $dbProduct->category_id)
                 ->where('id', '!=', $dbProduct->id)
+                ->where('is_active', true)
                 ->take(4)
-                ->get()
-                ->map(fn($p) => [
-                    'id' => $p->id,
-                    'name' => $p->name,
-                    'slug' => $p->slug,
-                    'category' => $p->category?->name ?? 'Phụ kiện',
-                    'brand' => $p->brand?->name ?? 'GearHub',
-                    'price' => (int) $p->price,
-                    'sale_price' => $p->sale_price ? (int) $p->sale_price : null,
-                    'thumbnail' => $p->thumbnail ? (str_starts_with($p->thumbnail, 'http') ? $p->thumbnail : asset('storage/' . $p->thumbnail)) : asset('images/hero-headphone.png'),
-                    'rating' => '4.8',
-                ]);
+                ->get();
+
+            if ($related->count() < 4) {
+                $more = Product::where('id', '!=', $dbProduct->id)
+                    ->whereNotIn('id', $related->pluck('id'))
+                    ->where('is_active', true)
+                    ->take(4 - $related->count())
+                    ->get();
+                $related = $related->merge($more);
+            }
+
+            $relatedProducts = $related->map(fn($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'slug' => $p->slug,
+                'category' => $p->category?->name ?? 'Phụ kiện',
+                'brand' => $p->brand?->name ?? 'GearHub',
+                'price' => (int) $p->price,
+                'sale_price' => $p->sale_price ? (int) $p->sale_price : null,
+                'thumbnail' => $p->thumbnail ? (str_starts_with($p->thumbnail, 'http') ? $p->thumbnail : asset('storage/' . $p->thumbnail)) : asset('images/hero-headphone.png'),
+                'rating' => '4.8',
+            ]);
         } else {
             // Rich fallback mock product matching Figma design perfectly
             $thumb = asset('images/png-transparent-playstation-4-headphones-hyperx-cloud-audio-video-game-headphones-electronics-video-game-playstation-4.png');
@@ -264,8 +275,10 @@ class ShopController extends Controller
                     'Thời lượng pin' => 'Lên đến 120 giờ liên tục',
                     'Driver âm thanh' => 'Dynamic 53mm với nam châm Neodymium',
                     'Tần số phản hồi' => '10Hz – 21.000Hz',
+                    'Trở kháng' => '64 Ω',
                     'Microphone' => '10mm khử tiếng ồn hai chiều có thể tháo rời',
                     'Trọng lượng' => '330g (kèm microphone)',
+                    'Tương thích' => 'PC, PS5, PS4, Nintendo Switch, Mobile',
                     'Chế độ bảo hành' => '24 tháng chính hãng, 1 đổi 1 trong 30 ngày',
                 ],
             ];
