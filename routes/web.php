@@ -35,7 +35,6 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('categories', CategoryController::class)->except(['show']);
         Route::resource('brands', BrandController::class)->except(['show']);
 
-        // Thứ 6 và Thứ 7 sẽ đổi thành ->except(['show'])
-        Route::resource('products', ProductController::class)->only(['index', 'create', 'store']);
+        Route::resource('products', ProductController::class)->only(['index', 'create', 'store', 'edit', 'update']);
     });
 require __DIR__.'/auth.php';
