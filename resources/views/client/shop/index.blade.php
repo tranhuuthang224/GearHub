@@ -226,7 +226,7 @@
 
             <!-- Numbered Pagination (1 2 3 4 5 matching Figma Page 4) -->
             <div class="pt-8 border-t border-gray-100 flex justify-center">
-                <x-pagination />
+                <x-pagination :paginator="$products" />
             </div>
 
         </div>

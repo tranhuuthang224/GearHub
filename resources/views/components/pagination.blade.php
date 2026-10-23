@@ -19,28 +19,37 @@
             </a>
         @endif
 
-        {{-- Pagination Elements --}}
-        @foreach ($paginator->elements() as $element)
-            {{-- "Three Dots" Separator --}}
-            @if (is_string($element))
-                <span class="w-9 h-9 flex items-center justify-center text-gray-500 font-medium">
-                    {{ $element }}
-                </span>
-            @endif
+        {{-- Pagination Numbered Elements --}}
+        @php
+            $lastPage = $paginator->lastPage();
+            $current = $paginator->currentPage();
+            $range = [];
+            if ($lastPage <= 7) {
+                $range = range(1, $lastPage);
+            } else {
+                if ($current <= 4) {
+                    $range = array_merge(range(1, 5), ['...', $lastPage]);
+                } elseif ($current >= $lastPage - 3) {
+                    $range = array_merge([1, '...'], range($lastPage - 4, $lastPage));
+                } else {
+                    $range = [1, '...', $current - 1, $current, $current + 1, '...', $lastPage];
+                }
+            }
+        @endphp
 
-            {{-- Array Of Links --}}
-            @if (is_array($element))
-                @foreach ($element as $page => $url)
-                    @if ($page == $paginator->currentPage())
-                        <span class="w-9 h-9 flex items-center justify-center rounded-lg bg-primary text-white font-semibold shadow-sm">
-                            {{ $page }}
-                        </span>
-                    @else
-                        <a href="{{ $url }}" class="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium transition">
-                            {{ $page }}
-                        </a>
-                    @endif
-                @endforeach
+        @foreach ($range as $pageItem)
+            @if ($pageItem === '...')
+                <span class="w-9 h-9 flex items-center justify-center text-gray-400 font-medium select-none">
+                    …
+                </span>
+            @elseif ($pageItem == $current)
+                <span class="w-9 h-9 flex items-center justify-center rounded-lg bg-primary text-white font-semibold shadow-sm">
+                    {{ $pageItem }}
+                </span>
+            @else
+                <a href="{{ $paginator->url($pageItem) }}" class="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium transition">
+                    {{ $pageItem }}
+                </a>
             @endif
         @endforeach
 

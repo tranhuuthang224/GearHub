@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Services\ProductCatalog;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\View\View;
 
 class ShopController extends Controller
@@ -75,8 +76,21 @@ class ShopController extends Controller
             $filteredProducts = $filteredProducts->sortByDesc(fn($p) => $p['sale_price'] ?? $p['price']);
         }
 
-        $products = $filteredProducts->values();
-        $totalProducts = $products->count();
+        $totalProducts = $filteredProducts->count();
+        $perPage = 12; // 12 sản phẩm mỗi trang (4 hàng x 3 cột)
+        $currentPage = max(1, (int) $request->input('page', 1));
+        $currentItems = $filteredProducts->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+        $products = new LengthAwarePaginator(
+            $currentItems,
+            $totalProducts,
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
 
         return view('client.shop.index', compact(
             'categories',
