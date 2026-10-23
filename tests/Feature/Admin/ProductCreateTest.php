@@ -8,6 +8,8 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class ProductCreateTest extends TestCase
 {
@@ -67,7 +69,7 @@ private function makeUser(string $email, string $role): User
 
         $this->actingAs($admin)
             ->post(route('admin.products.store'), $this->payload())
-            ->assertRedirect(route('admin.products.create'));
+            ->assertRedirect(route('admin.products.index'));
 
         $product = Product::firstOrFail();
         $this->assertSame('ban-phim-test', $product->slug);
@@ -113,6 +115,50 @@ private function makeUser(string $email, string $role): User
         ->assertRedirect(route('login'));
 
     $this->assertGuest();
+}
+public function test_admin_can_upload_thumbnail_and_gallery_images(): void
+{
+    Storage::fake('public');
+
+    // PNG 1x1, dùng createWithContent để không phụ thuộc thư viện GD
+    $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
+
+    $payload = $this->payload([
+        'thumbnail' => UploadedFile::fake()->createWithContent('thumb.png', $png),
+        'images'    => [
+            UploadedFile::fake()->createWithContent('a.png', $png),
+            UploadedFile::fake()->createWithContent('b.png', $png),
+        ],
+    ]);
+
+    $this->actingAs($this->admin())
+        ->post(route('admin.products.store'), $payload)
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('admin.products.index'));
+
+    $product = Product::with('images')->firstOrFail();
+
+    $this->assertStringStartsWith("products/{$product->id}/", $product->thumbnail);
+    Storage::disk('public')->assertExists($product->thumbnail);
+
+    $this->assertCount(2, $product->images);
+    $this->assertSame([1, 2], $product->images->pluck('sort_order')->all());
+    foreach ($product->images as $image) {
+        Storage::disk('public')->assertExists($image->path);
+    }
+}
+
+public function test_svg_upload_is_rejected(): void
+{
+    Storage::fake('public');
+
+    $svg = UploadedFile::fake()->createWithContent('x.svg', '<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+
+    $this->actingAs($this->admin())
+        ->post(route('admin.products.store'), $this->payload(['thumbnail' => $svg]))
+        ->assertSessionHasErrors('thumbnail');
+
+    $this->assertSame(0, Product::count());
 }
 }
 

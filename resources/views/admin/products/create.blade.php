@@ -8,8 +8,7 @@
 
         <div class="mt-8 flex gap-3">
             <x-button type="submit">Lưu sản phẩm</x-button>
-            {{-- TODO Thứ 6: đổi sang route('admin.products.index') --}}
-            <x-button :href="route('admin.dashboard')" variant="outline">Hủy</x-button>
+            <x-button :href="route('admin.products.index')" variant="outline">Hủy</x-button>
         </div>
     </form>
 @endsection
