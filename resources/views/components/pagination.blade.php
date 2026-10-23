@@ -3,6 +3,13 @@
 ])
 
 @if ($paginator && $paginator->hasPages())
+    @php
+        // linkCollection(): phần tử đầu là "Previous", phần tử cuối là "Next",
+        // ở giữa là các số trang và dấu "..." (url = null)
+        $links = $paginator->linkCollection();
+        $pageLinks = $links->slice(1, $links->count() - 2);
+    @endphp
+
     <nav role="navigation" aria-label="Pagination Navigation" class="flex items-center justify-center gap-2">
         {{-- Previous Page Link --}}
         @if ($paginator->onFirstPage())
@@ -19,28 +26,20 @@
             </a>
         @endif
 
-        {{-- Pagination Elements --}}
-        @foreach ($paginator->elements() as $element)
-            {{-- "Three Dots" Separator --}}
-            @if (is_string($element))
+        {{-- Page numbers and "..." separators --}}
+        @foreach ($pageLinks as $link)
+            @if ($link['url'] === null)
                 <span class="w-9 h-9 flex items-center justify-center text-gray-500 font-medium">
-                    {{ $element }}
+                    {{ $link['label'] }}
                 </span>
-            @endif
-
-            {{-- Array Of Links --}}
-            @if (is_array($element))
-                @foreach ($element as $page => $url)
-                    @if ($page == $paginator->currentPage())
-                        <span class="w-9 h-9 flex items-center justify-center rounded-lg bg-primary text-white font-semibold shadow-sm">
-                            {{ $page }}
-                        </span>
-                    @else
-                        <a href="{{ $url }}" class="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium transition">
-                            {{ $page }}
-                        </a>
-                    @endif
-                @endforeach
+            @elseif ($link['active'])
+                <span class="w-9 h-9 flex items-center justify-center rounded-lg bg-primary text-white font-semibold shadow-sm">
+                    {{ $link['label'] }}
+                </span>
+            @else
+                <a href="{{ $link['url'] }}" class="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium transition">
+                    {{ $link['label'] }}
+                </a>
             @endif
         @endforeach
 
