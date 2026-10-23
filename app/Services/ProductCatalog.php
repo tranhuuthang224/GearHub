@@ -1056,9 +1056,9 @@ class ProductCatalog
                 'stock_quantity' => 18,
                 'rating' => '4.8',
                 'reviews_count' => 36,
-                'thumbnail' => asset('images/HeadPhone/MChose V9 Turbo + Wireless (White Gold).webp'),
+                'thumbnail' => asset('images/HeadPhone/MChose V9 Turbo Wireless (White Gold).webp'),
                 'gallery' => [
-                    asset('images/HeadPhone/MChose V9 Turbo + Wireless (White Gold).webp'),
+                    asset('images/HeadPhone/MChose V9 Turbo Wireless (White Gold).webp'),
                 ],
                 'description' => 'MChose V9 Turbo nổi bật với tông màu Trắng Vàng Gold hoàng gia sang trọng. Kết nối không dây 2.4GHz không độ trễ cùng màng loa Titanium 50mm.',
                 'specs' => [
