@@ -202,7 +202,7 @@ class CartService
     }
 
     /**
-     * Tìm sản phẩm theo ID từ DB hoặc Mock Catalog.
+     * Tìm sản phẩm theo ID từ DB hoặc Catalog.
      */
     private function findProduct(int|string $productId): ?array
     {
@@ -226,68 +226,25 @@ class CartService
                 ];
             }
         } catch (\Throwable $e) {
-            // DB not connected, proceed to mock catalog fallback
+            // DB not connected, proceed to catalog fallback
         }
 
-        // Mock Fallback Catalog for local testing
-        $mockCatalog = [
-            101 => [
-                'id' => 101,
-                'name' => 'Tai nghe Gaming HyperX Cloud III Wireless Red',
-                'slug' => 'tai-nghe-gaming-hyperx-cloud-iii-wireless-red',
-                'sku' => 'HX-CL3W-RD',
-                'category' => 'Tai nghe',
-                'price' => 2990000,
-                'sale_price' => 2490000,
-                'stock_quantity' => 25,
-                'thumbnail' => asset('images/png-transparent-playstation-4-headphones-hyperx-cloud-audio-video-game-headphones-electronics-video-game-playstation-4.png'),
-            ],
-            102 => [
-                'id' => 102,
-                'name' => 'Chuột Razer Basilisk V3 Pro Wireless',
-                'slug' => 'razer-basilisk-v3-pro',
-                'sku' => 'RZ-BV3P-WL',
-                'category' => 'Chuột',
-                'price' => 3890000,
-                'sale_price' => 3290000,
-                'stock_quantity' => 15,
-                'thumbnail' => asset('images/mouse-razer.png'),
-            ],
-            103 => [
-                'id' => 103,
-                'name' => 'Bàn phím cơ không dây Keychron K2 Pro',
-                'slug' => 'keychron-k2-pro',
-                'sku' => 'KC-K2P-RGB',
-                'category' => 'Bàn phím cơ',
-                'price' => 2390000,
-                'sale_price' => null,
-                'stock_quantity' => 18,
-                'thumbnail' => asset('images/keyboard-katana.png'),
-            ],
-            104 => [
-                'id' => 104,
-                'name' => 'Micro HyperX QuadCast S RGB USB',
-                'slug' => 'hyperx-quadcast-s',
-                'sku' => 'HX-MIC-QC',
-                'category' => 'Microphone',
-                'price' => 3690000,
-                'sale_price' => 3290000,
-                'stock_quantity' => 10,
-                'thumbnail' => asset('images/images (2).png'),
-            ],
-            105 => [
-                'id' => 105,
-                'name' => 'Chuột Gaming ATK F1 Ultimate Carbon',
-                'slug' => 'atk-f1-ultimate',
-                'sku' => 'ATK-F1-ULT',
-                'category' => 'Chuột',
-                'price' => 1990000,
-                'sale_price' => 1690000,
-                'stock_quantity' => 20,
-                'thumbnail' => asset('images/mouse-atk.png'),
-            ],
-        ];
+        // Tra cứu trong ProductCatalog
+        $item = ProductCatalog::find($productId);
+        if ($item) {
+            return [
+                'id' => $item['id'],
+                'name' => $item['name'],
+                'slug' => $item['slug'],
+                'sku' => $item['sku'] ?? 'GEAR-' . $item['id'],
+                'category' => $item['category'] ?? 'Phụ kiện',
+                'price' => (int) $item['price'],
+                'sale_price' => !empty($item['sale_price']) ? (int) $item['sale_price'] : null,
+                'stock_quantity' => (int) ($item['stock_quantity'] ?? 20),
+                'thumbnail' => $item['thumbnail'],
+            ];
+        }
 
-        return $mockCatalog[$productId] ?? null;
+        return null;
     }
 }

@@ -165,6 +165,10 @@
                     .then(data => {
                         this.loading = false;
                         if (data.success) {
+                            const badge = document.querySelector('a[href*="cart"] span.bg-primary');
+                            if (badge && data.cartCount !== undefined) {
+                                badge.innerText = data.cartCount;
+                            }
                             if (isBuyNow) {
                                 window.location.href = '{{ route('cart.index') }}';
                             } else {

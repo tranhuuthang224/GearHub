@@ -78,23 +78,26 @@
 
                     <!-- 2. Price Range Filter -->
                     <div class="space-y-3">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">Price range</h3>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">Price range</h3>
+                            <span class="text-xs font-bold text-primary">{{ number_format(request('max_price', 70000000)) }}đ</span>
+                        </div>
                         
                         <!-- Visual Range Bar matching Figma -->
                         <div class="space-y-2">
                             <input 
                                 type="range" 
                                 min="500000" 
-                                max="20000000" 
+                                max="70000000" 
                                 step="500000"
-                                value="{{ request('max_price', 20000000) }}"
+                                value="{{ request('max_price', 70000000) }}"
                                 name="max_price"
                                 class="w-full accent-primary cursor-pointer"
                                 onchange="document.getElementById('filter-form').submit()"
                             >
-                            <div class="flex items-center justify-between text-xs font-semibold text-gray-700">
+                            <div class="flex items-center justify-between text-xs font-semibold text-gray-500">
                                 <span>500.000đ</span>
-                                <span>20.000.000đ</span>
+                                <span>70.000.000đ</span>
                             </div>
                         </div>
                     </div>

@@ -46,3 +46,7 @@ Thumbs.db
 *.pptx
 *.ppt
 
+# Local source image folder (assets are copied to public/images/)
+/Images
+
+
