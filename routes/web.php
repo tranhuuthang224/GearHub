@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\ProductController;
 
 // Storefront Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -33,5 +34,8 @@ Route::middleware(['auth', 'role:admin'])
 
         Route::resource('categories', CategoryController::class)->except(['show']);
         Route::resource('brands', BrandController::class)->except(['show']);
+
+        // Thứ 6 và Thứ 7 sẽ đổi thành ->except(['show'])
+        Route::resource('products', ProductController::class)->only(['create', 'store']);
     });
 require __DIR__.'/auth.php';

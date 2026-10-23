@@ -54,7 +54,7 @@ class LoginRequest extends FormRequest
         Auth::logout();
 
         throw ValidationException::withMessages([
-            'email' => 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.',
+            'email' => \App\Models\User::INACTIVE_MESSAGE,
         ]);
     }
 

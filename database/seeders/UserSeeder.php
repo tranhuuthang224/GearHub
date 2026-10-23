@@ -10,10 +10,10 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $accounts = [
-            ['name' => 'Quản trị viên',  'email' => 'admin@gearhub.vn',  'password' => 'Admin@123456', 'phone' => '0900000000', 'role' => 'admin'],
-            ['name' => 'Nguyễn Văn An',  'email' => 'khach1@gearhub.vn', 'password' => 'Customer@123', 'phone' => '0901111111', 'role' => 'customer'],
-            ['name' => 'Trần Thị Bình',  'email' => 'khach2@gearhub.vn', 'password' => 'Customer@123', 'phone' => '0902222222', 'role' => 'customer'],
-            ['name' => 'Lê Hoàng Cường', 'email' => 'khach3@gearhub.vn', 'password' => 'Customer@123', 'phone' => '0903333333', 'role' => 'customer'],
+            ['name' => 'Quản trị viên',  'email' => 'admin@gearhub.vn',  'password' => 'Admin@123456', 'phone' => '0900000000', 'role' => User::ROLE_ADMIN],
+            ['name' => 'Nguyễn Văn An',  'email' => 'khach1@gearhub.vn', 'password' => 'Customer@123', 'phone' => '0901111111', 'role' => User::ROLE_CUSTOMER],
+            ['name' => 'Trần Thị Bình',  'email' => 'khach2@gearhub.vn', 'password' => 'Customer@123', 'phone' => '0902222222', 'role' => User::ROLE_CUSTOMER],
+            ['name' => 'Lê Hoàng Cường', 'email' => 'khach3@gearhub.vn', 'password' => 'Customer@123', 'phone' => '0903333333', 'role' => User::ROLE_CUSTOMER],
         ];
 
         // unguarded: role và is_active cố ý không nằm trong $fillable (hôm qua),
