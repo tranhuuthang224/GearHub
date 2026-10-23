@@ -11,9 +11,36 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    public function index(Request $request): View
+{
+    $search     = trim((string) $request->query('q', ''));
+    $categoryId = $request->integer('category');
+    $brandId    = $request->integer('brand');
+
+    $products = Product::query()
+        ->with(['category.parent', 'brand'])          // tránh N+1
+        ->when($search !== '', function ($query) use ($search) {
+            $like = '%' . $search . '%';
+            $query->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('sku', 'like', $like));
+        })
+        ->when($categoryId > 0, fn ($query) => $query->inCategory($categoryId))
+        ->when($brandId > 0, fn ($query) => $query->where('brand_id', $brandId))
+        ->latest('id')
+        ->paginate(10)
+        ->withQueryString();                           // giữ bộ lọc khi chuyển trang
+
+    return view('admin.products.index', [
+        'products'       => $products,
+        'categoryGroups' => $this->categoryGroups(),
+        'brands'         => $this->brandOptions(),
+        'filters'        => ['q' => $search, 'category' => $categoryId, 'brand' => $brandId],
+        'hasFilters'     => $search !== '' || $categoryId > 0 || $brandId > 0,
+    ]);
+}
     public function create(): View
     {
         return view('admin.products.create', $this->formData(new Product()));
@@ -63,8 +90,7 @@ class ProductController extends Controller
             throw $e;
         }
 
-        // Bước 3 sẽ đổi sang route('admin.products.index')
-        return redirect()->route('admin.products.create')
+        return redirect()->route('admin.products.index')
             ->with('success', 'Đã thêm sản phẩm «' . $product->name . '».');
     }
 
