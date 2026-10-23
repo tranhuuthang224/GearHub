@@ -14,6 +14,19 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes, GeneratesSlug;
 
+    /** Dưới ngưỡng này (và còn hàng) thì coi là "sắp hết hàng". Dashboard Tuần 7 dùng lại. */
+public const LOW_STOCK_THRESHOLD = 5;
+
+public function isOutOfStock(): bool
+{
+    return $this->stock_quantity <= 0;
+}
+
+public function isLowStock(): bool
+{
+    return $this->stock_quantity > 0 && $this->stock_quantity < self::LOW_STOCK_THRESHOLD;
+}
+
     protected $fillable = [
         'category_id',
         'brand_id',
