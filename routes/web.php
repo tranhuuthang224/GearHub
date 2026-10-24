@@ -27,14 +27,13 @@ Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        Route::get('/', fn () => redirect()->route('admin.dashboard'));
+        Route::redirect('/', '/admin/dashboard');
 
-        // Tạm thời, Dashboard thật làm ở tuần 7
-        Route::get('/dashboard', fn () => view('admin.dashboard'))->name('dashboard');
+        // Tạm thời, Dashboard thật làm ở tuần 7 (khi đó đổi sang controller)
+        Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
 
         Route::resource('categories', CategoryController::class)->except(['show']);
         Route::resource('brands', BrandController::class)->except(['show']);
-
-        Route::resource('products', ProductController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+        Route::resource('products', ProductController::class)->except(['show']);
     });
 require __DIR__.'/auth.php';
