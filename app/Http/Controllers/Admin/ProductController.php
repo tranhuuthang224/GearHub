@@ -16,7 +16,7 @@ use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         $search     = trim((string) $request->query('q', ''));
         $categoryId = $request->integer('category');
@@ -33,6 +33,15 @@ class ProductController extends Controller
             ->latest('id')
             ->paginate(10)
             ->withQueryString();                           // giữ bộ lọc khi chuyển trang
+
+        // Vừa xóa mục cuối của trang cuối thì trang hiện tại thành rỗng:
+        // chuyển về trang cuối còn dữ liệu (lastPage() tối thiểu là 1 nên không lặp vô hạn)
+        if ($products->isEmpty() && $products->currentPage() > 1) {
+            return redirect()->route(
+                'admin.products.index',
+                array_merge($request->query(), ['page' => $products->lastPage()])
+            );
+        }
 
         return view('admin.products.index', [
             'products'       => $products,
@@ -171,6 +180,17 @@ class ProductController extends Controller
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Đã cập nhật sản phẩm «' . $product->name . '».');
+    }
+
+    public function destroy(Product $product): RedirectResponse
+    {
+        $name = $product->name;
+
+        // SoftDeletes: chỉ đặt deleted_at. Giữ nguyên bản ghi, ảnh và tệp để Khôi phục được ở Tuần 4,
+        // và để đơn hàng cũ vẫn đọc được sản phẩm (OrderItem dùng withTrashed).
+        $product->delete();
+
+        return back()->with('success', "Đã xóa sản phẩm «{$name}».");
     }
 
     /** Dữ liệu dùng chung cho form tạo và form sửa. */
