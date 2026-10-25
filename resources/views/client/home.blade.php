@@ -49,7 +49,7 @@
             @foreach ($featuredCategories as $cat)
                 <div class="relative {{ $cat['bg'] }} {{ $cat['colSpan'] }} rounded-3xl p-7 min-h-[250px] sm:min-h-[280px] flex flex-col justify-between overflow-hidden group transition duration-300 hover:shadow-2xl">
                     <!-- Text & Typography (Subtitle + Title + Big 3D Keyword) -->
-                    <div class="relative z-10 max-w-[55%] space-y-0.5 select-none">
+                    <div class="relative z-10 {{ $cat['textWrapper'] ?? 'max-w-[55%]' }} space-y-0.5 select-none">
                         <span class="text-xs sm:text-sm font-medium tracking-wide block {{ $cat['subtitleColor'] }}">
                             {{ $cat['subtitle'] }}
                         </span>
