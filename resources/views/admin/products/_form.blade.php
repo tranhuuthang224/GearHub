@@ -3,6 +3,7 @@
     $fieldClass = 'w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition disabled:bg-gray-100 disabled:text-gray-500';
     $labelClass = 'mb-1.5 block text-sm font-medium text-gray-700';
     $errorClass = 'mt-1.5 text-xs font-medium text-rose-600';
+    $fileClass  = 'block w-full text-sm text-gray-600 file:mr-4 file:rounded-xl file:border-0 file:bg-gray-100 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200';
 
     // Dòng specs ban đầu: ưu tiên dữ liệu vừa nhập (khi validate lỗi), rồi đến dữ liệu đã lưu
     $specsRows = old('specs');
@@ -16,6 +17,9 @@
     if (empty($specsRows)) {
         $specsRows = [['key' => '', 'value' => '']];
     }
+
+    // Ảnh chi tiết đã được tick xóa ở lần gửi trước (khi validate lỗi)
+    $markedForRemoval = collect(old('remove_images', []))->map(fn ($id) => (int) $id);
 @endphp
 
 <div class="space-y-8">
@@ -170,22 +174,68 @@
     </section>
 
     {{-- ===== Hình ảnh ===== --}}
-    <section class="space-y-5">
+    <section class="space-y-6">
         <h2 class="text-base font-semibold text-gray-900">Hình ảnh</h2>
 
+        {{-- Ảnh đại diện --}}
         <div>
             <label for="thumbnail" class="{{ $labelClass }}">Ảnh đại diện</label>
-            <input id="thumbnail" name="thumbnail" type="file" accept=".jpg,.jpeg,.png,.webp"
-                   class="block w-full text-sm text-gray-600 file:mr-4 file:rounded-xl file:border-0 file:bg-gray-100 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200">
-            <p class="mt-1 text-xs text-gray-500">JPG, PNG hoặc WEBP, tối đa 2MB.</p>
+
+            @if ($product->exists && $product->thumbnail_url)
+                <div class="mb-3 flex items-center gap-4">
+                    <img src="{{ $product->thumbnail_url }}" alt="{{ $product->name }}"
+                         class="h-20 w-20 rounded-xl object-cover">
+                    <label class="flex items-center gap-2 text-sm text-gray-600">
+                        <input type="checkbox" name="remove_thumbnail" value="1" @checked(old('remove_thumbnail'))
+                               class="rounded border-gray-300 text-primary focus:ring-primary">
+                        Xóa ảnh đại diện hiện tại
+                    </label>
+                </div>
+            @endif
+
+            <input id="thumbnail" name="thumbnail" type="file" accept=".jpg,.jpeg,.png,.webp" class="{{ $fileClass }}">
+            <p class="mt-1 text-xs text-gray-500">
+                JPG, PNG hoặc WEBP, tối đa 2MB.
+                @if ($product->exists && $product->thumbnail_url) Chọn tệp mới để thay thế ảnh hiện tại. @endif
+            </p>
             @error('thumbnail')<p class="{{ $errorClass }}">{{ $message }}</p>@enderror
+            @error('remove_thumbnail')<p class="{{ $errorClass }}">{{ $message }}</p>@enderror
         </div>
 
+        {{-- Ảnh chi tiết hiện có (chỉ khi sửa) --}}
+        @if ($product->exists && $product->images->isNotEmpty())
+            <div>
+                <p class="{{ $labelClass }}">Ảnh chi tiết hiện có</p>
+                <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    @foreach ($product->images as $image)
+                        <label class="block rounded-xl border border-gray-200 p-2 text-center text-xs text-gray-600">
+                            <img src="{{ $image->url }}" alt="Ảnh chi tiết {{ $loop->iteration }}"
+                                 class="mb-2 h-24 w-full rounded-lg object-cover">
+                            <span class="inline-flex items-center gap-1.5">
+                                <input type="checkbox" name="remove_images[]" value="{{ $image->id }}"
+                                       @checked($markedForRemoval->contains($image->id))
+                                       class="rounded border-gray-300 text-primary focus:ring-primary">
+                                Xóa
+                            </span>
+                        </label>
+                    @endforeach
+                </div>
+                @error('remove_images')<p class="{{ $errorClass }}">{{ $message }}</p>@enderror
+                @foreach ($errors->get('remove_images.*') as $messages)
+                    @foreach ($messages as $message)
+                        <p class="{{ $errorClass }}">{{ $message }}</p>
+                    @endforeach
+                @endforeach
+            </div>
+        @endif
+
+        {{-- Thêm ảnh chi tiết --}}
         <div>
-            <label for="images" class="{{ $labelClass }}">Ảnh chi tiết</label>
-            <input id="images" name="images[]" type="file" multiple accept=".jpg,.jpeg,.png,.webp"
-                   class="block w-full text-sm text-gray-600 file:mr-4 file:rounded-xl file:border-0 file:bg-gray-100 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200">
-            <p class="mt-1 text-xs text-gray-500">Tối đa 8 ảnh, mỗi ảnh tối đa 2MB.</p>
+            <label for="images" class="{{ $labelClass }}">
+                {{ $product->exists ? 'Thêm ảnh chi tiết' : 'Ảnh chi tiết' }}
+            </label>
+            <input id="images" name="images[]" type="file" multiple accept=".jpg,.jpeg,.png,.webp" class="{{ $fileClass }}">
+            <p class="mt-1 text-xs text-gray-500">Tối đa 8 ảnh chi tiết (tính cả ảnh hiện có), mỗi ảnh tối đa 2MB.</p>
             @error('images')<p class="{{ $errorClass }}">{{ $message }}</p>@enderror
             @foreach ($errors->get('images.*') as $messages)
                 @foreach ($messages as $message)

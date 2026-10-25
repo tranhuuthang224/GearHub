@@ -59,6 +59,7 @@
                     <th class="px-4 py-3">Giá bán</th>
                     <th class="px-4 py-3">Tồn kho</th>
                     <th class="px-4 py-3">Hiển thị</th>
+                    <th class="px-4 py-3 text-right">Thao tác</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -108,11 +109,21 @@
                                 <span class="{{ $badge }} bg-gray-100 text-gray-600">Ẩn</span>
                             @endif
                         </td>
-                        {{-- Thứ 7 thêm nút Sửa, Chủ nhật thêm nút Xóa --}}
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-end gap-2">
+                                <x-button :href="route('admin.products.edit', $product)" variant="outline" size="sm">Sửa</x-button>
+                                <form method="POST" action="{{ route('admin.products.destroy', $product) }}"
+                                    onsubmit="return confirm(@js('Xóa sản phẩm «' . $product->name . '»? Sản phẩm sẽ bị ẩn khỏi cửa hàng.'))">
+                                @csrf
+                                @method('DELETE')
+                                <x-button type="submit" variant="danger" size="sm">Xóa</x-button>
+                            </form>
+                            </div>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-4 py-10 text-center text-gray-500">
+                        <td colspan="9" class="px-4 py-10 text-center text-gray-500">
                             @if ($hasFilters)
                                 Không tìm thấy sản phẩm phù hợp với bộ lọc.
                             @else
