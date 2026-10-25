@@ -69,11 +69,11 @@
                     </div>
 
                     <!-- Floating Category Image -->
-                    <div class="{{ $cat['imgWrapper'] ?? 'absolute -right-1 sm:right-2 bottom-0 sm:bottom-2 max-w-[55%] max-h-[90%] flex items-end justify-end pointer-events-none' }}">
+                    <div class="{{ $cat['imgWrapper'] ?? 'absolute -right-1 sm:right-2 bottom-0 sm:bottom-2 max-w-[55%] max-h-[90%] flex items-end justify-end pointer-events-none' }} transition duration-500 group-hover:scale-105">
                         <img 
                             src="{{ $cat['image'] }}" 
                             alt="{{ $cat['keyword'] }}" 
-                            class="{{ $cat['imageClass'] }} transform group-hover:scale-105 transition duration-500 drop-shadow-xl"
+                            class="{{ $cat['imageClass'] }} transition duration-500"
                         >
                     </div>
                 </div>

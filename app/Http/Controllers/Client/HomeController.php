@@ -57,8 +57,8 @@ class HomeController extends Controller
                 'keywordColor' => 'text-primary', // Vivid red keyword
                 'btnColor' => 'bg-primary hover:bg-primary-hover text-white shadow-md shadow-primary/25',
                 'colSpan' => 'sm:col-span-2 lg:col-span-2',
-                'imgWrapper' => 'absolute right-0 sm:right-2 bottom-0 sm:bottom-1 max-w-[58%] max-h-[95%] flex items-end justify-end pointer-events-none',
-                'imageClass' => 'max-h-[220px] sm:max-h-[265px] w-auto object-contain',
+                'imgWrapper' => 'absolute -right-2 sm:right-0 -bottom-2 sm:-bottom-2 top-2 sm:top-1 w-[62%] sm:w-[58%] flex items-end justify-end pointer-events-none',
+                'imageClass' => 'w-full h-full object-contain object-right-bottom drop-shadow-2xl scale-110 sm:scale-120 origin-bottom-right',
             ],
             [
                 'subtitle' => 'New',
@@ -102,8 +102,8 @@ class HomeController extends Controller
                 'keywordColor' => 'text-[#4ADE80]', // Bright lime/neon green keyword
                 'btnColor' => 'bg-white text-[#258237] hover:bg-gray-50',
                 'colSpan' => 'lg:col-span-1',
-                'imgWrapper' => 'absolute right-1 sm:right-3 bottom-0 sm:bottom-2 max-w-[55%] max-h-[92%] flex items-end justify-end pointer-events-none',
-                'imageClass' => 'max-h-[195px] sm:max-h-[220px] w-auto object-contain',
+                'imgWrapper' => 'absolute -right-1 sm:right-1 -bottom-2 sm:-bottom-1 top-3 sm:top-2 w-[60%] sm:w-[58%] flex items-end justify-center pointer-events-none',
+                'imageClass' => 'w-full h-full object-contain rotate-[22deg] scale-125 sm:scale-135 origin-center drop-shadow-2xl',
             ],
         ];
 
