@@ -175,6 +175,7 @@
                                 this.toastMessage = data.message || 'Đã thêm vào giỏ hàng!';
                                 this.addedToast = true;
                                 setTimeout(() => this.addedToast = false, 3500);
+                                window.dispatchEvent(new CustomEvent('cart-toast', { detail: { message: this.toastMessage } }));
                             }
                         } else {
                             alert(data.message || 'Không thể thêm sản phẩm vào giỏ.');

@@ -309,7 +309,7 @@
     >
         <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">✓</span>
         <span x-text="message" class="font-medium"></span>
-        <a href="{{ route('cart.index') }}" class="font-bold underline text-primary hover:text-white ml-2">Xem giỏ</a>
+        <a href="{{ route('cart.index') }}" class="font-bold underline text-primary hover:text-white ml-2">Xem giỏ hàng</a>
     </div>
 
     <script>
