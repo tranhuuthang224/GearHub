@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductTrashController;
 
 // Storefront Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -45,5 +46,12 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('categories', CategoryController::class)->except(['show']);
         Route::resource('brands', BrandController::class)->except(['show']);
         Route::resource('products', ProductController::class)->except(['show']);
+
+        // Thùng rác sản phẩm: URL /admin/trash khớp mục Trash của sidebar
+        Route::get('trash', [ProductTrashController::class, 'index'])->name('trash.index');
+        Route::post('trash/{product}/restore', [ProductTrashController::class, 'restore'])
+            ->withTrashed()->name('trash.restore');
+        Route::delete('trash/{product}', [ProductTrashController::class, 'destroy'])
+            ->withTrashed()->name('trash.destroy');
     });
 require __DIR__.'/auth.php';
