@@ -193,4 +193,14 @@ class ProductTrashTest extends TestCase
         $this->actingAs($this->admin)->get(route('admin.trash.index', ['page' => 2]))
             ->assertRedirect(route('admin.trash.index', ['page' => 1]));
     }
+    public function test_trash_page_renders_forms_with_method_spoofing(): void
+{
+    $product = $this->trashed();
+
+    $this->actingAs($this->admin)->get(route('admin.trash.index'))
+        ->assertOk()
+        ->assertSee(route('admin.trash.destroy', $product), false)
+        ->assertSee('name="_method" value="DELETE"', false)
+        ->assertSee(route('admin.trash.restore', $product), false);
+}
 }

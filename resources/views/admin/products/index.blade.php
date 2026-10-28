@@ -110,15 +110,17 @@
                             @endif
                         </td>
                         <td class="px-4 py-3">
-                            <div class="flex items-center justify-end gap-2">
-                                <x-button :href="route('admin.products.edit', $product)" variant="outline" size="sm">Sửa</x-button>
-                                <form method="POST" action="{{ route('admin.products.destroy', $product) }}"
-                                    onsubmit="return confirm(@js('Chuyển sản phẩm «' . $product->name . '» vào Thùng rác? Sản phẩm sẽ bị ẩn khỏi cửa hàng và có thể khôi phục.'))"
-                                @method('DELETE')
-                                <x-button type="submit" variant="danger" size="sm">Xóa</x-button>
-                            </form>
-                            </div>
-                        </td>
+    <div class="flex items-center justify-end gap-2">
+        <x-button :href="route('admin.products.edit', $product)" variant="outline" size="sm">Sửa</x-button>
+
+        <form method="POST" action="{{ route('admin.products.destroy', $product) }}"
+              onsubmit="return confirm(@js('Chuyển sản phẩm «' . $product->name . '» vào Thùng rác? Sản phẩm sẽ bị ẩn khỏi cửa hàng và có thể khôi phục.'))">
+            @csrf
+            @method('DELETE')
+            <x-button type="submit" variant="danger" size="sm">Xóa</x-button>
+        </form>
+    </div>
+</td>
                     </tr>
                 @empty
                     <tr>
