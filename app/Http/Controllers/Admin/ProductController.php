@@ -190,7 +190,7 @@ class ProductController extends Controller
         // và để đơn hàng cũ vẫn đọc được sản phẩm (OrderItem dùng withTrashed).
         $product->delete();
 
-        return back()->with('success', "Đã xóa sản phẩm «{$name}».");
+        return back()->with('success', "Đã chuyển sản phẩm «{$name}» vào Thùng rác.");
     }
 
     /** Dữ liệu dùng chung cho form tạo và form sửa. */
