@@ -44,39 +44,36 @@
     </section>
 
     <!-- 2. 6 FEATURED CATEGORIES SHOWCASE GRID (Matching Figma Screenshot Exactly) -->
-    <section>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            @foreach ($featuredCategories as $cat)
-                <div class="relative {{ $cat['bg'] }} {{ $cat['colSpan'] }} rounded-3xl p-7 min-h-[250px] sm:min-h-[280px] flex flex-col justify-between overflow-hidden group transition duration-300 hover:shadow-2xl">
-                    <!-- Text & Typography (Subtitle + Title + Big 3D Keyword) -->
-                    <div class="relative z-10 {{ $cat['textWrapper'] ?? 'max-w-[55%]' }} space-y-0.5 select-none">
-                        <span class="text-xs sm:text-sm font-medium tracking-wide block {{ $cat['subtitleColor'] }}">
-                            {{ $cat['subtitle'] }}
-                        </span>
-                        <h3 class="text-xl sm:text-2xl font-bold tracking-tight leading-tight {{ $cat['titleColor'] }}">
-                            {{ $cat['title'] }}
-                        </h3>
-                        <div class="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-none uppercase pt-0.5 {{ $cat['keywordColor'] }}">
-                            {{ $cat['keyword'] }}
-                        </div>
-                    </div>
+    <section class="space-y-6">
+        <!-- Row 1: 1.png (Earphone) | 2.png (Mouse) | 3.png (Laptop) -->
+        <div class="flex flex-col sm:flex-row gap-6 items-stretch">
+            @foreach (array_slice($featuredCategories, 0, 3) as $cat)
+                <a 
+                    href="{{ url('/shop?category=' . $cat['slug']) }}" 
+                    class="group relative block {{ $cat['flex'] }} w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
+                >
+                    <img 
+                        src="{{ asset($cat['banner']) }}" 
+                        alt="{{ $cat['title'] }}" 
+                        class="w-full h-auto block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
+                    >
+                </a>
+            @endforeach
+        </div>
 
-                    <!-- Action Button -->
-                    <div class="relative z-10 pt-4">
-                        <a href="{{ url('/shop?category=' . $cat['slug']) }}" class="inline-flex items-center justify-center px-6 py-2 rounded-full text-xs font-bold transition transform group-hover:scale-105 {{ $cat['btnColor'] }}">
-                            Browse
-                        </a>
-                    </div>
-
-                    <!-- Floating Category Image -->
-                    <div class="{{ $cat['imgWrapper'] ?? 'absolute -right-1 sm:right-2 bottom-0 sm:bottom-2 max-w-[55%] max-h-[90%] flex items-end justify-end pointer-events-none' }} transition duration-500 group-hover:scale-105">
-                        <img 
-                            src="{{ $cat['image'] }}" 
-                            alt="{{ $cat['keyword'] }}" 
-                            class="{{ $cat['imageClass'] }} transition duration-500"
-                        >
-                    </div>
-                </div>
+        <!-- Row 2: 4.png (Console) | 5.png (Deck) | 6.png (Speaker) -->
+        <div class="flex flex-col sm:flex-row gap-6 items-stretch">
+            @foreach (array_slice($featuredCategories, 3, 3) as $cat)
+                <a 
+                    href="{{ url('/shop?category=' . $cat['slug']) }}" 
+                    class="group relative block {{ $cat['flex'] }} w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
+                >
+                    <img 
+                        src="{{ asset($cat['banner']) }}" 
+                        alt="{{ $cat['title'] }}" 
+                        class="w-full h-auto block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
+                    >
+                </a>
             @endforeach
         </div>
     </section>
