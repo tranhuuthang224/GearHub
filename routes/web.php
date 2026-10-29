@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductTrashController;
+use App\Http\Controllers\Admin\CouponController;
 
 // Storefront Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -53,5 +54,7 @@ Route::middleware(['auth', 'role:admin'])
             ->withTrashed()->name('trash.restore');
         Route::delete('trash/{product}', [ProductTrashController::class, 'destroy'])
             ->withTrashed()->name('trash.destroy');
+        
+        Route::resource('coupons', CouponController::class)->except(['show']);
     });
 require __DIR__.'/auth.php';

@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,   // trước Product: Product cần category_id
             BrandSeeder::class,      // trước Product: Product cần brand_id
             ProductSeeder::class,
+            CouponSeeder::class,
         ]);
     }
 }

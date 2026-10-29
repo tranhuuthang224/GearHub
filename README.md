@@ -82,3 +82,11 @@ Truy cập: `http://localhost:8000`
 | Khách hàng | khach1@gearhub.vn | Customer@123 |
 | Khách hàng | khach2@gearhub.vn | Customer@123 |
 | Khách hàng | khach3@gearhub.vn | Customer@123 |
+
+## 🎟️ Mã giảm giá demo
+
+| Mã | Giảm | Ghi chú |
+|---|---|---|
+| GEAR10 | 10% | Đơn từ 500.000 ₫ |
+| SAVE50K | 50.000 ₫ | Đơn từ 300.000 ₫ |
+| EXPIRED, FULL, SOON, DISABLED | | Các mã không dùng được (hết hạn, hết lượt, chưa bắt đầu, đã tắt) để thử thông báo lỗi |
