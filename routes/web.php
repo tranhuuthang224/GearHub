@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductTrashController;
 use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Client\CheckoutCouponController;
 
 // Storefront Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -57,4 +58,10 @@ Route::middleware(['auth', 'role:admin'])
         
         Route::resource('coupons', CouponController::class)->except(['show']);
     });
+
+// Xem trước mã giảm giá ở Checkout (B). Giới hạn 20 lượt/phút để chống dò mã.
+Route::middleware(['auth', 'throttle:20,1'])
+    ->post('/checkout/coupon', CheckoutCouponController::class)
+    ->name('checkout.coupon');
+
 require __DIR__.'/auth.php';
