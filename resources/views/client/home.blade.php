@@ -44,37 +44,83 @@
     </section>
 
     <!-- 2. 6 FEATURED CATEGORIES SHOWCASE GRID (Matching Figma Screenshot Exactly) -->
+    <style>
+        @media (min-width: 640px) {
+            .card-flex-400 { flex: 400 1 0% !important; min-width: 0 !important; }
+            .card-flex-640 { flex: 640 1 0% !important; min-width: 0 !important; }
+        }
+    </style>
     <section class="space-y-6">
         <!-- Row 1: 1.png (Earphone) | 2.png (Mouse) | 3.png (Laptop) -->
         <div class="flex flex-col sm:flex-row gap-6 items-stretch">
-            @foreach (array_slice($featuredCategories, 0, 3) as $cat)
-                <a 
-                    href="{{ url('/shop?category=' . $cat['slug']) }}" 
-                    class="group relative block {{ $cat['flex'] }} w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
+            <a 
+                href="{{ url('/shop?category=earphone') }}" 
+                class="card-flex-400 group block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
+            >
+                <img 
+                    src="{{ asset('images/1.png') }}" 
+                    alt="Enjoy With EARPHONE" 
+                    class="w-full h-full object-cover block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
                 >
-                    <img 
-                        src="{{ asset($cat['banner']) }}" 
-                        alt="{{ $cat['title'] }}" 
-                        class="w-full h-auto block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
-                    >
-                </a>
-            @endforeach
+            </a>
+
+            <a 
+                href="{{ url('/shop?category=mouse') }}" 
+                class="card-flex-400 group block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
+            >
+                <img 
+                    src="{{ asset('images/2.png') }}" 
+                    alt="New Wireless MOUSE" 
+                    class="w-full h-full object-cover block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
+                >
+            </a>
+
+            <a 
+                href="{{ url('/shop?category=laptop') }}" 
+                class="card-flex-640 group block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
+            >
+                <img 
+                    src="{{ asset('images/3.png') }}" 
+                    alt="Best Gaming LAPTOP" 
+                    class="w-full h-full object-cover block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
+                >
+            </a>
         </div>
 
         <!-- Row 2: 4.png (Console) | 5.png (Deck) | 6.png (Speaker) -->
         <div class="flex flex-col sm:flex-row gap-6 items-stretch">
-            @foreach (array_slice($featuredCategories, 3, 3) as $cat)
-                <a 
-                    href="{{ url('/shop?category=' . $cat['slug']) }}" 
-                    class="group relative block {{ $cat['flex'] }} w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
+            <a 
+                href="{{ url('/shop?category=console') }}" 
+                class="card-flex-640 group block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
+            >
+                <img 
+                    src="{{ asset('images/4.png') }}" 
+                    alt="New Trend CONSOLE" 
+                    class="w-full h-full object-cover block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
                 >
-                    <img 
-                        src="{{ asset($cat['banner']) }}" 
-                        alt="{{ $cat['title'] }}" 
-                        class="w-full h-auto block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
-                    >
-                </a>
-            @endforeach
+            </a>
+
+            <a 
+                href="{{ url('/shop?category=keyboard') }}" 
+                class="card-flex-400 group block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
+            >
+                <img 
+                    src="{{ asset('images/5.png') }}" 
+                    alt="Mechanical Elite DECK" 
+                    class="w-full h-full object-cover block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
+                >
+            </a>
+
+            <a 
+                href="{{ url('/shop?category=speaker') }}" 
+                class="card-flex-400 group block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
+            >
+                <img 
+                    src="{{ asset('images/6.png') }}" 
+                    alt="New Hyperx SPEAKER" 
+                    class="w-full h-full object-cover block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
+                >
+            </a>
         </div>
     </section>
 
