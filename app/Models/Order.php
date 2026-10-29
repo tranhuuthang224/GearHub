@@ -16,6 +16,22 @@ class Order extends Model
     public const STATUS_COMPLETED = 'completed';
     public const STATUS_CANCELLED = 'cancelled';
 
+    /** Nhãn hiển thị cho giao diện (huy hiệu trạng thái ở Storefront và Admin). */
+    public const STATUS_LABELS = [
+        self::STATUS_PENDING   => 'Chờ xử lý',
+        self::STATUS_SHIPPING  => 'Đang giao',
+        self::STATUS_COMPLETED => 'Hoàn thành',
+        self::STATUS_CANCELLED => 'Đã hủy',
+    ];
+
+    /** Luồng chuyển trạng thái hợp lệ (đề án mục 5.3). */
+    public const TRANSITIONS = [
+        self::STATUS_PENDING   => [self::STATUS_SHIPPING, self::STATUS_CANCELLED],
+        self::STATUS_SHIPPING  => [self::STATUS_COMPLETED, self::STATUS_CANCELLED],
+        self::STATUS_COMPLETED => [],
+        self::STATUS_CANCELLED => [],
+    ];
+
     protected $fillable = [
         'code',
         'user_id',
@@ -35,8 +51,18 @@ class Order extends Model
         return [
             'subtotal' => 'integer',
             'discount' => 'integer',
-            'total' => 'integer',
+            'total'    => 'integer',
         ];
+    }
+
+    public function canTransitionTo(string $status): bool
+    {
+        return in_array($status, self::TRANSITIONS[$this->status] ?? [], true);
+    }
+
+    public function statusLabel(): string
+    {
+        return self::STATUS_LABELS[$this->status] ?? (string) $this->status;
     }
 
     public function user(): BelongsTo

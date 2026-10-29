@@ -160,4 +160,13 @@ class ProductDeleteTest extends TestCase
 
         $this->assertSame('Sản phẩm cũ', $item->fresh()->product->name);
     }
+    public function test_list_renders_a_delete_form_with_method_spoofing(): void
+{
+    $product = $this->simpleProduct('FORM-001');
+
+    $this->actingAs($this->admin)->get(route('admin.products.index'))
+        ->assertOk()
+        ->assertSee(route('admin.products.destroy', $product), false)
+        ->assertSee('name="_method" value="DELETE"', false);
+}
 }
