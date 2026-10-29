@@ -39,6 +39,7 @@ class Order extends Model
         'receiver_name',
         'phone',
         'shipping_address',
+        'note',
         'payment_method',
         'status',
         'subtotal',
