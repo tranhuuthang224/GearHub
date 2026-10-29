@@ -3,94 +3,205 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Product;
-use App\Services\ProductCatalog;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\View\View;
 
 class ShopController extends Controller
 {
     /**
-     * Display the Product Catalog (Shop/All Products) matching Figma Page 4.
+     * Hiển thị danh mục sản phẩm (Shop/All Products) từ Database.
+     * Eager Loading with(['category', 'brand']) để tối ưu hóa truy vấn và chống N+1.
      */
     public function index(Request $request): View
     {
-        $allProducts = ProductCatalog::all();
+        // 1. Khởi tạo query sản phẩm đang hoạt động kèm Eager Loading quan hệ
+        $query = Product::query()
+            ->active()
+            ->with(['category', 'brand']);
 
-        // Danh mục tự động tổng hợp từ kho sản phẩm thực tế
-        $categories = collect($allProducts)
-            ->groupBy('category')
-            ->map(fn($group, $cat) => [
-                'name' => $cat,
-                'slug' => $cat,
-                'count' => $group->count(),
+        // 2. Lấy danh sách Categories trực tiếp từ Database kèm số lượng sản phẩm
+        $productCounts = Product::active()
+            ->selectRaw('category_id, count(*) as count')
+            ->groupBy('category_id')
+            ->pluck('count', 'category_id');
+
+        $categories = Category::query()
+            ->with(['children'])
+            ->orderBy('name')
+            ->get()
+            ->map(function ($cat) use ($productCounts) {
+                $childIds = $cat->children->pluck('id');
+                $count = ($productCounts[$cat->id] ?? 0) + $childIds->sum(fn ($id) => $productCounts[$id] ?? 0);
+
+                return [
+                    'id'    => $cat->id,
+                    'name'  => $cat->name,
+                    'slug'  => $cat->slug,
+                    'count' => $count,
+                ];
+            })
+            ->filter(fn ($c) => $c['count'] > 0)
+            ->values()
+            ->all();
+
+        // Fallback nếu chưa có sản phẩm nào được gán thì vẫn hiển thị các danh mục hiện có
+        if (empty($categories)) {
+            $categories = Category::query()
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($cat) => [
+                    'id'    => $cat->id,
+                    'name'  => $cat->name,
+                    'slug'  => $cat->slug,
+                    'count' => 0,
+                ])
+                ->values()
+                ->all();
+        }
+
+        // 3. Lấy danh sách Brands trực tiếp từ Database kèm số lượng sản phẩm
+        $brands = Brand::query()
+            ->withCount(['products' => fn ($q) => $q->active()])
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($brand) => [
+                'id'    => $brand->id,
+                'name'  => $brand->name,
+                'slug'  => $brand->slug,
+                'count' => $brand->products_count,
             ])
             ->values()
             ->all();
 
-        // Thương hiệu tự động tổng hợp từ kho sản phẩm thực tế
-        $brands = collect($allProducts)
-            ->pluck('brand')
-            ->unique()
-            ->sort()
-            ->map(fn($b) => ['name' => $b, 'slug' => $b])
-            ->values()
-            ->all();
-
-        // Lọc sản phẩm theo query params (Categories, Brands, Search, Sort)
+        // 4. Lọc theo Categories (Hỗ trợ cả mảng categories[] và chuỗi đơn category từ banner trang chủ)
         $selectedCategories = (array) $request->input('categories', []);
-        $selectedBrands = (array) $request->input('brands', []);
-        $search = $request->input('search');
-        $sort = $request->input('sort', 'newest');
-        $maxPrice = $request->input('max_price');
-
-        $filteredProducts = collect($allProducts);
+        if ($request->filled('category') && empty($selectedCategories)) {
+            $selectedCategories = [$request->input('category')];
+        }
 
         if (!empty($selectedCategories)) {
-            $filteredProducts = $filteredProducts->whereIn('category', $selectedCategories);
+            $categoryIds = Category::where(function ($q) use ($selectedCategories) {
+                $q->whereIn('name', $selectedCategories)
+                  ->orWhereIn('slug', $selectedCategories)
+                  ->orWhereIn('id', $selectedCategories);
+            })->pluck('id');
+
+            $allCategoryIds = Category::whereIn('id', $categoryIds)
+                ->orWhereIn('parent_id', $categoryIds)
+                ->pluck('id')
+                ->all();
+
+            if (!empty($allCategoryIds)) {
+                $query->whereIn('category_id', $allCategoryIds);
+            } else {
+                // Hỗ trợ tìm kiếm theo từ khóa danh mục (vd: 'headphones', 'earphone', 'laptop', 'mouse'...)
+                $query->whereHas('category', function ($q) use ($selectedCategories) {
+                    $q->where(function ($sq) use ($selectedCategories) {
+                        foreach ($selectedCategories as $term) {
+                            $sq->orWhere('name', 'like', "%{$term}%")
+                               ->orWhere('slug', 'like', "%{$term}%");
+                        }
+                    });
+                });
+            }
+        }
+
+        // 5. Lọc theo Brands (Hỗ trợ cả mảng brands[] và chuỗi đơn brand)
+        $selectedBrands = (array) $request->input('brands', []);
+        if ($request->filled('brand') && empty($selectedBrands)) {
+            $selectedBrands = [$request->input('brand')];
         }
 
         if (!empty($selectedBrands)) {
-            $filteredProducts = $filteredProducts->whereIn('brand', $selectedBrands);
+            $brandIds = Brand::whereIn('name', $selectedBrands)
+                ->orWhereIn('slug', $selectedBrands)
+                ->orWhereIn('id', $selectedBrands)
+                ->pluck('id');
+
+            if ($brandIds->isNotEmpty()) {
+                $query->whereIn('brand_id', $brandIds);
+            } else {
+                $query->whereHas('brand', function ($q) use ($selectedBrands) {
+                    $q->whereIn('name', $selectedBrands);
+                });
+            }
         }
 
-        if ($maxPrice && is_numeric($maxPrice)) {
-            $filteredProducts = $filteredProducts->filter(function ($item) use ($maxPrice) {
-                $effectivePrice = !empty($item['sale_price']) ? (int) $item['sale_price'] : (int) $item['price'];
-                return $effectivePrice <= (int) $maxPrice;
+        // 6. Lọc theo Khoảng giá min_price và max_price
+        $minPrice = $request->input('min_price');
+        $maxPrice = $request->input('max_price');
+
+        if ($minPrice !== null && $minPrice !== '' && is_numeric($minPrice)) {
+            $query->where(function ($q) use ($minPrice) {
+                $q->where(function ($sq) use ($minPrice) {
+                    $sq->whereNotNull('sale_price')
+                       ->where('sale_price', '>=', (int) $minPrice);
+                })->orWhere(function ($sq) use ($minPrice) {
+                    $sq->whereNull('sale_price')
+                       ->where('price', '>=', (int) $minPrice);
+                });
             });
         }
 
+        if ($maxPrice !== null && $maxPrice !== '' && is_numeric($maxPrice)) {
+            $query->where(function ($q) use ($maxPrice) {
+                $q->where(function ($sq) use ($maxPrice) {
+                    $sq->whereNotNull('sale_price')
+                       ->where('sale_price', '<=', (int) $maxPrice);
+                })->orWhere(function ($sq) use ($maxPrice) {
+                    $sq->whereNull('sale_price')
+                       ->where('price', '<=', (int) $maxPrice);
+                });
+            });
+        }
+
+        // 7. Lọc theo tình trạng còn hàng (Stock Status)
+        $stockStatus = $request->input('stock_status');
+        if ($request->has('in_stock') && !$request->has('stock_status')) {
+            $stockStatus = $request->boolean('in_stock') ? 'in_stock' : null;
+        }
+
+        if ($stockStatus === 'in_stock') {
+            $query->where('stock_quantity', '>', 0);
+        } elseif ($stockStatus === 'out_of_stock') {
+            $query->where('stock_quantity', '<=', 0);
+        }
+
+        // 8. Tìm kiếm theo từ khóa (name, sku, description, brand, category)
+        $search = $request->input('search');
         if ($search) {
-            $filteredProducts = $filteredProducts->filter(function ($item) use ($search) {
-                return stripos($item['name'], $search) !== false 
-                    || stripos($item['sku'] ?? '', $search) !== false
-                    || stripos($item['brand'] ?? '', $search) !== false;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('brand', fn ($bq) => $bq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('category', fn ($cq) => $cq->where('name', 'like', "%{$search}%"));
             });
         }
 
+        // 9. Sắp xếp kết quả (Sort)
+        $sort = $request->input('sort', 'newest');
         if ($sort === 'price_asc') {
-            $filteredProducts = $filteredProducts->sortBy(fn($p) => $p['sale_price'] ?? $p['price']);
+            $query->orderByRaw('COALESCE(sale_price, price) ASC');
         } elseif ($sort === 'price_desc') {
-            $filteredProducts = $filteredProducts->sortByDesc(fn($p) => $p['sale_price'] ?? $p['price']);
+            $query->orderByRaw('COALESCE(sale_price, price) DESC');
+        } elseif ($sort === 'popular' || $sort === 'best_selling') {
+            $query->withSum('orderItems', 'quantity')
+                  ->orderByDesc('order_items_sum_quantity')
+                  ->orderByDesc('stock_quantity')
+                  ->latest('id');
+        } else {
+            // Mặc định: Mới nhất
+            $query->latest('id');
         }
 
-        $totalProducts = $filteredProducts->count();
-        $perPage = 12; // 12 sản phẩm mỗi trang (4 hàng x 3 cột)
-        $currentPage = max(1, (int) $request->input('page', 1));
-        $currentItems = $filteredProducts->slice(($currentPage - 1) * $perPage, $perPage)->values();
-
-        $products = new LengthAwarePaginator(
-            $currentItems,
-            $totalProducts,
-            $perPage,
-            $currentPage,
-            [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]
-        );
+        // 10. Phân trang chuẩn 12 sản phẩm/trang kèm giữ nguyên Query String
+        $perPage = 12;
+        $products = $query->paginate($perPage)->withQueryString();
+        $totalProducts = $products->total();
 
         return view('client.shop.index', compact(
             'categories',
@@ -98,6 +209,9 @@ class ShopController extends Controller
             'products',
             'selectedCategories',
             'selectedBrands',
+            'minPrice',
+            'maxPrice',
+            'stockStatus',
             'search',
             'sort',
             'totalProducts'
@@ -105,120 +219,94 @@ class ShopController extends Controller
     }
 
     /**
-     * Display Single Product Detail (Figma Page 5).
+     * Hiển thị chi tiết 1 sản phẩm (Product Detail) từ Database.
+     * Eager Loading with(['category', 'brand', 'images', 'reviews.user']) chống N+1.
      */
     public function show(string $slug): View
     {
-        $dbProduct = null;
-        try {
-            $dbProduct = Product::with(['category', 'brand', 'images'])->where('slug', $slug)->first();
-        } catch (\Throwable $e) {
-            // Database not yet migrated or connection unavailable, fallback to catalog
-            $dbProduct = null;
+        $dbProduct = Product::query()
+            ->with(['category', 'brand', 'images', 'reviews.user'])
+            ->where('slug', $slug)
+            ->active()
+            ->firstOrFail();
+
+        $thumb = $dbProduct->thumbnail 
+            ? (str_starts_with($dbProduct->thumbnail, 'http') 
+                ? $dbProduct->thumbnail 
+                : (str_starts_with($dbProduct->thumbnail, ['images/', 'storage/']) 
+                    ? asset($dbProduct->thumbnail) 
+                    : asset('storage/' . $dbProduct->thumbnail)))
+            : asset('images/png-transparent-playstation-4-headphones-hyperx-cloud-audio-video-game-headphones-electronics-video-game-playstation-4.png');
+
+        $gallery = collect([$thumb]);
+        foreach ($dbProduct->images as $img) {
+            $gallery->push(str_starts_with($img->path, 'http') 
+                ? $img->path 
+                : (str_starts_with($img->path, ['images/', 'storage/']) 
+                    ? asset($img->path) 
+                    : asset('storage/' . $img->path)));
         }
 
-        if ($dbProduct) {
-            $thumb = $dbProduct->thumbnail 
-                ? (str_starts_with($dbProduct->thumbnail, 'http') ? $dbProduct->thumbnail : asset('storage/' . $dbProduct->thumbnail))
-                : asset('images/png-transparent-playstation-4-headphones-hyperx-cloud-audio-video-game-headphones-electronics-video-game-playstation-4.png');
+        $reviewsCount = $dbProduct->reviews->count();
+        $averageRating = $reviewsCount > 0 
+            ? number_format($dbProduct->reviews->avg('rating'), 1) 
+            : '4.9';
 
-            $gallery = collect([$thumb]);
-            foreach ($dbProduct->images as $img) {
-                $gallery->push(str_starts_with($img->path, 'http') ? $img->path : asset('storage/' . $img->path));
-            }
+        $product = [
+            'id'             => $dbProduct->id,
+            'name'           => $dbProduct->name,
+            'slug'           => $dbProduct->slug,
+            'sku'            => $dbProduct->sku,
+            'category'       => $dbProduct->category?->name ?? 'Phụ kiện',
+            'brand'          => $dbProduct->brand?->name ?? 'GearHub',
+            'price'          => (int) $dbProduct->price,
+            'sale_price'     => $dbProduct->sale_price ? (int) $dbProduct->sale_price : null,
+            'rating'         => $averageRating,
+            'reviews_count'  => $reviewsCount ?: 128,
+            'description'    => $dbProduct->description ?? 'Sản phẩm gaming gear và phụ kiện chính hãng, phân phối bởi GearHub.',
+            'thumbnail'      => $thumb,
+            'gallery'        => $gallery->unique()->values()->all(),
+            'stock_quantity' => (int) $dbProduct->stock_quantity,
+            'specs'          => is_array($dbProduct->specs) ? $dbProduct->specs : (json_decode($dbProduct->specs, true) ?? []),
+        ];
 
-            $product = [
-                'id' => $dbProduct->id,
-                'name' => $dbProduct->name,
-                'slug' => $dbProduct->slug,
-                'sku' => $dbProduct->sku,
-                'category' => $dbProduct->category?->name ?? 'Phụ kiện',
-                'brand' => $dbProduct->brand?->name ?? 'GearHub',
-                'price' => (int) $dbProduct->price,
-                'sale_price' => $dbProduct->sale_price ? (int) $dbProduct->sale_price : null,
-                'rating' => '4.9',
-                'reviews_count' => 128,
-                'description' => $dbProduct->description ?? 'Sản phẩm phụ kiện công nghệ chính hãng, phân phối bởi GearHub.',
-                'thumbnail' => $thumb,
-                'gallery' => $gallery->unique()->values()->all(),
-                'stock_quantity' => (int) $dbProduct->stock_quantity,
-                'specs' => is_array($dbProduct->specs) ? $dbProduct->specs : (json_decode($dbProduct->specs, true) ?? []),
-            ];
+        // Lấy 4 sản phẩm liên quan trong cùng danh mục, Eager Load category & brand chống N+1
+        $related = Product::query()
+            ->with(['category', 'brand'])
+            ->where('category_id', $dbProduct->category_id)
+            ->where('id', '!=', $dbProduct->id)
+            ->active()
+            ->take(4)
+            ->get();
 
-            $related = Product::where('category_id', $dbProduct->category_id)
+        if ($related->count() < 4) {
+            $more = Product::query()
+                ->with(['category', 'brand'])
                 ->where('id', '!=', $dbProduct->id)
-                ->where('is_active', true)
-                ->take(4)
+                ->whereNotIn('id', $related->pluck('id'))
+                ->active()
+                ->take(4 - $related->count())
                 ->get();
-
-            if ($related->count() < 4) {
-                $more = Product::where('id', '!=', $dbProduct->id)
-                    ->whereNotIn('id', $related->pluck('id'))
-                    ->where('is_active', true)
-                    ->take(4 - $related->count())
-                    ->get();
-                $related = $related->merge($more);
-            }
-
-            $relatedProducts = $related->map(fn($p) => [
-                'id' => $p->id,
-                'name' => $p->name,
-                'slug' => $p->slug,
-                'category' => $p->category?->name ?? 'Phụ kiện',
-                'brand' => $p->brand?->name ?? 'GearHub',
-                'price' => (int) $p->price,
-                'sale_price' => $p->sale_price ? (int) $p->sale_price : null,
-                'thumbnail' => $p->thumbnail ? (str_starts_with($p->thumbnail, 'http') ? $p->thumbnail : asset('storage/' . $p->thumbnail)) : asset('images/hero-headphone.png'),
-                'rating' => '4.8',
-            ]);
-        } else {
-            // Tra cứu từ danh mục thực tế ProductCatalog
-            $matched = ProductCatalog::findBySlug($slug) ?? ProductCatalog::all()[0];
-
-            $product = [
-                'id' => $matched['id'],
-                'name' => $matched['name'],
-                'slug' => $matched['slug'],
-                'sku' => $matched['sku'] ?? 'GEAR-ITEM',
-                'category' => $matched['category'],
-                'brand' => $matched['brand'],
-                'price' => (int) $matched['price'],
-                'sale_price' => !empty($matched['sale_price']) ? (int) $matched['sale_price'] : null,
-                'rating' => $matched['rating'] ?? '4.9',
-                'reviews_count' => $matched['reviews_count'] ?? 64,
-                'description' => $matched['description'] ?? 'Sản phẩm gaming gear và phụ kiện chính hãng, phân phối bởi GearHub.',
-                'thumbnail' => $matched['thumbnail'],
-                'gallery' => $matched['gallery'] ?? [$matched['thumbnail']],
-                'stock_quantity' => (int) ($matched['stock_quantity'] ?? 15),
-                'specs' => $matched['specs'] ?? [],
-            ];
-
-            // Tìm 4 sản phẩm liên quan trong cùng danh mục
-            $related = collect(ProductCatalog::all())
-                ->where('category', $matched['category'])
-                ->where('id', '!=', $matched['id'])
-                ->take(4);
-
-            if ($related->count() < 4) {
-                $more = collect(ProductCatalog::all())
-                    ->where('id', '!=', $matched['id'])
-                    ->whereNotIn('id', $related->pluck('id'))
-                    ->take(4 - $related->count());
-                $related = $related->merge($more);
-            }
-
-            $relatedProducts = $related->map(fn($p) => [
-                'id' => $p['id'],
-                'name' => $p['name'],
-                'slug' => $p['slug'],
-                'category' => $p['category'],
-                'brand' => $p['brand'],
-                'price' => (int) $p['price'],
-                'sale_price' => !empty($p['sale_price']) ? (int) $p['sale_price'] : null,
-                'thumbnail' => $p['thumbnail'],
-                'rating' => $p['rating'] ?? '4.8',
-            ])->values()->all();
+            $related = $related->merge($more);
         }
+
+        $relatedProducts = $related->map(fn ($p) => [
+            'id'         => $p->id,
+            'name'       => $p->name,
+            'slug'       => $p->slug,
+            'category'   => $p->category?->name ?? 'Phụ kiện',
+            'brand'      => $p->brand?->name ?? 'GearHub',
+            'price'      => (int) $p->price,
+            'sale_price' => $p->sale_price ? (int) $p->sale_price : null,
+            'thumbnail'  => $p->thumbnail 
+                ? (str_starts_with($p->thumbnail, 'http') 
+                    ? $p->thumbnail 
+                    : (str_starts_with($p->thumbnail, ['images/', 'storage/']) 
+                        ? asset($p->thumbnail) 
+                        : asset('storage/' . $p->thumbnail))) 
+                : asset('images/hero-headphone.png'),
+            'rating'     => '4.8',
+        ]);
 
         return view('client.shop.show', compact('product', 'relatedProducts'));
     }

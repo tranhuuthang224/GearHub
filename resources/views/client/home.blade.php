@@ -3,44 +3,20 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-24 pt-4 pb-12">
 
-    <!-- 1. HERO BANNER SECTION (Matching Figma Page 1) -->
-    <section class="relative bg-[#F4F5F7] rounded-3xl overflow-hidden min-h-[460px] sm:min-h-[520px] flex items-center p-8 sm:p-14 lg:p-16">
-        <!-- Giant Watermark Typography in Background -->
-        <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-200/60 font-black text-6xl sm:text-9xl lg:text-[180px] tracking-widest select-none pointer-events-none uppercase">
-            HEADPHONE
-        </span>
-
-        <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center w-full">
-            <!-- Left Hero Content -->
-            <div class="lg:col-span-7 space-y-4 sm:space-y-6">
-                <span class="inline-block text-xs sm:text-sm font-bold tracking-widest uppercase text-gray-500">
-                    HyperX Cloud • Wireless
-                </span>
-                
-                <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black text-gray-900 tracking-tight leading-none uppercase">
-                    HEADPHONE
-                </h1>
-
-                <p class="text-sm sm:text-base text-gray-500 max-w-lg leading-relaxed line-clamp-2 sm:line-clamp-3">
-                    Đắm chìm trong âm thanh vòm sống động với màng loa kép 53mm, đệm tai mút hoạt tính êm ái cùng thời lượng pin lên đến 300 giờ.
-                </p>
-
-                <div class="pt-2 flex items-center gap-4">
-                    <a href="{{ url('/shop?category=headphones') }}" class="inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-primary hover:bg-primary-hover text-white text-sm font-bold shadow-lg shadow-primary/30 transition transform hover:-translate-y-0.5">
-                        Shop by Category
-                    </a>
-                </div>
-            </div>
-
-            <!-- Right Hero Image -->
-            <div class="lg:col-span-5 flex items-center justify-center">
-                <img 
-                    src="{{ asset('images/png-transparent-playstation-4-headphones-hyperx-cloud-audio-video-game-headphones-electronics-video-game-playstation-4.png') }}" 
-                    alt="HyperX Cloud Wireless Headphone"
-                    class="max-h-[320px] sm:max-h-[400px] w-auto object-contain drop-shadow-2xl transform hover:scale-105 transition duration-500"
-                >
-            </div>
-        </div>
+    <!-- 1. HERO BANNER SECTION (Matching hero section.png) -->
+    <section class="relative block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white">
+        <a 
+            href="{{ url('/shop?category=headphones') }}" 
+            class="group block relative w-full overflow-hidden rounded-3xl"
+            title="HyperX Cloud Wireless - Shop By Category"
+        >
+            <img 
+                src="{{ asset('images/hero-banner-clean.png') }}" 
+                alt="HyperX Cloud Wireless Headphone - Shop By Category" 
+                class="w-full h-auto block rounded-3xl transform group-hover:scale-[1.01] transition duration-500"
+            >
+            <span class="sr-only">Shop by Category</span>
+        </a>
     </section>
 
     <!-- 2. 6 FEATURED CATEGORIES SHOWCASE GRID (Matching Figma Screenshot Exactly) -->

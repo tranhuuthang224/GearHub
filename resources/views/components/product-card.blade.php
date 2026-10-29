@@ -20,7 +20,18 @@
         $price = is_array($product) ? ($product['price'] ?? 0) : $product->price;
         $salePrice = is_array($product) ? ($product['sale_price'] ?? null) : ($product->sale_price ?? null);
         $thumbnail = is_array($product) ? ($product['thumbnail'] ?? null) : ($product->thumbnail ?? null);
-        $category = is_array($product) ? ($product['category'] ?? null) : ($product->category->name ?? null);
+        $category = is_array($product) ? ($product['category'] ?? null) : ($product->category?->name ?? null);
+    }
+
+    $thumbSrc = null;
+    if ($thumbnail) {
+        if (\Illuminate\Support\Str::startsWith($thumbnail, ['http://', 'https://', 'data:'])) {
+            $thumbSrc = $thumbnail;
+        } elseif (\Illuminate\Support\Str::startsWith($thumbnail, ['images/', 'storage/'])) {
+            $thumbSrc = asset($thumbnail);
+        } else {
+            $thumbSrc = asset('storage/' . $thumbnail);
+        }
     }
 
     $finalPrice = $salePrice ?? $price;
@@ -40,9 +51,9 @@
         @endif
 
         <a href="{{ $url }}" class="w-full h-full flex items-center justify-center">
-            @if ($thumbnail)
+            @if ($thumbSrc)
                 <img
-                    src="{{ Str::startsWith($thumbnail, 'http') ? $thumbnail : asset($thumbnail) }}"
+                    src="{{ $thumbSrc }}"
                     alt="{{ $name }}"
                     class="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
