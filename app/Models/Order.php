@@ -80,4 +80,10 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    /** Nhật ký trạng thái, cũ nhất trước. */
+    public function histories(): HasMany
+    {
+        return $this->hasMany(OrderStatusHistory::class)->orderBy('id');
+    }
 }
