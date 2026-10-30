@@ -31,7 +31,7 @@ class OrderService
 
     /**
      * Tạo đơn COD trong một transaction: khóa dòng sản phẩm, trừ kho, áp mã giảm giá, lưu bản sao tên và giá.
-     * Tổng tiền = tạm tính − giảm giá (không có phí ship).
+     * Tổng tiền = tạm tính − giảm giá (không có phí ship). Ghi dòng nhật ký đầu tiên (tạo đơn).
      *
      * @param  array<int, array{product_id: int, quantity: int}>  $cartItems
      *         Mọi trường khác (kể cả giá) đều bị bỏ qua: giá luôn được tính lại từ CSDL.
@@ -116,7 +116,7 @@ class OrderService
                 $this->coupons->redeem($coupon);
             }
 
-            // 5. Tạo đơn và các dòng đơn
+            // 5. Tạo đơn, các dòng đơn và dòng nhật ký đầu tiên
             $order = Order::create([
                 'code'             => $this->generateCode(),
                 'user_id'          => $user->id,
@@ -134,12 +134,14 @@ class OrderService
 
             $order->items()->createMany($items);
 
+            $this->recordStatus($order, null, Order::STATUS_PENDING, $user);
+
             return $order->load('items');
         });
     }
 
     /**
-     * Hủy đơn và hoàn kho (cả tồn kho lẫn lượt dùng mã giảm giá).
+     * Hủy đơn và hoàn kho (cả tồn kho lẫn lượt dùng mã giảm giá). Ghi nhật ký.
      * Khách chỉ hủy được đơn của mình khi còn pending; admin hủy được đơn pending hoặc shipping.
      *
      * @throws AuthorizationException           Khách hủy đơn của người khác
@@ -178,36 +180,54 @@ class OrderService
                 }
             }
 
+            $from = $locked->status;
+
             $locked->update(['status' => Order::STATUS_CANCELLED]);
+            $this->recordStatus($locked, $from, Order::STATUS_CANCELLED, $actor);
 
             return $locked;
         });
     }
 
     /**
-     * Đổi trạng thái theo luồng pending → shipping → completed (Admin).
+     * Đổi trạng thái theo luồng pending → shipping → completed (Admin). Ghi nhật ký.
      * Việc hủy đi qua cancelOrder() vì cần hoàn kho.
+     *
+     * @param  User|null  $actor  Người thực hiện, ghi vào nhật ký (trống thì ghi là hệ thống)
      *
      * @throws InvalidOrderTransitionException  Chuyển trạng thái không hợp lệ
      * @throws LogicException                   Gọi nhầm với trạng thái cancelled (lỗi lập trình)
      */
-    public function updateStatus(Order $order, string $newStatus): Order
+    public function updateStatus(Order $order, string $newStatus, ?User $actor = null): Order
     {
         if ($newStatus === Order::STATUS_CANCELLED) {
             throw new LogicException('Dùng OrderService::cancelOrder() để hủy đơn, vì việc hủy phải hoàn kho.');
         }
 
-        return DB::transaction(function () use ($order, $newStatus) {
+        return DB::transaction(function () use ($order, $newStatus, $actor) {
             $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
 
             if (! $locked->canTransitionTo($newStatus)) {
                 throw new InvalidOrderTransitionException($locked->status, $newStatus);
             }
 
+            $from = $locked->status;
+
             $locked->update(['status' => $newStatus]);
+            $this->recordStatus($locked, $from, $newStatus, $actor);
 
             return $locked;
         });
+    }
+
+    /** Ghi một dòng nhật ký. Luôn gọi bên trong transaction đổi trạng thái. */
+    private function recordStatus(Order $order, ?string $from, string $to, ?User $actor): void
+    {
+        $order->histories()->create([
+            'from_status' => $from,
+            'to_status'   => $to,
+            'changed_by'  => $actor?->id,
+        ]);
     }
 
     /**

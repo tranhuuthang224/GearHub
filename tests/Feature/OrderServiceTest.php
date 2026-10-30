@@ -20,6 +20,7 @@ use InvalidArgumentException;
 use LogicException;
 use RuntimeException;
 use Tests\TestCase;
+use App\Models\OrderStatusHistory;
 
 class OrderServiceTest extends TestCase
 {
@@ -470,5 +471,88 @@ class OrderServiceTest extends TestCase
         $this->service->updateStatus($order, Order::STATUS_COMPLETED);
 
         $this->assertSame(8, $this->stock($this->keyboard));
+    }
+        // ---------- Nhật ký trạng thái ----------
+
+    /** @return array<int, array{0: ?string, 1: string, 2: ?int}> */
+    private function historyOf(Order $order): array
+    {
+        return $order->histories()->get()
+            ->map(fn ($h) => [$h->from_status, $h->to_status, $h->changed_by])
+            ->all();
+    }
+
+    public function test_creating_an_order_writes_the_first_history_row(): void
+    {
+        $order = $this->place([$this->line($this->keyboard, 1)]);
+
+        $this->assertSame([[null, 'pending', $this->customer->id]], $this->historyOf($order));
+    }
+
+    public function test_status_flow_is_logged_with_actors(): void
+    {
+        $order = $this->place([$this->line($this->keyboard, 1)]);
+
+        $this->service->updateStatus($order, Order::STATUS_SHIPPING, $this->admin);
+        $this->service->updateStatus($order, Order::STATUS_COMPLETED, $this->admin);
+
+        $this->assertSame([
+            [null, 'pending', $this->customer->id],
+            ['pending', 'shipping', $this->admin->id],
+            ['shipping', 'completed', $this->admin->id],
+        ], $this->historyOf($order));
+    }
+
+    public function test_update_status_without_actor_logs_a_null_actor(): void
+    {
+        $order = $this->place([$this->line($this->keyboard, 1)]);
+
+        $this->service->updateStatus($order, Order::STATUS_SHIPPING);
+
+        $this->assertSame(['pending', 'shipping', null], $this->historyOf($order)[1]);
+    }
+
+    public function test_cancellation_is_logged_with_the_person_who_cancelled(): void
+    {
+        $byCustomer = $this->place([$this->line($this->keyboard, 1)]);
+        $this->service->cancelOrder($byCustomer, $this->customer);
+
+        $byAdmin = $this->place([$this->line($this->keyboard, 1)]);
+        $this->service->updateStatus($byAdmin, Order::STATUS_SHIPPING, $this->admin);
+        $this->service->cancelOrder($byAdmin, $this->admin);
+
+        $this->assertSame(['pending', 'cancelled', $this->customer->id], $this->historyOf($byCustomer)[1]);
+        $this->assertSame(['shipping', 'cancelled', $this->admin->id], $this->historyOf($byAdmin)[2]);
+    }
+
+    public function test_rejected_operations_leave_no_history_behind(): void
+    {
+        $order = $this->place([$this->line($this->keyboard, 1)]);
+
+        $this->rejection(InvalidOrderTransitionException::class, fn () => $this->service->updateStatus($order, Order::STATUS_COMPLETED, $this->admin));
+
+        // Hủy hai lần với hai bản sao cũ: chỉ có một dòng nhật ký hủy
+        $first  = Order::find($order->id);
+        $second = Order::find($order->id);
+        $this->service->cancelOrder($first, $this->customer);
+        $this->rejection(InvalidOrderTransitionException::class, fn () => $this->service->cancelOrder($second, $this->customer));
+
+        $this->assertCount(2, $this->historyOf($order));                  // tạo đơn + hủy
+    }
+
+    public function test_failed_order_creation_leaves_no_history(): void
+    {
+        Order::creating(fn () => throw new RuntimeException('Lỗi giả lập khi lưu đơn'));
+
+        try {
+            $this->place([$this->line($this->keyboard, 1)]);
+            $this->fail('Mong đợi ngoại lệ giả lập.');
+        } catch (RuntimeException) {
+            // đúng như mong đợi
+        } finally {
+            Order::flushEventListeners();
+        }
+
+        $this->assertSame(0, OrderStatusHistory::count());
     }
 }

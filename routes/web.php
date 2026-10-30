@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductTrashController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Client\CheckoutCouponController;
+use App\Http\Controllers\Admin\OrderController;
 
 // Storefront Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -57,6 +58,8 @@ Route::middleware(['auth', 'role:admin'])
             ->withTrashed()->name('trash.destroy');
         
         Route::resource('coupons', CouponController::class)->except(['show']);
+        Route::resource('orders', OrderController::class)->only(['index', 'show']);
+        Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     });
 
 // Xem trước mã giảm giá ở Checkout (B). Giới hạn 20 lượt/phút để chống dò mã.
