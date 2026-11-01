@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ProductTrashController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Client\CheckoutCouponController;
 use App\Http\Controllers\Client\CheckoutController;
+use App\Http\Controllers\Client\OrderController as ClientOrderController;
 use App\Http\Controllers\Admin\OrderController;
 
 // Storefront Public Routes
@@ -63,11 +64,17 @@ Route::middleware(['auth', 'role:admin'])
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     });
 
-// Checkout Routes (Requires Auth)
+// Checkout & Order Routes (Requires Auth)
 Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success/{code}', [CheckoutController::class, 'success'])->name('checkout.success');
+
+    // Đơn hàng của tôi (Client Orders)
+    Route::get('/orders', [ClientOrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{code}', [ClientOrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{code}/cancel', [ClientOrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{code}/reorder', [ClientOrderController::class, 'reorder'])->name('orders.reorder');
 });
 
 // Xem trước mã giảm giá ở Checkout (B). Giới hạn 20 lượt/phút để chống dò mã.
