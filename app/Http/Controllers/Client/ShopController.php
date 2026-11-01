@@ -231,18 +231,18 @@ class ShopController extends Controller
             ->firstOrFail();
 
         $thumb = $dbProduct->thumbnail 
-            ? (str_starts_with($dbProduct->thumbnail, 'http') 
+            ? (\Illuminate\Support\Str::startsWith($dbProduct->thumbnail, 'http') 
                 ? $dbProduct->thumbnail 
-                : (str_starts_with($dbProduct->thumbnail, ['images/', 'storage/']) 
+                : (\Illuminate\Support\Str::startsWith($dbProduct->thumbnail, ['images/', 'storage/']) 
                     ? asset($dbProduct->thumbnail) 
                     : asset('storage/' . $dbProduct->thumbnail)))
             : asset('images/png-transparent-playstation-4-headphones-hyperx-cloud-audio-video-game-headphones-electronics-video-game-playstation-4.png');
 
         $gallery = collect([$thumb]);
         foreach ($dbProduct->images as $img) {
-            $gallery->push(str_starts_with($img->path, 'http') 
+            $gallery->push(\Illuminate\Support\Str::startsWith($img->path, 'http') 
                 ? $img->path 
-                : (str_starts_with($img->path, ['images/', 'storage/']) 
+                : (\Illuminate\Support\Str::startsWith($img->path, ['images/', 'storage/']) 
                     ? asset($img->path) 
                     : asset('storage/' . $img->path)));
         }
@@ -299,9 +299,9 @@ class ShopController extends Controller
             'price'      => (int) $p->price,
             'sale_price' => $p->sale_price ? (int) $p->sale_price : null,
             'thumbnail'  => $p->thumbnail 
-                ? (str_starts_with($p->thumbnail, 'http') 
+                ? (\Illuminate\Support\Str::startsWith($p->thumbnail, 'http') 
                     ? $p->thumbnail 
-                    : (str_starts_with($p->thumbnail, ['images/', 'storage/']) 
+                    : (\Illuminate\Support\Str::startsWith($p->thumbnail, ['images/', 'storage/']) 
                         ? asset($p->thumbnail) 
                         : asset('storage/' . $p->thumbnail))) 
                 : asset('images/hero-headphone.png'),

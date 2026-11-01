@@ -158,7 +158,8 @@
                         },
                         body: JSON.stringify({
                             product_id: {{ $product['id'] }},
-                            quantity: this.qty
+                            quantity: this.qty,
+                            buy_now: isBuyNow ? 1 : 0
                         })
                     })
                     .then(res => res.json())
@@ -170,7 +171,7 @@
                                 badge.innerText = data.cartCount;
                             }
                             if (isBuyNow) {
-                                window.location.href = '{{ route('cart.index') }}';
+                                window.location.href = data.redirect_url || '{{ route('checkout.index') }}';
                             } else {
                                 this.toastMessage = data.message || 'Đã thêm vào giỏ hàng!';
                                 this.addedToast = true;

@@ -48,13 +48,22 @@ class CartController extends Controller
         $validated = $request->validate([
             'product_id' => 'required',
             'quantity' => 'nullable|integer|min:1',
+            'buy_now' => 'nullable|boolean',
         ]);
 
         $quantity = (int) ($validated['quantity'] ?? 1);
         $result = $this->cartService->add($validated['product_id'], $quantity);
+        $isBuyNow = $request->boolean('buy_now');
 
         if ($request->wantsJson() || $request->ajax()) {
+            if ($result['success'] && $isBuyNow) {
+                $result['redirect_url'] = route('checkout.index');
+            }
             return response()->json($result, $result['success'] ? 200 : 422);
+        }
+
+        if ($result['success'] && $isBuyNow) {
+            return redirect()->route('checkout.index');
         }
 
         return back()->with(

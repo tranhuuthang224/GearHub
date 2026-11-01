@@ -510,7 +510,7 @@
                     <!-- NÚT LỚN CTA: TIẾN HÀNH ĐẶT HÀNG (Đúng yêu cầu) -->
                     <div class="pt-2 space-y-3">
                         <a 
-                            href="{{ url('/shop') }}" 
+                            href="{{ route('checkout.index') }}" 
                             class="w-full py-4 px-6 rounded-2xl bg-primary hover:bg-primary-hover text-white font-black text-sm uppercase tracking-wider text-center shadow-xl shadow-primary/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2.5 group"
                         >
                             <svg class="w-5 h-5 transition transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">

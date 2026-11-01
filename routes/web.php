@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductTrashController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Client\CheckoutCouponController;
+use App\Http\Controllers\Client\CheckoutController;
 use App\Http\Controllers\Admin\OrderController;
 
 // Storefront Public Routes
@@ -61,6 +62,13 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('orders', OrderController::class)->only(['index', 'show']);
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     });
+
+// Checkout Routes (Requires Auth)
+Route::middleware('auth')->group(function () {
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('/checkout/success/{code}', [CheckoutController::class, 'success'])->name('checkout.success');
+});
 
 // Xem trước mã giảm giá ở Checkout (B). Giới hạn 20 lượt/phút để chống dò mã.
 Route::middleware(['auth', 'throttle:20,1'])

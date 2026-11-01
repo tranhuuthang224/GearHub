@@ -284,4 +284,115 @@ class ShopTest extends TestCase
 
         $response->assertNotFound();
     }
+
+    public function test_shop_show_renders_auxiliary_images_from_product_images_relation(): void
+    {
+        $cat = Category::create(['name' => 'Bàn phím cơ']);
+        $brand = Brand::create(['name' => 'Keychron']);
+
+        $product = $this->createProduct('Keychron K2 Pro', 'KC-K2P', 2100000, $cat, $brand);
+
+        \App\Models\ProductImage::create([
+            'product_id' => $product->id,
+            'path' => 'products/keychron-k2-side.png',
+            'sort_order' => 1,
+        ]);
+        \App\Models\ProductImage::create([
+            'product_id' => $product->id,
+            'path' => 'products/keychron-k2-top.png',
+            'sort_order' => 2,
+        ]);
+
+        $response = $this->get(route('shop.show', $product->slug));
+
+        $response->assertOk();
+        $productData = $response->viewData('product');
+        $this->assertCount(3, $productData['gallery']); // 1 thumbnail + 2 auxiliary images
+        $response->assertSee('products/keychron-k2-side.png');
+        $response->assertSee('products/keychron-k2-top.png');
+    }
+
+    public function test_shop_show_parses_specs_json_dynamically(): void
+    {
+        $cat = Category::create(['name' => 'Bàn phím']);
+        $brand = Brand::create(['name' => 'Akko']);
+
+        $product = Product::create([
+            'category_id'    => $cat->id,
+            'brand_id'       => $brand->id,
+            'name'           => 'Akko 3098B Plus',
+            'sku'            => 'AK-3098B',
+            'price'          => 1850000,
+            'stock_quantity' => 15,
+            'is_active'      => true,
+            'specs'          => [
+                'Kết nối' => 'Bluetooth 5.0 / 2.4Ghz / Type-C',
+                'Switch' => 'Akko CS Jelly Pink',
+                'Pin' => '3000mAh',
+            ],
+        ]);
+
+        $response = $this->get(route('shop.show', $product->slug));
+
+        $response->assertOk();
+        $productData = $response->viewData('product');
+        $this->assertIsArray($productData['specs']);
+        $this->assertEquals('Akko CS Jelly Pink', $productData['specs']['Switch']);
+        $response->assertSee('Kết nối');
+        $response->assertSee('Akko CS Jelly Pink');
+        $response->assertSee('3000mAh');
+    }
+
+    public function test_shop_show_renders_related_products_with_same_category_id(): void
+    {
+        $catMouse = Category::create(['name' => 'Chuột']);
+        $catKey = Category::create(['name' => 'Bàn phím']);
+        $brand = Brand::create(['name' => 'Logitech']);
+
+        $mainProduct = $this->createProduct('Logitech G Pro X Superlight', 'LG-GPX', 3200000, $catMouse, $brand);
+        $related1 = $this->createProduct('Logitech G502 Hero', 'LG-G502', 1200000, $catMouse, $brand);
+        $related2 = $this->createProduct('Logitech G304', 'LG-G304', 800000, $catMouse, $brand);
+        $unrelated = $this->createProduct('Logitech G913 TKL', 'LG-G913', 4500000, $catKey, $brand);
+
+        $response = $this->get(route('shop.show', $mainProduct->slug));
+
+        $response->assertOk();
+        $relatedProducts = $response->viewData('relatedProducts');
+        $relatedNames = collect($relatedProducts)->pluck('name')->all();
+
+        $this->assertContains('Logitech G502 Hero', $relatedNames);
+        $this->assertContains('Logitech G304', $relatedNames);
+        $this->assertNotContains('Logitech G Pro X Superlight', $relatedNames); // không chứa chính nó
+    }
+
+    public function test_buy_now_adds_to_cart_and_redirects_to_checkout(): void
+    {
+        $cat = Category::create(['name' => 'Củ sạc']);
+        $brand = Brand::create(['name' => 'Anker']);
+
+        $product = $this->createProduct('Anker 65W GaN', 'AK-65W', 950000, $cat, $brand);
+
+        // Test form POST buy_now = 1
+        $response = $this->post(route('cart.add'), [
+            'product_id' => $product->id,
+            'quantity'   => 2,
+            'buy_now'    => 1,
+        ]);
+
+        $response->assertRedirect(route('checkout.index'));
+        $this->assertEquals(2, session('cart')[$product->id]['quantity']);
+
+        // Test AJAX POST buy_now = 1
+        $ajaxResponse = $this->postJson(route('cart.add'), [
+            'product_id' => $product->id,
+            'quantity'   => 1,
+            'buy_now'    => 1,
+        ]);
+
+        $ajaxResponse->assertOk();
+        $ajaxResponse->assertJson([
+            'success'      => true,
+            'redirect_url' => route('checkout.index'),
+        ]);
+    }
 }
