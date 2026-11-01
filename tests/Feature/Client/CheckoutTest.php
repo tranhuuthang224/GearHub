@@ -167,4 +167,128 @@ class CheckoutTest extends TestCase
         $response->assertSessionHasErrors(['receiver_name', 'phone', 'shipping_address']);
         $this->assertEquals(0, Order::count());
     }
+
+    public function test_checkout_store_validates_vietnam_phone_number_format(): void
+    {
+        $this->actingAs($this->customer)->post(route('cart.add'), [
+            'product_id' => $this->productUnder500k->id,
+            'quantity'   => 1,
+        ]);
+
+        // Sai đầu số hoặc độ dài
+        $invalidPhones = ['0123456789', '0281234567', '091234', '1234567890', 'abcdefghij'];
+
+        foreach ($invalidPhones as $phone) {
+            $response = $this->actingAs($this->customer)->post(route('checkout.store'), [
+                'receiver_name'    => 'Nguyễn Văn Test',
+                'phone'            => $phone,
+                'shipping_address' => 'Số 123 Đường Số 1, Phường Linh Trung, TP. Thủ Đức',
+            ]);
+
+            $response->assertSessionHasErrors('phone');
+        }
+    }
+
+    public function test_checkout_store_normalizes_phone_with_spaces_or_dashes(): void
+    {
+        $this->actingAs($this->customer)->post(route('cart.add'), [
+            'product_id' => $this->productUnder500k->id,
+            'quantity'   => 1,
+        ]);
+
+        $response = $this->actingAs($this->customer)->post(route('checkout.store'), [
+            'receiver_name'    => 'Nguyễn Văn B',
+            'phone'            => '0987 654 321', // Chứa khoảng trắng
+            'shipping_address' => 'Số 456 Đường Số 2, Phường Linh Tây, TP. Thủ Đức',
+            'payment_method'   => 'cod',
+        ]);
+
+        $response->assertRedirect();
+        $order = Order::latest('id')->first();
+        $this->assertNotNull($order);
+        $this->assertEquals('0987654321', $order->phone); // Đã được chuẩn hóa
+    }
+
+    public function test_checkout_store_validates_minimum_address_length(): void
+    {
+        $this->actingAs($this->customer)->post(route('cart.add'), [
+            'product_id' => $this->productUnder500k->id,
+            'quantity'   => 1,
+        ]);
+
+        // Địa chỉ quá ngắn (dưới 10 ký tự)
+        $response = $this->actingAs($this->customer)->post(route('checkout.store'), [
+            'receiver_name'    => 'Nguyễn Văn C',
+            'phone'            => '0912345678',
+            'shipping_address' => 'HCM', // Quá ngắn
+        ]);
+
+        $response->assertSessionHasErrors('shipping_address');
+    }
+
+    public function test_checkout_store_with_coupon_applies_discount_and_records_redemption(): void
+    {
+        // Tạo Coupon giảm 10%
+        $coupon = \App\Models\Coupon::create([
+            'code'        => 'GEAR10',
+            'type'        => 'percent',
+            'value'       => 10,
+            'min_order'   => 500000,
+            'usage_limit' => 100,
+            'used_count'  => 0,
+            'is_active'   => true,
+        ]);
+
+        // Thêm sản phẩm 2.890.000đ vào giỏ
+        $this->actingAs($this->customer)->post(route('cart.add'), [
+            'product_id' => $this->productOver500k->id,
+            'quantity'   => 1,
+        ]);
+
+        // 1. Kiểm tra preview Coupon qua API
+        $previewResponse = $this->actingAs($this->customer)->postJson(route('checkout.coupon'), [
+            'code'     => 'GEAR10',
+            'subtotal' => 2890000,
+        ]);
+
+        $previewResponse->assertOk();
+        $previewResponse->assertJson([
+            'valid'    => true,
+            'code'     => 'GEAR10',
+            'discount' => 289000,
+            'total'    => 2601000,
+        ]);
+
+        // 2. Gửi request đặt hàng kèm Coupon
+        $response = $this->actingAs($this->customer)->post(route('checkout.store'), [
+            'receiver_name'    => 'Trần Hữu Thắng',
+            'phone'            => '0987654321',
+            'shipping_address' => 'Khu phố 6, Linh Trung, TP. Thủ Đức, TP. Hồ Chí Minh',
+            'coupon_code'      => 'GEAR10',
+            'payment_method'   => 'cod',
+        ]);
+
+        $order = Order::latest('id')->first();
+        $this->assertNotNull($order);
+        $this->assertEquals($coupon->id, $order->coupon_id);
+        $this->assertEquals(2890000, $order->subtotal);
+        $this->assertEquals(289000, $order->discount);
+        $this->assertEquals(2601000, $order->total);
+
+        // Lượt dùng của coupon tăng lên 1
+        $this->assertEquals(1, $coupon->fresh()->used_count);
+
+        // Giỏ hàng bị xóa sạch
+        $this->assertEmpty(session('cart'));
+
+        // Chuyển hướng sang màn hình thành công
+        $response->assertRedirect(route('checkout.success', $order->code));
+
+        // Màn hình thành công hiển thị mã giảm giá và tổng tiền đã trừ
+        $successResponse = $this->actingAs($this->customer)->get(route('checkout.success', $order->code));
+        $successResponse->assertOk();
+        $successResponse->assertSee('GEAR10');
+        $successResponse->assertSee('289.000đ');
+        $successResponse->assertSee('2.601.000đ');
+    }
 }

@@ -41,16 +41,25 @@ class CheckoutController extends Controller
      */
     public function store(Request $request, CartService $cartService, OrderService $orderService): RedirectResponse
     {
+        // Chuẩn hóa số điện thoại: loại bỏ dấu cách, dấu chấm, dấu gạch ngang
+        if ($request->has('phone')) {
+            $normalizedPhone = preg_replace('/[\s.-]/', '', (string) $request->input('phone'));
+            $request->merge(['phone' => $normalizedPhone]);
+        }
+
         $validated = $request->validate([
-            'receiver_name'    => ['required', 'string', 'max:100'],
-            'phone'            => ['required', 'string', 'max:20'],
-            'shipping_address' => ['required', 'string', 'max:255'],
+            'receiver_name'    => ['required', 'string', 'min:2', 'max:100'],
+            'phone'            => ['required', 'string', 'regex:/^(0|\+84)[35789][0-9]{8}$/'],
+            'shipping_address' => ['required', 'string', 'min:10', 'max:255'],
             'note'             => ['nullable', 'string', 'max:500'],
             'coupon_code'      => ['nullable', 'string', 'max:50'],
         ], [
             'receiver_name.required'    => 'Vui lòng nhập họ và tên người nhận hàng.',
+            'receiver_name.min'         => 'Họ và tên người nhận phải có ít nhất 2 ký tự.',
             'phone.required'            => 'Vui lòng nhập số điện thoại người nhận.',
-            'shipping_address.required' => 'Vui lòng nhập địa chỉ giao hàng chi tiết.',
+            'phone.regex'               => 'Số điện thoại không đúng định dạng Việt Nam (gồm 10 số, bắt đầu bằng 03, 05, 07, 08, 09 hoặc +84).',
+            'shipping_address.required' => 'Vui lòng nhập địa chỉ giao hàng.',
+            'shipping_address.min'      => 'Vui lòng nhập địa chỉ giao hàng cụ thể (tối thiểu 10 ký tự bao gồm số nhà, tên đường, phường/xã, quận/huyện).',
         ]);
 
         $cart = $cartService->getCart();

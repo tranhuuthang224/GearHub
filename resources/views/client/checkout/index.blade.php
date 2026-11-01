@@ -75,7 +75,7 @@
     @endif
 
     <!-- FORM ĐẶT HÀNG CHÍNH: 2 CỘT (7 COLS FORM GIAO HÀNG - 5 COLS ORDER SUMMARY) -->
-    <form action="{{ route('checkout.store') }}" method="POST" id="checkout-form">
+    <form action="{{ route('checkout.store') }}" method="POST" id="checkout-form" @submit="submitting = true">
         @csrf
         <input type="hidden" name="coupon_code" :value="appliedCouponCode">
 
@@ -555,12 +555,17 @@
                     <div class="pt-2">
                         <button 
                             type="submit" 
-                            class="w-full py-4 px-6 rounded-2xl bg-primary hover:bg-primary-hover text-white font-black text-sm uppercase tracking-wider text-center shadow-xl shadow-primary/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 group cursor-pointer"
+                            :disabled="submitting"
+                            class="w-full py-4 px-6 rounded-2xl bg-primary hover:bg-primary-hover text-white font-black text-sm uppercase tracking-wider text-center shadow-xl shadow-primary/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
                         >
-                            <svg class="w-5 h-5 transition transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg x-show="!submitting" class="w-5 h-5 transition transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                             </svg>
-                            <span>Xác nhận đặt hàng (COD)</span>
+                            <svg x-show="submitting" class="animate-spin w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" style="display: none;">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                            </svg>
+                            <span x-text="submitting ? 'Đang xử lý đơn hàng...' : 'Xác nhận đặt hàng (COD)'">Xác nhận đặt hàng (COD)</span>
                         </button>
                     </div>
 
@@ -595,17 +600,24 @@ function checkoutPage() {
     return {
         baseSubtotal: {{ $subtotal }},
         shippingFee: {{ $shipping }},
-        inputCoupon: '',
-        appliedCouponCode: '',
+        inputCoupon: '{{ old('coupon_code', '') }}',
+        appliedCouponCode: '{{ old('coupon_code', '') }}',
         discountAmount: 0,
         couponError: '',
         couponSuccessMessage: '',
         checkingCoupon: false,
+        submitting: false,
 
         // Form Fields (Hỗ trợ nạp nhanh từ địa chỉ đã lưu)
         receiverName: '{{ old('receiver_name', $defaultAddress?->receiver_name ?? $user->name ?? '') }}',
         receiverPhone: '{{ old('phone', $defaultAddress?->phone ?? $user->phone ?? '') }}',
         shippingAddress: '{{ old('shipping_address', $defaultAddress?->address_line ?? '') }}',
+
+        init() {
+            if (this.inputCoupon) {
+                this.checkCoupon();
+            }
+        },
 
         get finalTotal() {
             const calculated = this.baseSubtotal + this.shippingFee - this.discountAmount;
