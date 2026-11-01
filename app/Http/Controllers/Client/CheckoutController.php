@@ -30,8 +30,10 @@ class CheckoutController extends Controller
         $shipping = $cartService->getShippingFee();
         $total = $cartService->getTotal();
         $user = $request->user();
+        $addresses = $user ? $user->addresses()->get() : collect();
+        $defaultAddress = $addresses->firstWhere('is_default', true) ?? $addresses->first();
 
-        return view('client.checkout.index', compact('cart', 'subtotal', 'shipping', 'total', 'user'));
+        return view('client.checkout.index', compact('cart', 'subtotal', 'shipping', 'total', 'user', 'addresses', 'defaultAddress'));
     }
 
     /**
@@ -90,7 +92,7 @@ class CheckoutController extends Controller
     public function success(Request $request, string $code): View
     {
         $order = Order::query()
-            ->with(['items.product', 'coupon', 'statusHistories'])
+            ->with(['items.product', 'coupon', 'histories'])
             ->where('code', $code)
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
