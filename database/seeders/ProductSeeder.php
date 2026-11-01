@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\ProductCatalog;
 use Database\Seeders\Concerns\GeneratesPlaceholderImages;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -18,15 +19,24 @@ class ProductSeeder extends Seeder
         $categoryIds = Category::pluck('id', 'slug');
         $brandIds    = Brand::pluck('id', 'slug');
 
+        // 1. Seed phụ kiện bổ sung từ catalog của B (dùng ảnh placeholder)
         foreach ($this->catalog() as [$category, $brand, $name, $sku, $price, $sale, $stock, $specs]) {
             $slug = Str::slug($name);
+            $catSlug = Str::slug($category);
+            $catId = $categoryIds[$catSlug] ?? null;
+            $brandSlug = Str::slug($brand);
+            $brandId = $brandIds[$brandSlug] ?? null;
+
+            if (!$catId || !$brandId) {
+                continue;
+            }
 
             // withTrashed: chạy lại seeder không đụng SKU của sản phẩm đã xóa mềm
             $product = Product::withTrashed()->updateOrCreate(
                 ['sku' => $sku],
                 [
-                    'category_id'    => $categoryIds[Str::slug($category)],
-                    'brand_id'       => $brandIds[Str::slug($brand)],
+                    'category_id'    => $catId,
+                    'brand_id'       => $brandId,
                     'name'           => $name,
                     'slug'           => $slug,
                     'description'    => "{$name} chính hãng {$brand}. Bảo hành 12 tháng, đổi trả trong 7 ngày.",
@@ -47,6 +57,93 @@ class ProductSeeder extends Seeder
                 ]);
             }
         }
+
+        // 2. Seed danh mục gaming gear thực tế (56 sản phẩm với hình ảnh thật từ public/images/)
+        // Seed sau để có ID cao hơn, tự động hiển thị trước ở trang Shop theo newest/latest('id')
+        foreach (ProductCatalog::all() as $item) {
+            $childCategory = $this->detectChildCategory($item);
+            $catSlug = Str::slug($childCategory);
+            $catId = $categoryIds[$catSlug] ?? $categoryIds[Str::slug($item['category'])] ?? null;
+
+            $brandSlug = Str::slug($item['brand']);
+            $brandId = $brandIds[$brandSlug] ?? null;
+
+            if (!$catId || !$brandId) {
+                continue;
+            }
+
+            // Chuẩn hóa đường dẫn tương đối (e.g. 'images/Keyboard/Aula F75.webp')
+            $thumbnail = preg_replace('#^https?://[^/]+/#', '', $item['thumbnail']);
+
+            $product = Product::withTrashed()->updateOrCreate(
+                ['sku' => $item['sku']],
+                [
+                    'category_id'    => $catId,
+                    'brand_id'       => $brandId,
+                    'name'           => $item['name'],
+                    'slug'           => $item['slug'],
+                    'description'    => $item['description'] ?? "{$item['name']} chính hãng {$item['brand']}.",
+                    'specs'          => $item['specs'] ?? [],
+                    'price'          => $item['price'],
+                    'sale_price'     => $item['sale_price'] ?? null,
+                    'stock_quantity' => $item['stock_quantity'] ?? 20,
+                    'thumbnail'      => $thumbnail,
+                    'is_active'      => true,
+                ]
+            );
+
+            $product->images()->delete();
+            $gallery = $item['gallery'] ?? [$item['thumbnail']];
+            $sort = 1;
+            foreach ($gallery as $galleryImg) {
+                $imgPath = preg_replace('#^https?://[^/]+/#', '', $galleryImg);
+                $product->images()->create([
+                    'path'       => $imgPath,
+                    'sort_order' => $sort++,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Tự động phân loại sản phẩm thực tế vào danh mục con phù hợp
+     */
+    private function detectChildCategory(array $item): string
+    {
+        $cat = $item['category'];
+        $name = mb_strtolower($item['name']);
+        $desc = mb_strtolower($item['description'] ?? '');
+        $text = $name . ' ' . $desc;
+
+        if ($cat === 'Bàn phím cơ') {
+            if (str_contains($text, 'không dây') || str_contains($text, 'wireless') || str_contains($text, '3-mode') || str_contains($text, 'multi-mode') || str_contains($text, 'bluetooth')) {
+                return 'Bàn phím cơ không dây';
+            }
+            return 'Bàn phím cơ có dây';
+        }
+
+        if ($cat === 'Chuột') {
+            if (str_contains($text, 'văn phòng') || str_contains($text, 'silent') || str_contains($text, 'office')) {
+                return 'Chuột văn phòng';
+            }
+            return 'Chuột gaming';
+        }
+
+        if ($cat === 'Tai nghe') {
+            if (str_contains($text, 'không dây') || str_contains($text, 'wireless') || str_contains($text, 'bluetooth') || str_contains($text, 'tws')) {
+                return 'Tai nghe không dây';
+            }
+            return 'Tai nghe gaming';
+        }
+
+        if ($cat === 'Laptop') {
+            if (str_contains($text, 'văn phòng') || str_contains($text, 'vivobook') || str_contains($text, 'swift') || str_contains($text, 'zenbook') || str_contains($text, 'thinkbook') || str_contains($text, 'ideapad') || str_contains($text, 'pavilion')) {
+                return 'Laptop văn phòng';
+            }
+            return 'Laptop gaming';
+        }
+
+        return $cat;
     }
 
     /**
@@ -118,35 +215,33 @@ class ProductSeeder extends Seeder
             ['Củ sạc nhanh', 'Baseus', 'Baseus GaN5 Pro 65W', 'BS-GAN5P', 690000, 590000, 55,
                 ['Công suất' => '65W', 'Cổng' => '2 USB-C + 1 USB-A', 'Công nghệ' => 'GaN']],
             ['Củ sạc nhanh', 'Ugreen', 'Ugreen Nexode 100W', 'UG-NX100', 1290000, 1090000, 20,
-                ['Công suất' => '100W', 'Cổng' => '3 USB-C + 1 USB-A', 'Công nghệ' => 'GaN']],
+                ['Công suất' => '100W', 'Cổng' => '3 USB-C + 1 USB-A', 'Công nghệ' => 'GaNFast']],
 
             // Sạc dự phòng
-            ['Sạc dự phòng', 'Anker', 'Anker PowerCore 10000', 'ANK-PC10K', 590000, null, 70,
-                ['Dung lượng' => '10000mAh', 'Công suất' => '12W', 'Cổng' => '1 USB-A + Micro USB']],
-            ['Sạc dự phòng', 'Anker', 'Anker 737 Power Bank 24000mAh', 'ANK-PB737', 2990000, 2690000, 2,
-                ['Dung lượng' => '24000mAh', 'Công suất' => '140W', 'Màn hình' => 'Hiển thị thông minh']],
-            ['Sạc dự phòng', 'Baseus', 'Baseus Blade 100W 20000mAh', 'BS-BLD20K', 1890000, 1590000, 11,
-                ['Dung lượng' => '20000mAh', 'Công suất' => '100W', 'Thiết kế' => 'Mỏng']],
+            ['Sạc dự phòng', 'Anker', 'Anker 737 Power Bank 24000mAh', 'ANK-737PB', 2490000, null, 8,
+                ['Dung lượng' => '24000mAh', 'Công suất' => '140W', 'Màn hình' => 'OLED hiển thị thông số']],
+            ['Sạc dự phòng', 'Baseus', 'Baseus Blade 100W 20000mAh', 'BS-BLADE', 1390000, 1190000, 18,
+                ['Dung lượng' => '20000mAh', 'Công suất' => '100W', 'Độ mỏng' => '18mm', 'Cổng' => '2 Type-C + 2 USB-A']],
 
             // Bàn di chuột
-            ['Bàn di chuột', 'Razer', 'Razer Gigantus V2 Large', 'RZ-GIGV2L', 490000, null, 40,
-                ['Kích thước' => '450 x 400mm', 'Chất liệu' => 'Vải, đế cao su', 'Độ dày' => '3mm']],
-            ['Bàn di chuột', 'SteelSeries', 'SteelSeries QcK Heavy XXL', 'SS-QCKXXL', 890000, 790000, 25,
-                ['Kích thước' => '900 x 400mm', 'Chất liệu' => 'Vải, đế cao su', 'Độ dày' => '6mm']],
-            ['Bàn di chuột', 'Corsair', 'Corsair MM300 Pro Extended', 'CS-MM300', 690000, null, 30,
-                ['Kích thước' => '930 x 300mm', 'Chất liệu' => 'Vải chống nước', 'Độ dày' => '3mm']],
+            ['Bàn di chuột', 'SteelSeries', 'SteelSeries QcK Heavy XXL', 'SS-QCKH-XXL', 890000, null, 30,
+                ['Kích thước' => '900 x 400 x 4mm', 'Bề mặt' => 'Vải dệt vi mô', 'Đế' => 'Cao su chống trượt']],
+            ['Bàn di chuột', 'Razer', 'Razer Gigantus V2 Large', 'RZ-GV2-L', 450000, 390000, 45,
+                ['Kích thước' => '450 x 400 x 3mm', 'Bề mặt' => 'Vải dệt mịn', 'Bọt cao su' => 'Mật độ cao']],
+            ['Bàn di chuột', 'Corsair', 'Corsair MM300 Pro Extended', 'CS-MM300P', 790000, 690000, 20,
+                ['Kích thước' => '930 x 300 x 3mm', 'Chống tràn nước' => 'Có', 'Viền' => 'Bo chỉ chống sờn']],
 
             // Giá đỡ, đèn và phụ kiện
-            ['Giá đỡ, đèn và phụ kiện', 'Baseus', 'Baseus i-Work Monitor Light Bar', 'BS-IWLB', 790000, 690000, 27,
-                ['Kiểu' => 'Treo màn hình', 'Nhiệt độ màu' => '2700 - 6500K', 'Điều khiển' => 'Cảm ứng']],
-            ['Giá đỡ, đèn và phụ kiện', 'Ugreen', 'Ugreen Giá đỡ laptop hợp kim nhôm', 'UG-LPSTAND', 390000, 349000, 60,
-                ['Chất liệu' => 'Hợp kim nhôm', 'Tương thích' => '10 - 17 inch', 'Điều chỉnh' => 'Nhiều góc']],
-            ['Giá đỡ, đèn và phụ kiện', 'Ugreen', 'Ugreen Giá treo màn hình 17-32 inch', 'UG-MARM', 890000, 790000, 18,
-                ['Tải trọng' => '9kg', 'Kích thước màn hình' => '17 - 32 inch', 'Xoay' => '360 độ']],
-            ['Giá đỡ, đèn và phụ kiện', 'Baseus', 'Baseus Đèn bàn LED Smart Eye', 'BS-DLAMP', 1290000, 1090000, 14,
-                ['Nguồn' => 'USB-C', 'Chế độ' => '3 mức sáng', 'Đặc điểm' => 'Chống chói']],
-            ['Giá đỡ, đèn và phụ kiện', 'Keychron', 'Keychron Kê tay gỗ Walnut', 'KC-WRIST', 590000, null, 22,
-                ['Chất liệu' => 'Gỗ óc chó', 'Tương thích' => 'Layout 75% - TKL', 'Bề mặt' => 'Phủ dầu']],
+            ['Giá đỡ, đèn và phụ kiện', 'Baseus', 'Baseus i-Work Monitor Light Bar', 'BS-IWORK-LB', 790000, 690000, 25,
+                ['Nhiệt độ màu' => '2800K - 5500K', 'Nguồn' => 'USB 5V', 'Chống lóa mắt' => 'Có']],
+            ['Giá đỡ, đèn và phụ kiện', 'Baseus', 'Baseus Đèn bàn LED Smart Eye', 'BS-SMARTEYE', 1290000, 1090000, 14,
+                ['Cảm biến ánh sáng' => 'Tự động', 'Chỉ số hoàn màu' => 'Ra >= 95', 'Pin' => '2200mAh']],
+            ['Giá đỡ, đèn và phụ kiện', 'Ugreen', 'Ugreen Giá đỡ laptop hợp kim nhôm', 'UG-LPSTD', 390000, 3490000, 50,
+                ['Chất liệu' => 'Hợp kim nhôm', 'Nấc chỉnh' => '5 góc độ', 'Tải trọng' => 'Tối đa 20kg']],
+            ['Giá đỡ, đèn và phụ kiện', 'Ugreen', 'Ugreen Giá treo màn hình 17-32 inch', 'UG-MNARM', 890000, 790000, 16,
+                ['Chuẩn VESA' => '75x75, 100x100', 'Tải trọng' => '9kg', 'Lò xo khí nén' => 'Có']],
+            ['Giá đỡ, đèn và phụ kiện', 'Keychron', 'Keychron Kê tay gỗ Walnut', 'KC-WR-WAL', 590000, null, 22,
+                ['Chất liệu' => 'Gỗ óc chó tự nhiên', 'Kích thước' => 'Phù hợp layout K2/Q1', 'Đế cao su' => 'Chống trượt']],
         ];
     }
 }

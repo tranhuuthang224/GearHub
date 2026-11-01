@@ -17,6 +17,7 @@ class CategorySeeder extends Seeder
             'Chuột'              => ['Chuột gaming', 'Chuột văn phòng'],
             'Bàn phím cơ'        => ['Bàn phím cơ không dây', 'Bàn phím cơ có dây'],
             'Tai nghe'           => ['Tai nghe gaming', 'Tai nghe không dây'],
+            'Laptop'             => ['Laptop gaming', 'Laptop văn phòng'],
             'Củ sạc'             => ['Củ sạc nhanh', 'Sạc dự phòng'],
             'Setup góc làm việc' => ['Bàn di chuột', 'Giá đỡ, đèn và phụ kiện'],
         ];
