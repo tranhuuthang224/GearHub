@@ -90,3 +90,13 @@ Truy cập: `http://localhost:8000`
 | GEAR10 | 10% | Đơn từ 500.000 ₫ |
 | SAVE50K | 50.000 ₫ | Đơn từ 300.000 ₫ |
 | EXPIRED, FULL, SOON, DISABLED | | Các mã không dùng được (hết hạn, hết lượt, chưa bắt đầu, đã tắt) để thử thông báo lỗi |
+
+
+## 🧪 Kiểm thử
+
+```bash
+php artisan test                                          # toàn bộ Feature test (SQLite trong bộ nhớ)
+php artisan orders:race-test stock --workers=8 --stock=3  # thử chống đua thật trên MySQL (chỉ môi trường local)
+```
+
+Kịch bản `orders:race-test`: `stock` (bán vượt tồn), `multi` (deadlock), `coupon` (vượt lượt mã), `cancel` (hoàn kho hai lần).
