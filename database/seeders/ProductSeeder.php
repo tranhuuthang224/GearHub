@@ -5,57 +5,44 @@ namespace Database\Seeders;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
-use App\Services\ProductCatalog;
-use Database\Seeders\Concerns\GeneratesPlaceholderImages;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class ProductSeeder extends Seeder
 {
-    use GeneratesPlaceholderImages;
-
     public function run(): void
     {
         $categoryIds = Category::pluck('id', 'slug');
         $brandIds    = Brand::pluck('id', 'slug');
 
-        // 1. Seed phụ kiện bổ sung từ catalog của B (dùng ảnh placeholder)
-        foreach ($this->catalog() as [$category, $brand, $name, $sku, $price, $sale, $stock, $specs]) {
-            $slug = Str::slug($name);
-            $catSlug = Str::slug($category);
-            $catId = $categoryIds[$catSlug] ?? null;
+        foreach ($this->catalog() as [$category, $brand, $name, $sku, $price, $sale, $stock, $specs, $imagePath]) {
+            $catSlug   = Str::slug($category);
             $brandSlug = Str::slug($brand);
-            $brandId = $brandIds[$brandSlug] ?? null;
+            $slug      = Str::slug($name);
 
-            if (!$catId || !$brandId) {
-                continue;
-            }
-
-            // withTrashed: chạy lại seeder không đụng SKU của sản phẩm đã xóa mềm
             $product = Product::withTrashed()->updateOrCreate(
                 ['sku' => $sku],
                 [
-                    'category_id'    => $catId,
-                    'brand_id'       => $brandId,
+                    'category_id'    => $categoryIds[$catSlug] ?? 1,
+                    'brand_id'       => $brandIds[$brandSlug] ?? 1,
                     'name'           => $name,
                     'slug'           => $slug,
-                    'description'    => "{$name} chính hãng {$brand}. Bảo hành 12 tháng, đổi trả trong 7 ngày.",
+                    'description'    => "{$name} chính hãng {$brand}. Phân phối chính hãng tại GearHub, bảo hành 12 - 24 tháng, hỗ trợ 1 đổi 1 trong 7 ngày.",
                     'specs'          => $specs,
                     'price'          => $price,
                     'sale_price'     => $sale,
                     'stock_quantity' => $stock,
-                    'thumbnail'      => $this->placeholder("products/{$slug}/thumb.svg", $name, $brand),
+                    'thumbnail'      => $imagePath,
                     'is_active'      => true,
                 ]
             );
 
+            // Cập nhật thư viện ảnh chi tiết
             $product->images()->delete();
-            foreach ([1, 2, 3] as $i) {
-                $product->images()->create([
-                    'path'       => $this->placeholder("products/{$slug}/{$i}.svg", $name, "{$brand} - Ảnh {$i}"),
-                    'sort_order' => $i,
-                ]);
-            }
+            $product->images()->create([
+                'path'       => $imagePath,
+                'sort_order' => 1,
+            ]);
         }
 
         // 2. Seed danh mục gaming gear thực tế (56 sản phẩm với hình ảnh thật từ public/images/)
@@ -147,101 +134,283 @@ class ProductSeeder extends Seeder
     }
 
     /**
-     * [danh mục con, thương hiệu, tên, SKU, giá gốc, giá KM|null, tồn kho, thông số]
-     * Giá và thông số chỉ mang tính minh họa, không cần khớp 100% với sản phẩm thật.
+     * [Danh mục con, Hãng, Tên sản phẩm, SKU, Giá gốc, Giá sale, Tồn kho, Specs, Ảnh]
      */
     private function catalog(): array
     {
         return [
-            // Chuột gaming
-            ['Chuột gaming', 'Logitech', 'Logitech G Pro X Superlight 2', 'LG-GPXS2', 3290000, 2990000, 25,
-                ['Kết nối' => '2.4GHz Lightspeed', 'Cảm biến' => 'HERO 2', 'DPI tối đa' => '32000', 'Trọng lượng' => '60g', 'Pin' => '95 giờ']],
-            ['Chuột gaming', 'Razer', 'Razer DeathAdder V3', 'RZ-DAV3', 1890000, null, 30,
-                ['Kết nối' => 'Có dây', 'Cảm biến' => 'Focus Pro 30K', 'DPI tối đa' => '30000', 'Trọng lượng' => '59g']],
-            ['Chuột gaming', 'Razer', 'Razer Viper V3 Pro', 'RZ-VV3P', 3990000, 3590000, 12,
-                ['Kết nối' => '2.4GHz HyperSpeed', 'DPI tối đa' => '35000', 'Trọng lượng' => '54g', 'Pin' => '95 giờ']],
-            ['Chuột gaming', 'SteelSeries', 'SteelSeries Aerox 3 Wireless', 'SS-AX3W', 1590000, 1290000, 4,
-                ['Kết nối' => '2.4GHz + Bluetooth', 'DPI tối đa' => '18000', 'Trọng lượng' => '68g', 'Pin' => '200 giờ']],
+            // ==================== BÀN PHÍM CƠ ====================
+            [
+                'Bàn phím cơ không dây', 'Aula', 'Bàn phím cơ Aula F75', 'KB-AULA-F75', 1250000, 990000, 45,
+                ['Layout' => '75%', 'Kết nối' => 'Type-C / 2.4G / Bluetooth', 'Switch' => 'Reaper Switch', 'Keycap' => 'PBT Double-shot', 'Led' => 'RGB 16.8 triệu màu'],
+                'images/Keyboard/Aula F75.webp'
+            ],
+            [
+                'Bàn phím cơ không dây', 'Aula', 'Bàn phím cơ Aula S100 Pro', 'KB-AULA-S100P', 1450000, 1190000, 30,
+                ['Layout' => '98 phím', 'Kết nối' => '3 Mode', 'Switch' => 'Custom Linear', 'Pin' => '4000mAh'],
+                'images/Keyboard/Aula S100 Pro.webp'
+            ],
+            [
+                'Bàn phím cơ không dây', 'Aula', 'Bàn phím cơ Aula L99 3-Mode Raindrop', 'KB-AULA-L99', 1690000, 1390000, 25,
+                ['Layout' => '99 phím', 'Kết nối' => 'Type-C / 2.4G / BT', 'Switch' => 'Raindrop Switch', 'Cấu trúc' => 'Gasket Mount'],
+                'images/Keyboard/ban-phim-co-aula-l99-3-mode-den-xam-vang-raindrop-switch-1.webp'
+            ],
+            [
+                'Bàn phím cơ có dây', 'Akko', 'Bàn phím cơ AKKO 3087', 'KB-AKKO-3087', 1290000, 1090000, 20,
+                ['Layout' => 'TKL 87 phím', 'Kết nối' => 'Type-C rời', 'Switch' => 'Akko CS v2', 'Keycap' => 'PBT Side-printed'],
+                'images/Keyboard/AKKO 3087.webp'
+            ],
+            [
+                'Bàn phím cơ có dây', 'Akko', 'Bàn phím cơ Akko 3098', 'KB-AKKO-3098', 1590000, 1350000, 20,
+                ['Layout' => '98 phím', 'Kết nối' => 'Type-C', 'Switch' => 'Akko Orange / Pink', 'Tính năng' => 'Hotswap 5-pin'],
+                'images/Keyboard/Akko 3098.webp'
+            ],
+            [
+                'Bàn phím cơ có dây', 'Asus', 'Bàn phím cơ Asus TUF Gaming K3', 'KB-ASUS-K3', 1890000, 1590000, 15,
+                ['Layout' => 'Fullsize 104 phím', 'Switch' => 'TUF Optical-Mech', 'Kê tay' => 'Có nam châm đi kèm', 'Khung' => 'Hợp kim nhôm'],
+                'images/Keyboard/Asus Tuf K3.webp'
+            ],
+            [
+                'Bàn phím cơ không dây', 'ATK', 'Bàn phím cơ ATK VXE V75X', 'KB-ATK-V75X', 2190000, 1890000, 18,
+                ['Layout' => '75%', 'Switch' => 'Magnetic Switch Rapid Trigger', 'Độ trễ' => '0.1ms cực thấp', 'Kết nối' => '3 Mode'],
+                'images/Keyboard/ATK VXE V75X.webp'
+            ],
+            [
+                'Bàn phím cơ không dây', 'DareU', 'Bàn phím cơ DareU EK98 Pro Mystic Violet', 'KB-DAREU-EK98P', 1190000, 950000, 35,
+                ['Layout' => '98 phím', 'Switch' => 'DareU Dream Switch', 'Màu sắc' => 'Mystic Violet', 'Màn hình' => 'Tích hợp TFT LCD'],
+                'images/Keyboard/DareU EK98 Pro Mystic Violet.webp'
+            ],
+            [
+                'Bàn phím cơ không dây', 'E-Dra', 'Bàn phím cơ E-Dra EK398W', 'KB-EDRA-EK398W', 950000, 790000, 40,
+                ['Layout' => '98 phím', 'Switch' => 'E-Dra Custom', 'Kết nối' => 'Wireless 2.4G + Bluetooth', 'Pin' => 'Li-ion bền bỉ'],
+                'images/Keyboard/EDRA EK398W.webp'
+            ],
+            [
+                'Bàn phím cơ có dây', 'Fuhlen', 'Bàn phím cơ Fuhlen Eraser', 'KB-FUHLEN-ERASER', 850000, 690000, 25,
+                ['Layout' => 'Fullsize 104 phím', 'Switch' => 'Quang cơ chống nước', 'Đèn led' => 'Rainbow đa hiệu ứng'],
+                'images/Keyboard/Fuhlen Erarser.webp'
+            ],
+            [
+                'Bàn phím cơ không dây', 'Keychron', 'Bàn phím cơ Keychron Q3 Pro Brown Switch', 'KB-KC-Q3P', 4390000, 3990000, 10,
+                ['Layout' => 'TKL', 'Khung' => 'Nhôm CNC nguyên khối', 'Switch' => 'Keychron K Pro Brown', 'Kết nối' => 'Bluetooth 5.1 / Type-C'],
+                'images/Keyboard/Keychron Q3U-P3 Brown Switch.webp'
+            ],
+            [
+                'Bàn phím cơ có dây', 'Logitech', 'Bàn phím cơ Logitech G413 Carbon', 'KB-LOGI-G413', 1590000, 1390000, 15,
+                ['Layout' => 'Fullsize', 'Switch' => 'Romer-G Tactile', 'Chất liệu' => 'Vỏ hợp kim nhôm 5052 hàng không'],
+                'images/Keyboard/Logitech G413.webp'
+            ],
+            [
+                'Bàn phím cơ không dây', 'Logitech', 'Bàn phím cơ Logitech G515 Lightspeed TKL', 'KB-LOGI-G515', 2990000, 2690000, 12,
+                ['Layout' => 'Low profile TKL', 'Độ mỏng' => '22mm siêu gọn', 'Kết nối' => 'Lightspeed Wireless / Bluetooth'],
+                'images/Keyboard/Logitech G515.webp'
+            ],
+            [
+                'Bàn phím cơ không dây', 'MChose', 'Bàn phím cơ MChose G75 Pro Arctic Snow', 'KB-MCHOSE-G75P', 1890000, 1590000, 22,
+                ['Layout' => '75%', 'Màu sắc' => 'Arctic Snow trắng tinh khôi', 'Switch' => 'TTC Iron Linear', 'Cấu trúc' => 'Gasket 5 lớp tiêu âm'],
+                'images/Keyboard/MChose G75 Pro - Arctic Snow.webp'
+            ],
+            [
+                'Bàn phím cơ có dây', 'Rapoo', 'Bàn phím cơ Rapoo V520 Chống nước', 'KB-RAPOO-V520', 650000, 520000, 30,
+                ['Layout' => 'Fullsize', 'Switch' => 'Optical Switch độ bền cao', 'Đặc điểm' => 'Chống tràn nước và bụi bẩn'],
+                'images/Keyboard/Rapoo V520.webp'
+            ],
 
-            // Chuột văn phòng
-            ['Chuột văn phòng', 'Logitech', 'Logitech MX Master 3S', 'LG-MXM3S', 2490000, 2190000, 20,
-                ['Kết nối' => 'Bluetooth + Logi Bolt', 'DPI tối đa' => '8000', 'Trọng lượng' => '141g', 'Pin' => '70 ngày']],
-            ['Chuột văn phòng', 'Logitech', 'Logitech M331 Silent Plus', 'LG-M331', 390000, null, 60,
-                ['Kết nối' => '2.4GHz', 'DPI tối đa' => '1000', 'Đặc điểm' => 'Click êm', 'Pin' => '24 tháng']],
-            ['Chuột văn phòng', 'Anker', 'Anker Vertical Ergonomic Mouse', 'ANK-VMOUSE', 450000, null, 35,
-                ['Kết nối' => '2.4GHz', 'DPI tối đa' => '1600', 'Thiết kế' => 'Công thái học dọc']],
+            // ==================== CHUỘT ====================
+            [
+                'Chuột gaming', 'Logitech', 'Chuột Logitech G Pro X Superlight Magenta', 'MS-LOGI-GPX-MG', 2990000, 2590000, 20,
+                ['Cảm biến' => 'HERO 25K', 'Trọng lượng' => '<63g siêu nhẹ', 'Kết nối' => 'Lightspeed Wireless', 'Màu' => 'Magenta Hồng cánh sen'],
+                'images/Mouse/Chuột game không dây Logitech Pro X Superlight Magenta.webp'
+            ],
+            [
+                'Chuột gaming', 'Logitech', 'Chuột chơi game Logitech G403 Hero', 'MS-LOGI-G403H', 990000, 850000, 30,
+                ['Cảm biến' => 'HERO 25K', 'DPI' => '100 - 25,600', 'Thiết kế' => 'Công thái học tay phải', 'Tạ tăng trọng lượng' => '10g tháo rời'],
+                'images/Mouse/Chuột game Logitech G403 Hero.webp'
+            ],
+            [
+                'Chuột gaming', 'HyperX', 'Chuột HyperX Pulsefire Surge RGB', 'MS-HX-PFSURGE', 890000, 690000, 25,
+                ['Cảm biến' => 'Pixart 3389', 'DPI' => 'Tối đa 16000', 'Led' => 'Vòng ánh sáng RGB 360 độ', 'Switch' => 'Omron 50 triệu click'],
+                'images/Mouse/Chuột gaming HyperX Pulsefire Surge RGB - Likenew (Full box).webp'
+            ],
+            [
+                'Chuột gaming', 'Logitech', 'Chuột không dây Logitech G Pro X2 Superstrike', 'MS-LOGI-GPX2', 3690000, 3290000, 15,
+                ['Cảm biến' => 'HERO 2 32000 DPI', 'Tần số quét' => 'Polling Rate 4K/8K', 'Switch' => 'Lightforce Hybrid'],
+                'images/Mouse/Chuột Gaming không dây Logitech Pro X2 Superstrike (910-007778).webp'
+            ],
+            [
+                'Chuột gaming', 'ATK', 'Chuột Gaming VXE V3 Pro Wireless Black', 'MS-ATK-V3PRO', 1190000, 990000, 35,
+                ['Cảm biến' => 'PAW3395 flagship', 'Trọng lượng' => '49g siêu nhẹ', 'Pin' => 'Lên tới 100 giờ liên tục'],
+                'images/Mouse/Chuột Gaming VXE V3 Pro Wireless - Black.webp'
+            ],
+            [
+                'Chuột gaming', 'ATK', 'Chuột không dây ATK U2 Ultimate', 'MS-ATK-U2ULT', 1590000, 1390000, 20,
+                ['Cảm biến' => 'PAW3950 Ultra', 'MCU' => 'Nordic 52840', 'Polling Rate' => 'Không dây 8K mượt mà'],
+                'images/Mouse/Chuột không dây ATK U2 Ultimate.webp'
+            ],
+            [
+                'Chuột gaming', 'Logitech', 'Chuột Logitech G Pro X3 Superstrike Đen', 'MS-LOGI-GPX3', 3990000, 3590000, 10,
+                ['Cảm biến' => 'HERO thế hệ mới', 'Switch' => 'Optical Switch bền bỉ', 'Trọng lượng' => '58g cân bằng tuyệt đối'],
+                'images/Mouse/Chuột không dây Logitech G Pro X3 Superstrike - Màu Đen (910-007880).webp'
+            ],
+            [
+                'Chuột gaming', 'Logitech', 'Chuột không dây Logitech Pro X Superlight 2C', 'MS-LOGI-GPX2C', 3490000, 3190000, 18,
+                ['Cảm biến' => 'HERO 2', 'Cổng sạc' => 'USB-C chuẩn mới', 'Thời lượng pin' => '95 giờ'],
+                'images/Mouse/Chuột không dây Logitech Pro X Superlight 2C.webp'
+            ],
+            [
+                'Chuột gaming', 'Razer', 'Chuột không dây Razer DeathAdder V4 Pro', 'MS-RZ-DAV4P', 3890000, 3490000, 12,
+                ['Cảm biến' => 'Focus Pro 35K Gen-2', 'Switch' => 'Gen-3 Optical 90M click', 'Trọng lượng' => '55g công thái học đỉnh cao'],
+                'images/Mouse/Chuột không dây Razer DeathAdder V4 Pro.webp'
+            ],
 
-            // Bàn phím cơ không dây
-            ['Bàn phím cơ không dây', 'Keychron', 'Keychron K2 Pro', 'KC-K2P', 2590000, 2390000, 18,
-                ['Layout' => '75%', 'Switch' => 'Gateron G Pro Red', 'Kết nối' => 'Bluetooth 5.1 + có dây', 'Hot-swap' => 'Có']],
-            ['Bàn phím cơ không dây', 'Keychron', 'Keychron K8 Pro', 'KC-K8P', 2790000, null, 14,
-                ['Layout' => 'TKL', 'Switch' => 'Gateron G Pro Brown', 'Kết nối' => 'Bluetooth 5.1 + có dây', 'Hot-swap' => 'Có']],
-            ['Bàn phím cơ không dây', 'Keychron', 'Keychron Q1 Max', 'KC-Q1M', 4990000, 4590000, 3,
-                ['Layout' => '75%', 'Khung' => 'Nhôm CNC', 'Kết nối' => '2.4GHz + Bluetooth', 'Cấu trúc' => 'Gasket mount']],
-            ['Bàn phím cơ không dây', 'Akko', 'Akko 3068B Plus', 'AK-3068BP', 1690000, 1490000, 22,
-                ['Layout' => '65%', 'Switch' => 'Akko CS Jelly Pink', 'Kết nối' => '3 chế độ', 'Hot-swap' => 'Có']],
+            // ==================== TAI NGHE ====================
+            [
+                'Tai nghe gaming', 'ATK', 'Tai nghe In-Ear ATK IEM Horizon 3.5mm White', 'HP-ATK-HRZW', 790000, 620000, 40,
+                ['Driver' => 'Dual Dynamic Driver', 'Chuẩn cắm' => 'Jack 3.5mm mạ vàng', 'Đặc tính' => 'Chuyên dụng định vị bước chân game FPS'],
+                'images/HeadPhone/ATK Iem Horizon 3.5mm - White.webp'
+            ],
+            [
+                'Tai nghe gaming', 'Corsair', 'Tai nghe Corsair HS35 v3 Carbon', 'HP-CS-HS35V3', 1190000, 950000, 25,
+                ['Driver' => 'Neodymium 50mm tùy chỉnh', 'Micro' => 'Đơn hướng lọc tiếng ồn', 'Đệm tai' => 'Memory foam êm ái'],
+                'images/HeadPhone/Corsair HS35 v3 Carbon.webp'
+            ],
+            [
+                'Tai nghe gaming', 'Corsair', 'Tai nghe Corsair HS55 Stereo White', 'HP-CS-HS55W', 1490000, 1190000, 20,
+                ['Trọng lượng' => '273g siêu nhẹ', 'Driver' => '50mm', 'Micro' => 'Gập lên để tắt tiếng tiện lợi'],
+                'images/HeadPhone/Corsair HS55 Stereo White.webp'
+            ],
+            [
+                'Tai nghe gaming', 'DareU', 'Tai nghe DAREU EH925 MAX Black Red', 'HP-DAREU-EH925', 990000, 790000, 30,
+                ['Hiệu ứng âm thanh' => 'Giả lập 7.1 Magic Voice', 'Led' => 'RGB Flowing', 'Khung kim loại' => 'Chắc chắn, bền bỉ'],
+                'images/HeadPhone/DAREU EH925 MAX BLACK RED.webp'
+            ],
+            [
+                'Tai nghe gaming', 'Logitech', 'Tai nghe Logitech G Pro X Gaming', 'HP-LOGI-GPROX', 2890000, 2450000, 15,
+                ['Công nghệ Micro' => 'BLUE VO!CE lọc ồn chuẩn studio', 'Âm thanh' => 'DTS Headphone:X 2.0 vòm 7.1', 'Màng loa' => 'PRO-G 50mm'],
+                'images/HeadPhone/Gaming Logitech G ProX.webp'
+            ],
+            [
+                'Tai nghe không dây', 'Havit', 'Tai nghe Open-Ear Havit OWS929 Black', 'HP-HAVIT-OWS929', 850000, 680000, 35,
+                ['Thiết kế' => 'Open-ear truyền âm khí bảo vệ thính giác', 'Bluetooth' => '5.3 kết nối ổn định', 'Kháng nước' => 'IPX5'],
+                'images/HeadPhone/Havit OWS929 - Black.webp'
+            ],
+            [
+                'Tai nghe gaming', 'HyperX', 'Tai nghe HyperX Cloud Alpha 2 Wireless', 'HP-HX-CLDALP2', 4290000, 3790000, 10,
+                ['Thời lượng pin' => '300 giờ kỷ lục', 'Driver' => 'Dual Chamber 50mm', 'Âm thanh' => 'DTS Spatial Audio'],
+                'images/HeadPhone/HyperX Cloud Alpha 2 Wireless.webp'
+            ],
+            [
+                'Tai nghe không dây', 'MChose', 'Tai nghe MChose V9 Turbo Wireless White Gold', 'HP-MCHOSE-V9T', 1690000, 1390000, 20,
+                ['Kết nối' => '2.4GHz độ trễ siêu thấp + Bluetooth 5.3', 'Thời lượng pin' => 'Lên đến 50 giờ', 'Màu' => 'Trắng viền vàng phong cách'],
+                'images/HeadPhone/MChose V9 Turbo Wireless (White Gold).webp'
+            ],
+            [
+                'Tai nghe không dây', 'Razer', 'Tai nghe Razer Barracuda X Chroma Phantom White', 'HP-RZ-BARRAX', 3190000, 2790000, 12,
+                ['Kết nối kép' => 'SmartSwitch Type-C 2.4GHz + BT', 'Led' => 'Chroma RGB đa vùng', 'Driver' => 'TriForce 40mm'],
+                'images/HeadPhone/Razer Barracuda X Chroma - Phantom White Edition.webp'
+            ],
+            [
+                'Tai nghe gaming', 'Razer', 'Tai nghe Razer BlackShark V2 HyperSpeed', 'HP-RZ-BSV2HS', 3290000, 2890000, 15,
+                ['Micro' => 'HyperClear Super Wideband', 'Trọng lượng' => 'Chỉ 280g', 'Âm thanh' => 'THX Spatial Audio chuyên sâu'],
+                'images/HeadPhone/Razer BlackShark V2 HyperSpeed.webp'
+            ],
+            [
+                'Tai nghe gaming', 'Razer', 'Tai nghe Razer BlackShark V3 Pro 2XKO Edition', 'HP-RZ-BSV3P', 4990000, 4490000, 8,
+                ['Phiên bản' => 'Special 2XKO Edition đối kháng đỉnh cao', 'Driver' => 'TriForce Titanium 50mm', 'Đệm tai' => 'Gel làm mát'],
+                'images/HeadPhone/Razer BlackShark V3 Pro 2XKO Edition.webp'
+            ],
+            [
+                'Tai nghe gaming', 'Razer', 'Tai nghe Earphone Razer Hammerhead V3', 'HP-RZ-HMH3', 1290000, 990000, 30,
+                ['Driver' => '10mm Dynamic Driver', 'Dây cáp' => 'Dẹt chống rối kèm micro thoại', 'Chuẩn cắm' => '3.5mm tương thích đa nền tảng'],
+                'images/HeadPhone/Razer Hammerhead V3.webp'
+            ],
+            [
+                'Tai nghe gaming', 'Zidii', 'Tai nghe Zidii LH1 Ultimate Gaming', 'HP-ZIDII-LH1', 690000, 550000, 35,
+                ['Led' => 'RGB Breathing', 'Đệm mút' => 'Da PU thoáng khí', 'Âm bass' => 'Tăng cường âm trầm uy lực'],
+                'images/HeadPhone/Zidii LH1 Ultimate.webp'
+            ],
 
-            // Bàn phím cơ có dây
-            ['Bàn phím cơ có dây', 'Corsair', 'Corsair K70 RGB TKL', 'CS-K70TKL', 3290000, null, 10,
-                ['Layout' => 'TKL', 'Switch' => 'Cherry MX Red', 'Đèn' => 'RGB từng phím', 'Kết nối' => 'USB-C']],
-            ['Bàn phím cơ có dây', 'Razer', 'Razer BlackWidow V4 X', 'RZ-BWV4X', 3490000, 2990000, 8,
-                ['Layout' => 'Full-size', 'Switch' => 'Razer Green', 'Macro' => '6 phím', 'Đèn' => 'RGB Chroma']],
-            ['Bàn phím cơ có dây', 'HyperX', 'HyperX Alloy Origins 60', 'HX-AO60', 2190000, 1890000, 0,
-                ['Layout' => '60%', 'Switch' => 'HyperX Red', 'Khung' => 'Nhôm', 'Kết nối' => 'USB-C']],
-
-            // Tai nghe gaming
-            ['Tai nghe gaming', 'HyperX', 'HyperX Cloud II', 'HX-CLD2', 2290000, 1990000, 28,
-                ['Driver' => '53mm', 'Kết nối' => 'USB / 3.5mm', 'Micro' => 'Tháo rời', 'Âm thanh' => '7.1 ảo']],
-            ['Tai nghe gaming', 'Razer', 'Razer BlackShark V2 X', 'RZ-BSV2X', 1490000, null, 33,
-                ['Driver' => '50mm', 'Kết nối' => '3.5mm', 'Trọng lượng' => '240g']],
-            ['Tai nghe gaming', 'SteelSeries', 'SteelSeries Arctis Nova 1', 'SS-ARN1', 1890000, 1590000, 15,
-                ['Driver' => '40mm', 'Kết nối' => '3.5mm', 'Micro' => 'Khử ồn']],
-            ['Tai nghe gaming', 'Corsair', 'Corsair HS80 RGB Wireless', 'CS-HS80W', 3990000, null, 9,
-                ['Driver' => '50mm', 'Kết nối' => '2.4GHz', 'Pin' => '20 giờ', 'Âm thanh' => 'Dolby Atmos']],
-
-            // Tai nghe không dây
-            ['Tai nghe không dây', 'Anker', 'Anker Soundcore Liberty 4 NC', 'ANK-LB4NC', 2990000, 2490000, 24,
-                ['Kiểu' => 'True Wireless', 'Chống ồn' => 'Chủ động', 'Pin' => '10 giờ (50 giờ với hộp sạc)', 'Kết nối' => 'Bluetooth 5.3']],
-            ['Tai nghe không dây', 'Anker', 'Anker Soundcore Space One', 'ANK-SP1', 2490000, 1990000, 16,
-                ['Kiểu' => 'Over-ear', 'Chống ồn' => 'Chủ động', 'Pin' => '40 giờ', 'Kết nối' => 'Bluetooth 5.3']],
-            ['Tai nghe không dây', 'Baseus', 'Baseus Bowie WM02', 'BS-WM02', 590000, 490000, 50,
-                ['Kiểu' => 'True Wireless', 'Pin' => '5 giờ (25 giờ với hộp sạc)', 'Kết nối' => 'Bluetooth 5.3']],
-
-            // Củ sạc nhanh
-            ['Củ sạc nhanh', 'Anker', 'Anker Nano II 65W', 'ANK-NANO65', 890000, 790000, 40,
-                ['Công suất' => '65W', 'Cổng' => '1 USB-C', 'Công nghệ' => 'GaN II']],
-            ['Củ sạc nhanh', 'Anker', 'Anker 737 GaNPrime 120W', 'ANK-737G', 1990000, null, 12,
-                ['Công suất' => '120W', 'Cổng' => '2 USB-C + 1 USB-A', 'Công nghệ' => 'GaNPrime']],
-            ['Củ sạc nhanh', 'Baseus', 'Baseus GaN5 Pro 65W', 'BS-GAN5P', 690000, 590000, 55,
-                ['Công suất' => '65W', 'Cổng' => '2 USB-C + 1 USB-A', 'Công nghệ' => 'GaN']],
-            ['Củ sạc nhanh', 'Ugreen', 'Ugreen Nexode 100W', 'UG-NX100', 1290000, 1090000, 20,
-                ['Công suất' => '100W', 'Cổng' => '3 USB-C + 1 USB-A', 'Công nghệ' => 'GaNFast']],
-
-            // Sạc dự phòng
-            ['Sạc dự phòng', 'Anker', 'Anker 737 Power Bank 24000mAh', 'ANK-737PB', 2490000, null, 8,
-                ['Dung lượng' => '24000mAh', 'Công suất' => '140W', 'Màn hình' => 'OLED hiển thị thông số']],
-            ['Sạc dự phòng', 'Baseus', 'Baseus Blade 100W 20000mAh', 'BS-BLADE', 1390000, 1190000, 18,
-                ['Dung lượng' => '20000mAh', 'Công suất' => '100W', 'Độ mỏng' => '18mm', 'Cổng' => '2 Type-C + 2 USB-A']],
-
-            // Bàn di chuột
-            ['Bàn di chuột', 'SteelSeries', 'SteelSeries QcK Heavy XXL', 'SS-QCKH-XXL', 890000, null, 30,
-                ['Kích thước' => '900 x 400 x 4mm', 'Bề mặt' => 'Vải dệt vi mô', 'Đế' => 'Cao su chống trượt']],
-            ['Bàn di chuột', 'Razer', 'Razer Gigantus V2 Large', 'RZ-GV2-L', 450000, 390000, 45,
-                ['Kích thước' => '450 x 400 x 3mm', 'Bề mặt' => 'Vải dệt mịn', 'Bọt cao su' => 'Mật độ cao']],
-            ['Bàn di chuột', 'Corsair', 'Corsair MM300 Pro Extended', 'CS-MM300P', 790000, 690000, 20,
-                ['Kích thước' => '930 x 300 x 3mm', 'Chống tràn nước' => 'Có', 'Viền' => 'Bo chỉ chống sờn']],
-
-            // Giá đỡ, đèn và phụ kiện
-            ['Giá đỡ, đèn và phụ kiện', 'Baseus', 'Baseus i-Work Monitor Light Bar', 'BS-IWORK-LB', 790000, 690000, 25,
-                ['Nhiệt độ màu' => '2800K - 5500K', 'Nguồn' => 'USB 5V', 'Chống lóa mắt' => 'Có']],
-            ['Giá đỡ, đèn và phụ kiện', 'Baseus', 'Baseus Đèn bàn LED Smart Eye', 'BS-SMARTEYE', 1290000, 1090000, 14,
-                ['Cảm biến ánh sáng' => 'Tự động', 'Chỉ số hoàn màu' => 'Ra >= 95', 'Pin' => '2200mAh']],
-            ['Giá đỡ, đèn và phụ kiện', 'Ugreen', 'Ugreen Giá đỡ laptop hợp kim nhôm', 'UG-LPSTD', 390000, 3490000, 50,
-                ['Chất liệu' => 'Hợp kim nhôm', 'Nấc chỉnh' => '5 góc độ', 'Tải trọng' => 'Tối đa 20kg']],
-            ['Giá đỡ, đèn và phụ kiện', 'Ugreen', 'Ugreen Giá treo màn hình 17-32 inch', 'UG-MNARM', 890000, 790000, 16,
-                ['Chuẩn VESA' => '75x75, 100x100', 'Tải trọng' => '9kg', 'Lò xo khí nén' => 'Có']],
-            ['Giá đỡ, đèn và phụ kiện', 'Keychron', 'Keychron Kê tay gỗ Walnut', 'KC-WR-WAL', 590000, null, 22,
-                ['Chất liệu' => 'Gỗ óc chó tự nhiên', 'Kích thước' => 'Phù hợp layout K2/Q1', 'Đế cao su' => 'Chống trượt']],
+            // ==================== LAPTOP ====================
+            [
+                'Laptop văn phòng', 'Acer', 'Laptop Acer Aspire 7 A715-59G-59RD', 'LT-ACER-A715', 18990000, 16990000, 10,
+                ['CPU' => 'Intel Core i5-12450H', 'RAM' => '16GB DDR4', 'SSD' => '512GB PCIe NVMe', 'VGA' => 'RTX 2050 4GB', 'Màn hình' => '15.6 inch FHD 144Hz'],
+                'images/Laptop/Laptop Acer Aspire 7 A715-59G-59RD.webp'
+            ],
+            [
+                'Laptop gaming', 'Acer', 'Laptop Acer Predator Helios Neo PHN16', 'LT-ACER-NEO16', 38990000, 35490000, 6,
+                ['CPU' => 'Intel Core i7-14700HX', 'RAM' => '16GB DDR5 5600MHz', 'SSD' => '1TB Gen4', 'VGA' => 'RTX 4060 8GB 140W', 'Màn hình' => '16 inch 2.5K WQXGA 165Hz sRGB 100%'],
+                'images/Laptop/Laptop Acer Predator Helios PHN16-I31-72XE (NH.U4RSV.001).webp'
+            ],
+            [
+                'Laptop văn phòng', 'Acer', 'Laptop Acer Swift Air 14 Siêu mỏng nhẹ', 'LT-ACER-SFA14', 21990000, 19490000, 8,
+                ['CPU' => 'Intel Core Ultra 5-125H', 'RAM' => '16GB LPDDR5X', 'SSD' => '512GB', 'Màn hình' => '14 inch OLED 2.8K 90Hz', 'Trọng lượng' => '1.2kg'],
+                'images/Laptop/Laptop Acer Swift Air 14 SFA14-I31-54A2.webp'
+            ],
+            [
+                'Laptop gaming', 'Asus', 'Laptop Asus ROG Strix G16 G614PH', 'LT-ASUS-G614PH', 42990000, 39990000, 5,
+                ['CPU' => 'Intel Core i9-13980HX', 'RAM' => '16GB DDR5', 'SSD' => '1TB', 'VGA' => 'RTX 4060 8GB', 'Màn hình' => '16 inch FHD+ 165Hz', 'Tản nhiệt' => 'Kim loại lỏng Conductonaut Extreme'],
+                'images/Laptop/Laptop Asus Gaming ROG Strix G614PH-S5101W.webp'
+            ],
+            [
+                'Laptop gaming', 'Asus', 'Laptop Asus TUF Gaming A16 FA608UM', 'LT-ASUS-FA608', 32990000, 29990000, 7,
+                ['CPU' => 'AMD Ryzen 9 8945HS', 'RAM' => '16GB DDR5', 'SSD' => '512GB', 'VGA' => 'RTX 4060 8GB', 'Chuẩn độ bền' => 'Quân đội Mỹ MIL-STD-810H'],
+                'images/Laptop/Laptop Asus Gaming TUF FA608UM-RV266W.webp'
+            ],
+            [
+                'Laptop gaming', 'Asus', 'Laptop Asus TUF Gaming F16 FX610JH', 'LT-ASUS-FX610', 25990000, 23490000, 10,
+                ['CPU' => 'Intel Core i7-13620H', 'RAM' => '16GB DDR5', 'SSD' => '512GB', 'VGA' => 'RTX 4050 6GB', 'Màn hình' => '16 inch 165Hz viền mỏng'],
+                'images/Laptop/Laptop Asus Gaming TUF FX610JH-TU009W.webp'
+            ],
+            [
+                'Laptop gaming', 'Asus', 'Laptop Asus Gaming V3607VJ', 'LT-ASUS-V3607', 22990000, 20490000, 9,
+                ['CPU' => 'Intel Core i5-13420H', 'RAM' => '16GB', 'SSD' => '512GB', 'VGA' => 'RTX 3050 6GB', 'Màn hình' => '15.6 inch 144Hz IPS'],
+                'images/Laptop/Laptop Asus Gaming V3607VJ-TK189W.webp'
+            ],
+            [
+                'Laptop văn phòng', 'Asus', 'Laptop Asus Vivobook Pro 15 K3605VC', 'LT-ASUS-K3605', 24990000, 22490000, 8,
+                ['CPU' => 'Intel Core i9-13900H', 'RAM' => '16GB', 'SSD' => '512GB', 'VGA' => 'RTX 3050', 'Thiết kế' => 'Thời trang văn phòng tích hợp đồ họa'],
+                'images/Laptop/Laptop Asus Gaming Vivobook K3605VC-RP431W.webp'
+            ],
+            [
+                'Laptop gaming', 'Gigabyte', 'Laptop Gigabyte Gaming A16 CTH', 'LT-GIGA-A16', 26990000, 23990000, 7,
+                ['CPU' => 'AMD Ryzen 7 7735HS', 'RAM' => '16GB DDR5', 'SSD' => '512GB Gen4', 'VGA' => 'RTX 4050 6GB', 'Màn hình' => '16 inch 165Hz tỷ lệ 16:10'],
+                'images/Laptop/Laptop Gigabyte Gaming A16 (A16-CTHH3VN893SH).webp'
+            ],
+            [
+                'Laptop gaming', 'Lenovo', 'Laptop Lenovo Legion Pro 7 FIFA Edition', 'LT-LENOVO-LEG7', 59990000, 54990000, 3,
+                ['CPU' => 'Intel Core i9-14900HX', 'RAM' => '32GB DDR5 5600', 'SSD' => '2TB PCIe Gen4', 'VGA' => 'RTX 4080 12GB 175W', 'Màn hình' => '16 inch WQXGA 240Hz 500 nits HDR'],
+                'images/Laptop/Laptop Lenovo Gaming Legion Pro 7 FIFA World Cup 26 Edition.webp'
+            ],
+            [
+                'Laptop gaming', 'Lenovo', 'Laptop Lenovo Gaming LOQ 15 IRX11', 'LT-LENOVO-LOQ15', 23990000, 21490000, 12,
+                ['CPU' => 'Intel Core i5-13450HX', 'RAM' => '16GB DDR5', 'SSD' => '512GB', 'VGA' => 'RTX 4050 6GB 95W', 'Màn hình' => '15.6 inch 144Hz 100% sRGB'],
+                'images/Laptop/Laptop Lenovo Gaming LOQ IRX11 83SC003RVN.webp'
+            ],
+            [
+                'Laptop gaming', 'MSI', 'Laptop MSI Cyborg 15 A13UC Translucent', 'LT-MSI-CY15', 19990000, 17990000, 11,
+                ['CPU' => 'Intel Core i5-13420H', 'RAM' => '16GB DDR5', 'SSD' => '512GB', 'VGA' => 'RTX 3050 6GB', 'Thiết kế' => 'Vỏ xuyên thấu Cyberpunk độc đáo'],
+                'images/Laptop/Laptop MSI Cyborg 15 A13UC-2088VN.webp'
+            ],
+            [
+                'Laptop gaming', 'MSI', 'Laptop MSI Gaming Katana 15 B13VEK', 'LT-MSI-KAT15', 27990000, 24990000, 8,
+                ['CPU' => 'Intel Core i7-13620H', 'RAM' => '16GB DDR5', 'SSD' => '1TB', 'VGA' => 'RTX 4050 6GB', 'Bàn phím' => 'Led 4 vùng RGB phím WASD nổi bật'],
+                'images/Laptop/Laptop MSI Gaming Katana 15 B13VEK-2440VN.webp'
+            ],
+            [
+                'Laptop gaming', 'MSI', 'Laptop MSI Katana 15 HX B14WEK', 'LT-MSI-KAT15HX', 33990000, 30990000, 6,
+                ['CPU' => 'Intel Core i7-14650HX', 'RAM' => '16GB DDR5', 'SSD' => '1TB NVMe', 'VGA' => 'RTX 4060 8GB', 'Màn hình' => '15.6 inch QHD 165Hz 100% DCI-P3'],
+                'images/Laptop/Laptop MSI Katana 15 HX (B14WEK-027VN).webp'
+            ],
+            [
+                'Laptop văn phòng', 'HP', 'Laptop Workstation HP ZBook 15 G5', 'LT-HP-ZB15', 17500000, 15500000, 7,
+                ['CPU' => 'Intel Core i7-8850H vPro', 'RAM' => '32GB DDR4 ECC', 'SSD' => '512GB NVMe', 'VGA' => 'NVIDIA Quadro P2000 4GB', 'Đặc tính' => 'Máy trạm đồ họa bền bỉ'],
+                'images/Laptop/Laptop Workstation HP Zbook 15 G5 3AX12AV.webp'
+            ],
+            [
+                'Laptop văn phòng', 'Lenovo', 'Laptop Lenovo Yoga Slim 7 Siêu mỏng nhẹ', 'LT-LENOVO-YOGA7', 26990000, 23990000, 9,
+                ['CPU' => 'Intel Core Ultra 7-155H AI', 'RAM' => '32GB LPDDR5X', 'SSD' => '1TB', 'Màn hình' => '14.5 inch 3K PureSight 120Hz', 'Khung máy' => 'Nhôm cao cấp siêu nhẹ'],
+                'images/Laptop/Lenovo Yoga Slim 7 14LL10.webp'
+            ],
         ];
     }
 }
