@@ -55,28 +55,32 @@ class HomeController extends Controller
         ];
 
         // 8 Best Seller Products lấy trực tiếp từ Database để đảm bảo luôn khớp slug và link chi tiết
-        $dbProducts = Product::query()
-            ->active()
-            ->with(['category', 'brand'])
-            ->latest('id')
-            ->take(8)
-            ->get();
+        $bestSellerProducts = [];
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('products')) {
+                $dbProducts = Product::query()
+                    ->active()
+                    ->with(['category', 'brand'])
+                    ->latest('id')
+                    ->take(8)
+                    ->get();
 
-        if ($dbProducts->isNotEmpty()) {
-            $bestSellerProducts = $dbProducts->map(function ($p) {
-                return [
-                    'id'         => $p->id,
-                    'name'       => $p->name,
-                    'slug'       => $p->slug,
-                    'price'      => (int) $p->price,
-                    'sale_price' => $p->sale_price ? (int) $p->sale_price : null,
-                    'thumbnail'  => $p->thumbnail_url ?? asset($p->thumbnail ?? 'images/hero-headphone.png'),
-                    'category'   => $p->category?->name ?? 'Gaming Gear',
-                    'rating'     => '4.9',
-                ];
-            })->all();
-        } else {
-            // Fallback khi database chưa seed dữ liệu
+                if ($dbProducts->isNotEmpty()) {
+                    $bestSellerProducts = $dbProducts->map(function ($p) {
+                        return [
+                            'id'         => $p->id,
+                            'name'       => $p->name,
+                            'slug'       => $p->slug,
+                            'price'      => (int) $p->price,
+                            'sale_price' => $p->sale_price ? (int) $p->sale_price : null,
+                            'thumbnail'  => $p->thumbnail_url ?? asset($p->thumbnail ?? 'images/hero-headphone.png'),
+                            'category'   => $p->category?->name ?? 'Gaming Gear',
+                            'rating'     => '4.9',
+                        ];
+                    })->all();
+                }
+            }
+        } catch (\Throwable $e) {
             $bestSellerProducts = [];
         }
 
