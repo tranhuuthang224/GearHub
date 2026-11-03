@@ -20,7 +20,12 @@ class ProductImage extends Model
 
     protected function url(): Attribute
     {
-        return Attribute::get(fn () => asset('storage/' . $this->path));
+        return Attribute::get(function () {
+            if (! $this->path) return null;
+            if (str_starts_with($this->path, 'http')) return $this->path;
+            if (str_starts_with($this->path, 'images/')) return asset($this->path);
+            return asset('storage/' . $this->path);
+        });
     }
 
     public function product(): BelongsTo

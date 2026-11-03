@@ -14,8 +14,10 @@ class BrandSeeder extends Seeder
     public function run(): void
     {
         $brands = [
-            'Keychron', 'Logitech', 'Razer', 'Anker', 'SteelSeries',
-            'Corsair', 'HyperX', 'Akko', 'Baseus', 'Ugreen',
+            'Aula', 'Akko', 'Asus', 'ATK', 'DareU', 'Keychron', 'Logitech', 'MChose',
+            'E-Dra', 'Fuhlen', 'Rapoo', 'Acer', 'Lenovo', 'MSI', 'Gigabyte', 'HP',
+            'HyperX', 'Razer', 'Corsair', 'Havit', 'Zidii', 'Anker', 'SteelSeries',
+            'Baseus', 'Ugreen'
         ];
 
         foreach ($brands as $name) {

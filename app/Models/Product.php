@@ -52,9 +52,12 @@ class Product extends Model
 
     protected function thumbnailUrl(): Attribute
     {
-        return Attribute::get(
-            fn () => $this->thumbnail ? asset('storage/' . $this->thumbnail) : null
-        );
+        return Attribute::get(function () {
+            if (! $this->thumbnail) return null;
+            if (str_starts_with($this->thumbnail, 'http')) return $this->thumbnail;
+            if (str_starts_with($this->thumbnail, 'images/')) return asset($this->thumbnail);
+            return asset('storage/' . $this->thumbnail);
+        });
     }
 
     /** Sản phẩm đang bật hiển thị (chưa tính xóa mềm, SoftDeletes tự lo). */
