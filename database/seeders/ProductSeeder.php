@@ -44,52 +44,6 @@ class ProductSeeder extends Seeder
                 'sort_order' => 1,
             ]);
         }
-
-        // 2. Seed danh mục gaming gear thực tế (56 sản phẩm với hình ảnh thật từ public/images/)
-        // Seed sau để có ID cao hơn, tự động hiển thị trước ở trang Shop theo newest/latest('id')
-        foreach (ProductCatalog::all() as $item) {
-            $childCategory = $this->detectChildCategory($item);
-            $catSlug = Str::slug($childCategory);
-            $catId = $categoryIds[$catSlug] ?? $categoryIds[Str::slug($item['category'])] ?? null;
-
-            $brandSlug = Str::slug($item['brand']);
-            $brandId = $brandIds[$brandSlug] ?? null;
-
-            if (!$catId || !$brandId) {
-                continue;
-            }
-
-            // Chuẩn hóa đường dẫn tương đối (e.g. 'images/Keyboard/Aula F75.webp')
-            $thumbnail = preg_replace('#^https?://[^/]+/#', '', $item['thumbnail']);
-
-            $product = Product::withTrashed()->updateOrCreate(
-                ['sku' => $item['sku']],
-                [
-                    'category_id'    => $catId,
-                    'brand_id'       => $brandId,
-                    'name'           => $item['name'],
-                    'slug'           => $item['slug'],
-                    'description'    => $item['description'] ?? "{$item['name']} chính hãng {$item['brand']}.",
-                    'specs'          => $item['specs'] ?? [],
-                    'price'          => $item['price'],
-                    'sale_price'     => $item['sale_price'] ?? null,
-                    'stock_quantity' => $item['stock_quantity'] ?? 20,
-                    'thumbnail'      => $thumbnail,
-                    'is_active'      => true,
-                ]
-            );
-
-            $product->images()->delete();
-            $gallery = $item['gallery'] ?? [$item['thumbnail']];
-            $sort = 1;
-            foreach ($gallery as $galleryImg) {
-                $imgPath = preg_replace('#^https?://[^/]+/#', '', $galleryImg);
-                $product->images()->create([
-                    'path'       => $imgPath,
-                    'sort_order' => $sort++,
-                ]);
-            }
-        }
     }
 
     /**

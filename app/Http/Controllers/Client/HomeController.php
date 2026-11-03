@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -53,89 +54,31 @@ class HomeController extends Controller
             ],
         ];
 
-        // 8 Best Seller Products matching Figma Page 1 & Product Catalog
-        $bestSellerProducts = [
-            [
-                'id' => 401,
-                'name' => 'HyperX Cloud III Wireless',
-                'slug' => 'tai-nghe-hyperx-cloud-iii-wireless',
-                'price' => 3490000,
-                'sale_price' => 2990000,
-                'thumbnail' => asset('images/png-transparent-playstation-4-headphones-hyperx-cloud-audio-video-game-headphones-electronics-video-game-playstation-4.png'),
-                'category' => 'Headphones',
-                'rating' => '4.9',
-            ],
-            [
-                'id' => 201,
-                'name' => 'Aula F75 Gasket Mount',
-                'slug' => 'ban-phim-co-aula-f75-gasket-mount',
-                'price' => 1450000,
-                'sale_price' => 1250000,
-                'thumbnail' => asset('images/Keyboard/Aula F75.webp'),
-                'category' => 'Keyboard',
-                'rating' => '4.9',
-            ],
-            [
-                'id' => 501,
-                'name' => 'Razer Viper V3 Pro',
-                'slug' => 'chuot-razer-viper-v3-pro',
-                'price' => 3990000,
-                'sale_price' => 3590000,
-                'thumbnail' => asset('images/razer viper v3.png'),
-                'category' => 'Mouse',
-                'rating' => '5.0',
-            ],
-            [
-                'id' => 408,
-                'name' => 'ATK Horizon IEM Gaming',
-                'slug' => 'tai-nghe-atk-horizon-iem',
-                'price' => 590000,
-                'sale_price' => 450000,
-                'thumbnail' => asset('images/HeadPhone/ATK Iem Horizon 3.5mm - White.webp'),
-                'category' => 'Earphone',
-                'rating' => '4.8',
-            ],
-            [
-                'id' => 403,
-                'name' => 'Logitech G Pro X Wireless',
-                'slug' => 'tai-nghe-logitech-g-pro-x-lightspeed',
-                'price' => 3890000,
-                'sale_price' => 3390000,
-                'thumbnail' => asset('images/HeadPhone/Gaming Logitech G ProX.webp'),
-                'category' => 'Headphones',
-                'rating' => '4.8',
-            ],
-            [
-                'id' => 209,
-                'name' => 'Logitech G515 TKL Lightspeed',
-                'slug' => 'ban-phim-co-logitech-g515-lightspeed',
-                'price' => 3490000,
-                'sale_price' => 2990000,
-                'thumbnail' => asset('images/Keyboard/Logitech G515.webp'),
-                'category' => 'Keyboard',
-                'rating' => '4.9',
-            ],
-            [
-                'id' => 504,
-                'name' => 'Logitech GPX Magenta Pink',
-                'slug' => 'chuot-logitech-g-pro-x-superlight-magenta',
-                'price' => 3290000,
-                'sale_price' => 2790000,
-                'thumbnail' => asset('images/Mouse/Chuột game không dây Logitech Pro X Superlight Magenta.webp'),
-                'category' => 'Mouse',
-                'rating' => '4.9',
-            ],
-            [
-                'id' => 301,
-                'name' => 'Asus ROG Strix G16 i9 RTX 4070',
-                'slug' => 'laptop-asus-rog-strix-g16',
-                'price' => 49990000,
-                'sale_price' => 44990000,
-                'thumbnail' => asset('images/Laptop/Laptop Asus Gaming ROG Strix G614PH-S5101W.webp'),
-                'category' => 'Laptop',
-                'rating' => '5.0',
-            ],
-        ];
+        // 8 Best Seller Products lấy trực tiếp từ Database để đảm bảo luôn khớp slug và link chi tiết
+        $dbProducts = Product::query()
+            ->active()
+            ->with(['category', 'brand'])
+            ->latest('id')
+            ->take(8)
+            ->get();
+
+        if ($dbProducts->isNotEmpty()) {
+            $bestSellerProducts = $dbProducts->map(function ($p) {
+                return [
+                    'id'         => $p->id,
+                    'name'       => $p->name,
+                    'slug'       => $p->slug,
+                    'price'      => (int) $p->price,
+                    'sale_price' => $p->sale_price ? (int) $p->sale_price : null,
+                    'thumbnail'  => $p->thumbnail_url ?? asset($p->thumbnail ?? 'images/hero-headphone.png'),
+                    'category'   => $p->category?->name ?? 'Gaming Gear',
+                    'rating'     => '4.9',
+                ];
+            })->all();
+        } else {
+            // Fallback khi database chưa seed dữ liệu
+            $bestSellerProducts = [];
+        }
 
         // 4 Key Service Value Propositions matching Figma Page 1
         $services = [

@@ -20,7 +20,6 @@ class CategorySeeder extends Seeder
             'Laptop'             => ['Laptop gaming', 'Laptop văn phòng'],
             'Củ sạc'             => ['Củ sạc nhanh', 'Sạc dự phòng'],
             'Setup góc làm việc' => ['Bàn di chuột', 'Giá đỡ, đèn và phụ kiện'],
-            'Laptop' => ['Laptop gaming', 'Laptop văn phòng'],
         ];
 
         foreach ($tree as $parentName => $children) {
