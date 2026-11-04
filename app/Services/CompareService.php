@@ -164,4 +164,68 @@ class CompareService
 
         return $current->id;
     }
+
+        /**
+     * Xây dựng ma trận thông số kỹ thuật (Specs Matrix) cho danh sách sản phẩm.
+     * 
+     * Output trả về mảng gồm:
+     * - 'keys': Danh sách tất cả các key thuộc tính gộp lại của các sản phẩm (duy nhất).
+     * - 'matrix': [
+     *     'Tên thuộc tính' => [
+     *        'values' => [productId1 => 'giá trị 1', productId2 => 'giá trị 2', ...],
+     *        'is_different' => true|false (hàng này các giá trị có khác nhau không, hỗ trợ Member A highlight)
+     *     ]
+     *   ]
+     * 
+     * @param \Illuminate\Support\Collection $products
+     * @return array
+     */
+    public function buildSpecsMatrix($products): array
+    {
+        if ($products->isEmpty()) {
+            return [
+                'keys' => [],
+                'matrix' => [],
+            ];
+        }
+
+        // 1. Tập hợp tất cả các key xuất hiện trong specs của tất cả sản phẩm
+        $allKeys = [];
+        foreach ($products as $product) {
+            $specs = is_array($product->specs) ? $product->specs : [];
+            foreach (array_keys($specs) as $key) {
+                if (!in_array($key, $allKeys, true)) {
+                    $allKeys[] = $key;
+                }
+            }
+        }
+
+        // 2. Dựng ma trận so sánh
+        $matrix = [];
+        foreach ($allKeys as $key) {
+            $rowValues = [];
+
+            foreach ($products as $product) {
+                $specs = is_array($product->specs) ? $product->specs : [];
+                // Nếu sản phẩm không có thuộc tính này thì tự động điền '-'
+                $rowValues[$product->id] = $specs[$key] ?? '-';
+            }
+
+            // Kiểm tra xem các giá trị trong hàng này có khác biệt nhau không
+            // Loại bỏ các giá trị trùng lặp
+            $uniqueValues = array_unique(array_values($rowValues));
+            $isDifferent = count($uniqueValues) > 1;
+
+            $matrix[$key] = [
+                'label'        => $key,
+                'values'       => $rowValues,
+                'is_different' => $isDifferent,
+            ];
+        }
+
+        return [
+            'keys'   => $allKeys,
+            'matrix' => $matrix,
+        ];
+    }
 }

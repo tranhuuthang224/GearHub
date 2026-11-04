@@ -16,21 +16,23 @@ class CompareController extends Controller
     /**
      * Xem trang so sánh chi tiết hoặc lấy danh sách so sánh hiện tại.
      */
-    public function index(Request $request)
+        public function index(Request $request)
     {
         $products = $this->compareService->getItems();
+        $specsMatrix = $this->compareService->buildSpecsMatrix($products);
 
-        // Nếu request AJAX/JSON từ Alpine.js của Member A (ví dụ thanh Compare Bar)
+        // Trả về JSON nếu là request API / AJAX từ Alpine.js của Member A
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
-                'success'  => true,
-                'count'    => $products->count(),
-                'products' => $products,
+                'success'      => true,
+                'count'        => $products->count(),
+                'products'     => $products,
+                'specs_matrix' => $specsMatrix,
             ]);
         }
 
-        // Trả về view Blade trang so sánh chi tiết
-        return view('client.compare.index', compact('products'));
+        // Trả về view Blade
+        return view('client.compare.index', compact('products', 'specsMatrix'));
     }
 
     /**
