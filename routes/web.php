@@ -15,6 +15,7 @@ use App\Http\Controllers\Client\CheckoutController;
 use App\Http\Controllers\Client\OrderController as ClientOrderController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Client\CompareController;
+use App\Http\Controllers\Client\QuizController;
 
 
 // Storefront Public Routes
@@ -37,6 +38,12 @@ Route::prefix('compare')->name('compare.')->group(function () {
     Route::post('/add/{id}', [CompareController::class, 'add'])->name('add');
     Route::delete('/remove/{id}', [CompareController::class, 'remove'])->name('remove');
     Route::delete('/clear', [CompareController::class, 'clear'])->name('clear');
+});
+
+// Smart Gear Finder Quiz Routes
+Route::prefix('quiz')->name('quiz.')->group(function () {
+    Route::get('/', [QuizController::class, 'index'])->name('index');
+    Route::post('/submit', [QuizController::class, 'submit'])->name('submit');
 });
 
 Route::get('/dashboard', function () {
