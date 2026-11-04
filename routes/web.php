@@ -17,6 +17,8 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Client\CompareController;
 use App\Http\Controllers\Client\QuizController;
 use App\Http\Controllers\Client\ReviewController;
+use App\Http\Controllers\Client\CommunityController;
+use App\Http\Controllers\Admin\CommunityModerationController;
 
 
 // Storefront Public Routes
@@ -53,6 +55,24 @@ Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])
     ->middleware('auth')
     ->name('products.reviews.store');
 
+// Community Routes
+Route::prefix('community')->name('community.')->group(function () {
+    Route::get('/', [CommunityController::class, 'index'])->name('index');
+    Route::get('/create', [CommunityController::class, 'create'])->middleware('auth')->name('create');
+    Route::post('/', [CommunityController::class, 'store'])->middleware('auth')->name('store');
+    Route::get('/{slug}', [CommunityController::class, 'show'])->name('show');
+    
+    // Tương tác Like & Comment (Yêu cầu đăng nhập)
+    Route::middleware('auth')->group(function () {
+        Route::post('/{id}/like', [CommunityController::class, 'toggleLike'])->name('like');
+        Route::post('/{id}/comments', [CommunityController::class, 'storeComment'])->name('comments.store');
+    });
+});
+
+    // Community Moderation
+    Route::get('community', [CommunityModerationController::class, 'index'])->name('community.index');
+    Route::patch('community/{post}/status', [CommunityModerationController::class, 'updateStatus'])->name('community.status');
+    Route::delete('community/{post}', [CommunityModerationController::class, 'destroy'])->name('community.destroy');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
