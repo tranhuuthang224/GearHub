@@ -14,6 +14,8 @@ use App\Http\Controllers\Client\CheckoutCouponController;
 use App\Http\Controllers\Client\CheckoutController;
 use App\Http\Controllers\Client\OrderController as ClientOrderController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Client\CompareController;
+
 
 // Storefront Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -27,6 +29,14 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::patch('/update', [CartController::class, 'update'])->name('update');
     Route::delete('/remove/{id}', [CartController::class, 'remove'])->name('remove');
     Route::delete('/clear', [CartController::class, 'clear'])->name('clear');
+});
+
+// Compare Routes (Session-based)
+Route::prefix('compare')->name('compare.')->group(function () {
+    Route::get('/', [CompareController::class, 'index'])->name('index');
+    Route::post('/add/{id}', [CompareController::class, 'add'])->name('add');
+    Route::delete('/remove/{id}', [CompareController::class, 'remove'])->name('remove');
+    Route::delete('/clear', [CompareController::class, 'clear'])->name('clear');
 });
 
 Route::get('/dashboard', function () {
