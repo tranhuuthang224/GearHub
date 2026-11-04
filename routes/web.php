@@ -16,6 +16,7 @@ use App\Http\Controllers\Client\OrderController as ClientOrderController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Client\CompareController;
 use App\Http\Controllers\Client\QuizController;
+use App\Http\Controllers\Client\ReviewController;
 
 
 // Storefront Public Routes
@@ -45,6 +46,13 @@ Route::prefix('quiz')->name('quiz.')->group(function () {
     Route::get('/', [QuizController::class, 'index'])->name('index');
     Route::post('/submit', [QuizController::class, 'submit'])->name('submit');
 });
+
+// Product Reviews Routes
+Route::get('/products/{product}/reviews', [ReviewController::class, 'index'])->name('products.reviews.index');
+Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])
+    ->middleware('auth')
+    ->name('products.reviews.store');
+
 
 Route::get('/dashboard', function () {
     return view('dashboard');
