@@ -1,8 +1,9 @@
 @extends('layouts.client', ['title' => 'So sánh thông số kỹ thuật chi tiết - GearHub'])
 
 @section('content')
-<div 
-    x-data="{
+<script>
+function comparePage() {
+    return {
         diffOnly: false,
         highlightDiff: true,
         loadingId: null,
@@ -26,7 +27,7 @@
             .then(data => {
                 this.loadingId = null;
                 if (data.success) {
-                    const badge = document.querySelector('a[href*=\"cart\"] span.bg-primary');
+                    const badge = document.querySelector('a[href*="cart"] span.bg-primary');
                     if (badge && data.cartCount !== undefined) {
                         badge.innerText = data.cartCount;
                     }
@@ -44,7 +45,12 @@
                 alert('Có lỗi kết nối máy chủ.');
             });
         }
-    }"
+    };
+}
+</script>
+
+<div 
+    x-data="comparePage()"
     class="bg-[#F8FAFC] py-8 sm:py-12 min-h-screen text-gray-900"
 >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

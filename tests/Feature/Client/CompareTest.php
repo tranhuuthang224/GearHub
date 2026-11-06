@@ -136,6 +136,7 @@ class CompareTest extends TestCase
         $viewRes->assertSee('Thêm vào giỏ');
         $viewRes->assertSee('Đặc tả thông số kỹ thuật (Specs Matrix)');
         $viewRes->assertSee('Điểm khác biệt:');
+        $viewRes->assertDontSee('{ this.loadingId = null');
     }
 
     public function test_cannot_compare_products_from_different_category_families(): void
