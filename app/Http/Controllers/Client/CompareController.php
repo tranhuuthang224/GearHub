@@ -143,9 +143,10 @@ class CompareController extends Controller
         $compareSession = session('compare_items', []);
 
         return response()->json([
-            'count' => count($compareSession),
-            'items' => array_values($compareSession),
-            'ids'   => array_map('intval', array_keys($compareSession)),
+            'success' => true,
+            'count'   => count($compareSession),
+            'items'   => array_values($compareSession),
+            'ids'     => array_map('intval', array_keys($compareSession)),
         ]);
     }
 
@@ -201,7 +202,7 @@ class CompareController extends Controller
                     $firstCatName = $firstProduct->category->parent?->name ?? $firstProduct->category->name;
                     return response()->json([
                         'success' => false,
-                        'message' => "Chỉ có thể so sánh các sản phẩm cùng nhóm '{$firstCatName}'. Vui lòng xóa bớt để chọn ngành hàng khác.",
+                        'message' => "Chỉ có thể so sánh các sản phẩm cùng nhóm danh mục ('{$firstCatName}'). Vui lòng xóa bớt để chọn ngành hàng khác.",
                         'count'   => count($compareSession),
                     ], 422);
                 }

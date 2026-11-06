@@ -63,13 +63,9 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::post('/', [CommunityController::class, 'store'])->middleware('auth')->name('store');
     Route::get('/search-products', [CommunityController::class, 'searchProducts'])->name('search-products');
     Route::get('/{slug}', [CommunityController::class, 'show'])->name('show');
-    
-    // Tương tác Like & Comment (Yêu cầu đăng nhập)
-    Route::middleware('auth')->group(function () {
-        Route::post('/{post}/like', [CommunityController::class, 'like'])->name('like');
-        Route::post('/{post}/comments', [CommunityController::class, 'comment'])->name('comment');
-        Route::post('/{post}/comments-alt', [CommunityController::class, 'comment'])->name('comments.store');
-    });
+    Route::post('/{post}/like', [CommunityController::class, 'like'])->name('like');
+    Route::post('/{post}/comments', [CommunityController::class, 'comment'])->name('comment');
+    Route::post('/{post}/comments-alt', [CommunityController::class, 'comment'])->name('comments.store');
 });
 
 Route::get('/dashboard', function () {
