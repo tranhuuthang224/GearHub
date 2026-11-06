@@ -5,6 +5,7 @@ use App\Http\Controllers\Client\ShopController;
 use App\Http\Controllers\Client\ReviewController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\CompareController;
+use App\Http\Controllers\Client\CommunityController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController;
@@ -41,6 +42,14 @@ Route::prefix('compare')->name('compare.')->group(function () {
     Route::post('/toggle/{id}', [CompareController::class, 'toggle'])->name('toggle');
     Route::delete('/remove/{id}', [CompareController::class, 'remove'])->name('remove');
     Route::delete('/clear', [CompareController::class, 'clear'])->name('clear');
+});
+
+// Community Showcase Routes (Diễn đàn khoe góc máy)
+Route::prefix('community')->name('community.')->group(function () {
+    Route::get('/', [CommunityController::class, 'index'])->name('index');
+    Route::get('/{post}', [CommunityController::class, 'show'])->name('show');
+    Route::post('/{post}/like', [CommunityController::class, 'like'])->name('like');
+    Route::post('/{post}/comments', [CommunityController::class, 'comment'])->name('comment');
 });
 
 Route::get('/dashboard', function () {

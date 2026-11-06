@@ -45,6 +45,10 @@
                     <a href="{{ url('/shop') }}" class="{{ request()->is('shop*') ? 'text-primary font-bold' : 'text-gray-700 hover:text-primary' }} transition">
                         Shop
                     </a>
+                    <a href="{{ route('community.index') }}" class="{{ request()->is('community*') ? 'text-primary font-bold' : 'text-gray-700 hover:text-primary' }} transition flex items-center gap-1.5">
+                        <span>Khoe góc máy</span>
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 uppercase leading-none">Mới</span>
+                    </a>
                     <a href="{{ url('/about') }}" class="{{ request()->is('about*') ? 'text-primary font-bold' : 'text-gray-700 hover:text-primary' }} transition">
                         About us
                     </a>
@@ -183,6 +187,10 @@
             </a>
             <a href="{{ url('/shop') }}" class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->is('shop*') ? 'bg-primary/10 text-primary font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
                 Shop
+            </a>
+            <a href="{{ route('community.index') }}" class="flex items-center justify-between px-3 py-2 rounded-lg text-base font-medium {{ request()->is('community*') ? 'bg-primary/10 text-primary font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
+                <span>Khoe góc máy</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">Mới</span>
             </a>
             <a href="{{ url('/about') }}" class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->is('about*') ? 'bg-primary/10 text-primary font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
                 About us

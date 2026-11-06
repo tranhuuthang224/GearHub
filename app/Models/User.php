@@ -82,4 +82,15 @@ public function reviews(): HasMany
     return $this->hasMany(Review::class);
 }
 
+public function communityPosts(): HasMany
+{
+    return $this->hasMany(CommunityPost::class);
+}
+
+public function communityLikes(): HasMany
+{
+    return $this->hasMany(CommunityPostLike::class);
+}
+
+
 }
