@@ -91,10 +91,15 @@
                     class="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100/80 transition px-2.5 py-1 rounded-lg border border-amber-200/60 cursor-pointer text-left group"
                     title="Xem chi tiết đánh giá từ khách hàng"
                 >
-                    <span class="text-amber-500 font-bold text-xs flex items-center gap-1">
-                        ★ {{ $product['rating'] }}
-                    </span>
-                    <span class="text-gray-500 group-hover:text-primary transition text-xs underline decoration-dotted underline-offset-2">({{ $product['reviews_count'] }} đánh giá)</span>
+                    @if ($product['reviews_count'] > 0)
+                        <span class="text-amber-500 font-bold text-xs flex items-center gap-1">
+                            ★ {{ $product['rating'] }}
+                        </span>
+                        <span class="text-gray-500 group-hover:text-primary transition text-xs underline decoration-dotted underline-offset-2">({{ $product['reviews_count'] }} đánh giá)</span>
+                    @else
+                        <span class="text-amber-500 font-bold text-xs">★</span>
+                        <span class="text-gray-500 group-hover:text-primary transition text-xs underline decoration-dotted underline-offset-2">Chưa có đánh giá (Gửi đầu tiên)</span>
+                    @endif
                 </button>
 
                 <!-- SKU Code (Đúng yêu cầu) -->
@@ -740,85 +745,123 @@
                 </div>
             @endif
 
-            <!-- 2. Khối tổng quan: Điểm trung bình, Thanh tỷ lệ số sao & Chỉ số hài lòng -->
+            <!-- 2. Khối tổng quan: Điểm trung bình, Thanh tỷ lệ số sao & Nút viết đánh giá -->
             <div class="p-6 sm:p-8 bg-gradient-to-br from-[#F8FAFC] to-white rounded-3xl border border-gray-200 shadow-sm">
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                     
-                    <!-- Cột 1: Điểm số trung bình to bản & Sao -->
-                    <div class="md:col-span-4 text-center md:text-left space-y-3">
-                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold uppercase tracking-wider">
+                    <!-- Cột 1: Điểm số trung bình & Nút viết đánh giá (Rộng rãi, không bị co ép) -->
+                    <div class="lg:col-span-5 flex flex-col items-center lg:items-start text-center lg:text-left space-y-4 lg:pr-6 lg:border-r lg:border-gray-200/80">
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-xs font-bold uppercase tracking-wider">
                             <span>★ Đánh giá tổng hợp</span>
                         </div>
-                        <div class="flex items-baseline justify-center md:justify-start gap-2">
-                            <span class="text-5xl sm:text-6xl font-black text-gray-900 tracking-tight">{{ $averageRating }}</span>
-                            <span class="text-gray-400 text-lg font-bold">/ 5.0</span>
-                        </div>
 
-                        <!-- 5 Ngôi sao vàng lớn -->
-                        <div class="flex items-center justify-center md:justify-start gap-1 text-amber-400">
-                            @for ($s = 1; $s <= 5; $s++)
-                                @if ($s <= round((float)$averageRating))
-                                    <svg class="w-6 h-6 fill-current drop-shadow-xs" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                    </svg>
-                                @else
-                                    <svg class="w-6 h-6 text-gray-200 fill-current" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                    </svg>
-                                @endif
-                            @endfor
-                        </div>
-
-                        <p class="text-xs text-gray-500 font-medium leading-relaxed">
-                            Dựa trên <strong class="text-gray-900 font-bold">{{ $reviewsCount }}</strong> đánh giá thực tế từ khách hàng mua sắm
-                        </p>
-                    </div>
-
-                    <!-- Cột 2: Thanh tỷ lệ số sao (5★ -> 1★) -->
-                    <div class="md:col-span-5 space-y-2.5">
-                        @foreach ([5, 4, 3, 2, 1] as $star)
-                            <div class="flex items-center gap-3 text-xs">
-                                <span class="w-10 font-bold text-gray-700 flex items-center justify-end gap-1">
-                                    {{ $star }} <span class="text-amber-500">★</span>
-                                </span>
-
-                                <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden p-0.5 border border-gray-200/50">
-                                    <div 
-                                        class="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-700"
-                                        style="width: {{ $starDistribution[$star]['percent'] }}%"
-                                    ></div>
-                                </div>
-
-                                <div class="w-16 text-right font-medium text-gray-500">
-                                    <span class="font-bold text-gray-900">{{ $starDistribution[$star]['count'] }}</span>
-                                    <span class="text-[11px] text-gray-400">({{ $starDistribution[$star]['percent'] }}%)</span>
-                                </div>
+                        @if ($reviewsCount > 0)
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-5xl sm:text-6xl font-black text-gray-900 tracking-tight">{{ $averageRating }}</span>
+                                <span class="text-gray-400 text-lg font-bold">/ 5.0</span>
                             </div>
-                        @endforeach
-                    </div>
 
-                    <!-- Cột 3: Chỉ số niềm tin & Nút mở form đánh giá -->
-                    <div class="md:col-span-3 flex flex-col items-center md:items-end justify-center gap-3 pt-4 md:pt-0 md:border-l md:border-gray-200/80 md:pl-6 text-center md:text-right">
-                        <div class="px-4 py-2 bg-emerald-50 rounded-2xl border border-emerald-200 w-full text-center">
-                            <span class="font-black text-emerald-700 text-lg block">98.5%</span>
-                            <span class="text-xs text-emerald-800 font-semibold">Khách hàng hài lòng</span>
-                        </div>
+                            <!-- 5 Ngôi sao vàng lớn -->
+                            <div class="flex items-center gap-1 text-amber-400">
+                                @for ($s = 1; $s <= 5; $s++)
+                                    @if ($s <= round((float)$averageRating))
+                                        <svg class="w-6 h-6 fill-current drop-shadow-xs" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                        </svg>
+                                    @else
+                                        <svg class="w-6 h-6 text-gray-200 fill-current" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                        </svg>
+                                    @endif
+                                @endfor
+                            </div>
 
-                        <div class="px-4 py-2 bg-white rounded-2xl border border-gray-200 w-full text-center shadow-xs">
-                            <span class="font-black text-primary text-lg block">100%</span>
-                            <span class="text-xs text-gray-600 font-medium">Bảo hành chính hãng</span>
-                        </div>
+                            <p class="text-xs text-gray-500 font-medium">
+                                Dựa trên <strong class="text-gray-900 font-bold">{{ $reviewsCount }}</strong> đánh giá thực tế từ khách hàng mua sắm
+                            </p>
+                        @else
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-4xl sm:text-5xl font-black text-gray-400 tracking-tight">0.0</span>
+                                <span class="text-gray-400 text-base font-bold">/ 5.0</span>
+                            </div>
 
+                            <div class="flex items-center gap-1 text-gray-200">
+                                @for ($s = 1; $s <= 5; $s++)
+                                    <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                @endfor
+                            </div>
+
+                            <p class="text-xs text-gray-500 font-medium">
+                                Sản phẩm chưa có lượt đánh giá nào từ khách hàng
+                            </p>
+                        @endif
+
+                        <!-- Nút Viết đánh giá: Rộng rãi, chữ nằm ngang thoải mái, không bao giờ bị rớt dòng -->
                         <button 
                             type="button" 
                             @click="showReviewForm = !showReviewForm; $nextTick(() => document.getElementById('review-form-anchor')?.scrollIntoView({ behavior: 'smooth' }))"
-                            class="w-full mt-1 px-5 py-3 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-xs shadow-md shadow-primary/20 transition flex items-center justify-center gap-2"
+                            class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-xs shadow-md shadow-primary/20 transition flex items-center justify-center gap-2 whitespace-nowrap active:scale-98"
                         >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
-                            <span x-text="showReviewForm ? 'Đóng khung đánh giá' : 'Viết đánh giá của bạn'">Viết đánh giá của bạn</span>
+                            <span x-text="showReviewForm ? 'Đóng khung đánh giá' : '{{ $reviewsCount > 0 ? 'Viết đánh giá của bạn' : 'Viết đánh giá đầu tiên' }}'">
+                                {{ $reviewsCount > 0 ? 'Viết đánh giá của bạn' : 'Viết đánh giá đầu tiên' }}
+                            </span>
                         </button>
+                    </div>
+
+                    <!-- Cột 2: Thanh tỷ lệ số sao & Hàng cam kết niềm tin (lg:col-span-7) -->
+                    <div class="lg:col-span-7 space-y-5">
+                        
+                        <!-- 5 Dòng thanh tỷ lệ số sao -->
+                        <div class="space-y-2.5">
+                            @foreach ([5, 4, 3, 2, 1] as $star)
+                                <div class="flex items-center gap-3 text-xs">
+                                    <span class="w-10 font-bold text-gray-700 flex items-center justify-end gap-1 shrink-0">
+                                        {{ $star }} <span class="text-amber-500">★</span>
+                                    </span>
+
+                                    <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden p-0.5 border border-gray-200/60 min-w-[120px]">
+                                        <div 
+                                            class="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-700"
+                                            style="width: {{ $starDistribution[$star]['percent'] }}%"
+                                        ></div>
+                                    </div>
+
+                                    <div class="w-20 text-right font-medium text-gray-500 shrink-0">
+                                        <span class="font-bold text-gray-900">{{ $starDistribution[$star]['count'] }}</span>
+                                        <span class="text-[11px] text-gray-400">({{ $starDistribution[$star]['percent'] }}%)</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <!-- Hàng cam kết niềm tin (Nằm ngang rộng rãi, không bị co ép) -->
+                        <div class="pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div class="flex items-center gap-3 p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-emerald-800">
+                                <span class="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+                                    ✓
+                                </span>
+                                <div>
+                                    <span class="font-bold block text-emerald-950 text-xs">100% Đánh giá xác thực</span>
+                                    <span class="text-[11px] text-emerald-700">Chỉ từ khách hàng đã mua tại GearHub</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-200/80 text-gray-800">
+                                <span class="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+                                    🛡️
+                                </span>
+                                <div>
+                                    <span class="font-bold block text-gray-900 text-xs">Bảo hành chính hãng</span>
+                                    <span class="text-[11px] text-gray-500">Bảo hành 12 - 24 tháng, 1 đổi 1 trong 30 ngày</span>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                 </div>

@@ -253,7 +253,7 @@ class ShopController extends Controller
         $reviewsCount = $reviews->count();
         $averageRating = $reviewsCount > 0 
             ? number_format($reviews->avg('rating'), 1) 
-            : '5.0';
+            : '0.0';
 
         // Phân phối tỷ lệ số sao (5★ -> 1★)
         $starDistribution = [];
