@@ -10,11 +10,20 @@ class Review extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'product_id', 'rating', 'comment'];
+    protected $fillable = [
+        'user_id',
+        'product_id',
+        'rating',
+        'comment',
+        'photos',
+    ];
 
     protected function casts(): array
     {
-        return ['rating' => 'integer'];
+        return [
+            'rating' => 'integer',
+            'photos' => 'array',
+        ];
     }
 
     public function user(): BelongsTo

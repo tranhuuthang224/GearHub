@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             BrandSeeder::class,      // trước Product: Product cần brand_id
             ProductSeeder::class,
             CouponSeeder::class,
+            ReviewSeeder::class,
         ]);
     }
 }

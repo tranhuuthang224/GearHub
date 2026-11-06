@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\ShopController;
+use App\Http\Controllers\Client\ReviewController;
 use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\CompareController;
 use App\Http\Controllers\ProfileController;
@@ -20,6 +21,8 @@ use App\Http\Controllers\Admin\OrderController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
+Route::post('/shop/{slug}/reviews', [ReviewController::class, 'store'])->middleware('auth')->name('shop.reviews.store');
+Route::delete('/shop/{slug}/reviews', [ReviewController::class, 'destroy'])->middleware('auth')->name('shop.reviews.destroy');
 
 // Cart Routes (Session-based)
 Route::prefix('cart')->name('cart.')->group(function () {

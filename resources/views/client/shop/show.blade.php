@@ -85,12 +85,17 @@
             <!-- Rating, Review Count & SKU Code -->
             <div class="flex items-center gap-4 text-sm flex-wrap pt-0.5">
                 <!-- Stars -->
-                <div class="flex items-center gap-1.5 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200/60">
+                <button 
+                    type="button"
+                    @click="$dispatch('switch-tab', 'reviews'); document.getElementById('tabs-section').scrollIntoView({ behavior: 'smooth' })"
+                    class="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100/80 transition px-2.5 py-1 rounded-lg border border-amber-200/60 cursor-pointer text-left group"
+                    title="Xem chi tiết đánh giá từ khách hàng"
+                >
                     <span class="text-amber-500 font-bold text-xs flex items-center gap-1">
                         ★ {{ $product['rating'] }}
                     </span>
-                    <span class="text-gray-400 text-xs">({{ $product['reviews_count'] }} đánh giá)</span>
-                </div>
+                    <span class="text-gray-500 group-hover:text-primary transition text-xs underline decoration-dotted underline-offset-2">({{ $product['reviews_count'] }} đánh giá)</span>
+                </button>
 
                 <!-- SKU Code (Đúng yêu cầu) -->
                 <div class="text-xs text-gray-500">
@@ -457,7 +462,7 @@
     </section>
 
     <!-- 4. TABS: THÔNG SỐ KỸ THUẬT, MÔ TẢ & ĐÁNH GIÁ (Figma Page 5) -->
-    <div class="mt-20 pt-10 border-t border-gray-100" x-data="{ activeTab: 'specs' }">
+    <div id="tabs-section" class="mt-20 pt-10 border-t border-gray-100" x-data="{ activeTab: window.location.hash === '#reviews' ? 'reviews' : 'specs' }" x-on:switch-tab.window="activeTab = $event.detail">
         
         <!-- Tab Navigation Buttons -->
         <div class="flex items-center gap-8 border-b border-gray-200 pb-4 text-sm font-bold flex-wrap">
@@ -695,65 +700,602 @@
             </p>
         </div>
 
-        <!-- Tab 3: Reviews Preview -->
-        <div x-show="activeTab === 'reviews'" style="display: none;" class="pt-8 max-w-4xl space-y-6">
-            <!-- Điểm đánh giá tổng quan -->
-            <div class="p-6 bg-gray-50/80 rounded-2xl border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-6">
-                <div class="text-center sm:text-left">
-                    <span class="text-4xl font-black text-gray-900 tracking-tight">{{ $product['rating'] }}</span>
-                    <span class="text-gray-400 text-sm">/ 5.0</span>
-                    <div class="flex items-center justify-center sm:justify-start gap-1 text-amber-500 text-base mt-1">
-                        ★★★★★
+        <!-- Tab 3: Reviews & Star Ratings (Figma Spec) -->
+        <div 
+            x-show="activeTab === 'reviews'" 
+            style="display: none;" 
+            class="pt-8 max-w-5xl space-y-8"
+            x-data="{
+                filterRating: 'all',
+                activePhotoModal: null,
+                showReviewForm: {{ $currentUserReview || $errors->any() ? 'true' : 'false' }}
+            }"
+        >
+            <!-- 1. Flash Notifications -->
+            @if (session('review_success'))
+                <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between gap-3 text-emerald-800 text-sm font-semibold shadow-sm animate-fade-in">
+                    <div class="flex items-center gap-2.5">
+                        <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>{{ session('review_success') }}</span>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">Dựa trên {{ $product['reviews_count'] }} đánh giá thực tế từ khách hàng</p>
+                    <button type="button" @click="$el.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700 text-xs font-bold">Đóng</button>
                 </div>
+            @endif
 
-                <div class="flex items-center gap-4 text-xs">
-                    <div class="text-center px-4 py-2 bg-white rounded-xl border border-gray-200">
-                        <span class="font-bold text-emerald-600 text-sm block">98%</span>
-                        <span class="text-gray-500">Khách hàng hài lòng</span>
+            @if ($errors->any())
+                <div class="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-800 text-sm font-medium space-y-1.5 shadow-sm">
+                    <div class="font-bold flex items-center gap-2 text-red-900">
+                        <svg class="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Không thể gửi đánh giá. Vui lòng kiểm tra lại:</span>
                     </div>
-                    <div class="text-center px-4 py-2 bg-white rounded-xl border border-gray-200">
-                        <span class="font-bold text-primary text-sm block">100%</span>
-                        <span class="text-gray-500">Đã mua tại GearHub</span>
+                    <ul class="list-disc list-inside pl-1 text-xs space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <!-- 2. Khối tổng quan: Điểm trung bình, Thanh tỷ lệ số sao & Chỉ số hài lòng -->
+            <div class="p-6 sm:p-8 bg-gradient-to-br from-[#F8FAFC] to-white rounded-3xl border border-gray-200 shadow-sm">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                    
+                    <!-- Cột 1: Điểm số trung bình to bản & Sao -->
+                    <div class="md:col-span-4 text-center md:text-left space-y-3">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold uppercase tracking-wider">
+                            <span>★ Đánh giá tổng hợp</span>
+                        </div>
+                        <div class="flex items-baseline justify-center md:justify-start gap-2">
+                            <span class="text-5xl sm:text-6xl font-black text-gray-900 tracking-tight">{{ $averageRating }}</span>
+                            <span class="text-gray-400 text-lg font-bold">/ 5.0</span>
+                        </div>
+
+                        <!-- 5 Ngôi sao vàng lớn -->
+                        <div class="flex items-center justify-center md:justify-start gap-1 text-amber-400">
+                            @for ($s = 1; $s <= 5; $s++)
+                                @if ($s <= round((float)$averageRating))
+                                    <svg class="w-6 h-6 fill-current drop-shadow-xs" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                @else
+                                    <svg class="w-6 h-6 text-gray-200 fill-current" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                @endif
+                            @endfor
+                        </div>
+
+                        <p class="text-xs text-gray-500 font-medium leading-relaxed">
+                            Dựa trên <strong class="text-gray-900 font-bold">{{ $reviewsCount }}</strong> đánh giá thực tế từ khách hàng mua sắm
+                        </p>
                     </div>
+
+                    <!-- Cột 2: Thanh tỷ lệ số sao (5★ -> 1★) -->
+                    <div class="md:col-span-5 space-y-2.5">
+                        @foreach ([5, 4, 3, 2, 1] as $star)
+                            <div class="flex items-center gap-3 text-xs">
+                                <span class="w-10 font-bold text-gray-700 flex items-center justify-end gap-1">
+                                    {{ $star }} <span class="text-amber-500">★</span>
+                                </span>
+
+                                <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden p-0.5 border border-gray-200/50">
+                                    <div 
+                                        class="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-700"
+                                        style="width: {{ $starDistribution[$star]['percent'] }}%"
+                                    ></div>
+                                </div>
+
+                                <div class="w-16 text-right font-medium text-gray-500">
+                                    <span class="font-bold text-gray-900">{{ $starDistribution[$star]['count'] }}</span>
+                                    <span class="text-[11px] text-gray-400">({{ $starDistribution[$star]['percent'] }}%)</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <!-- Cột 3: Chỉ số niềm tin & Nút mở form đánh giá -->
+                    <div class="md:col-span-3 flex flex-col items-center md:items-end justify-center gap-3 pt-4 md:pt-0 md:border-l md:border-gray-200/80 md:pl-6 text-center md:text-right">
+                        <div class="px-4 py-2 bg-emerald-50 rounded-2xl border border-emerald-200 w-full text-center">
+                            <span class="font-black text-emerald-700 text-lg block">98.5%</span>
+                            <span class="text-xs text-emerald-800 font-semibold">Khách hàng hài lòng</span>
+                        </div>
+
+                        <div class="px-4 py-2 bg-white rounded-2xl border border-gray-200 w-full text-center shadow-xs">
+                            <span class="font-black text-primary text-lg block">100%</span>
+                            <span class="text-xs text-gray-600 font-medium">Bảo hành chính hãng</span>
+                        </div>
+
+                        <button 
+                            type="button" 
+                            @click="showReviewForm = !showReviewForm; $nextTick(() => document.getElementById('review-form-anchor')?.scrollIntoView({ behavior: 'smooth' }))"
+                            class="w-full mt-1 px-5 py-3 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-xs shadow-md shadow-primary/20 transition flex items-center justify-center gap-2"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            <span x-text="showReviewForm ? 'Đóng khung đánh giá' : 'Viết đánh giá của bạn'">Viết đánh giá của bạn</span>
+                        </button>
+                    </div>
+
                 </div>
             </div>
 
-            <!-- Danh sách đánh giá mẫu -->
-            <div class="space-y-3">
-                <div class="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                    <div class="flex items-center justify-between text-xs mb-2">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-gray-900">Trần Hữu Thắng</span>
-                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                ✓ Đã mua hàng tại GearHub
-                            </span>
+            <!-- Anchor cuộn tới form -->
+            <div id="review-form-anchor"></div>
+
+            <!-- 3. KHUNG CHẤM 1–5 SAO, Ô NHẬP NHẬN XÉT, NÚT TẢI ẢNH GÓC CHỤP THẬT -->
+            <div 
+                x-show="showReviewForm" 
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 -translate-y-4"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                class="p-6 sm:p-8 bg-white rounded-3xl border border-gray-200 shadow-lg space-y-6"
+                id="review-form-card"
+            >
+                @auth
+                    <div class="flex items-center justify-between flex-wrap gap-4 border-b border-gray-100 pb-5">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-primary to-orange-500 text-white font-black flex items-center justify-center text-sm shadow-sm">
+                                {{ mb_substr(auth()->user()->name ?? 'U', 0, 1) }}
+                            </div>
+                            <div>
+                                <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                                    {{ auth()->user()->name }}
+                                    @if ($isVerifiedBuyer)
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                            <svg class="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Đã mua hàng tại GearHub
+                                        </span>
+                                    @endif
+                                </h3>
+                                <p class="text-xs text-gray-500">
+                                    {{ $currentUserReview ? 'Bạn đã đánh giá sản phẩm này. Bạn có thể cập nhật nhận xét và ảnh bên dưới.' : 'Chia sẻ góc chụp thật và đánh giá trung thực để nhận điểm thưởng GearHub.' }}
+                                </p>
+                            </div>
                         </div>
-                        <span class="text-amber-500 font-bold">★★★★★ 5.0</span>
+
+                        @if ($currentUserReview)
+                            <form 
+                                action="{{ route('shop.reviews.destroy', $product['slug']) }}" 
+                                method="POST" 
+                                onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài đánh giá này không?')"
+                            >
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-xs font-bold text-red-500 hover:text-red-700 transition flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Xóa đánh giá cũ
+                                </button>
+                            </form>
+                        @endif
                     </div>
-                    <p class="text-xs text-gray-600 leading-relaxed">
-                        Đóng gói rất cẩn thận bằng hộp xốp chống sốc, nhân viên giao hỏa tốc chỉ mất hơn 1 tiếng là có hàng tại TP.HCM. Thiết bị build chắc chắn, chất âm chi tiết đúng như mô tả của shop!
-                    </p>
-                    <span class="text-[11px] text-gray-400 mt-2 block">Đánh giá vào 2 ngày trước</span>
+
+                    <!-- Alpine Interactive Form Component -->
+                    <form 
+                        action="{{ route('shop.reviews.store', $product['slug']) }}" 
+                        method="POST" 
+                        enctype="multipart/form-data"
+                        x-data="{
+                            rating: {{ (int) old('rating', $currentUserReview->rating ?? 5) }},
+                            hoverRating: 0,
+                            comment: '{{ addslashes(old('comment', $currentUserReview->comment ?? '')) }}',
+                            previews: [],
+                            submitting: false,
+                            labels: {
+                                1: '1 sao: Thất vọng - Rất tệ',
+                                2: '2 sao: Chưa ưng ý - Cần cải thiện',
+                                3: '3 sao: Bình thường - Đủ dùng',
+                                4: '4 sao: Hài lòng - Chất lượng tốt',
+                                5: '5 sao: Tuyệt vời - Rất đáng tiền'
+                            },
+                            handleFileChange(event) {
+                                const files = Array.from(event.target.files).slice(0, 3);
+                                this.previews = files.map(file => URL.createObjectURL(file));
+                            },
+                            removePreview(index) {
+                                this.previews.splice(index, 1);
+                                const input = document.getElementById('review-photos-input');
+                                if (input) input.value = '';
+                            }
+                        }"
+                        @submit="submitting = true"
+                        class="space-y-6"
+                    >
+                        @csrf
+                        <input type="hidden" name="rating" :value="rating">
+
+                        <!-- KHUNG CHẤM 1–5 SAO (Hover đổi màu sao vàng hổ phách) -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                                1. Mức độ hài lòng của bạn <span class="text-red-500">*</span>
+                            </label>
+
+                            <div class="flex items-center gap-4 flex-wrap bg-gray-50/80 p-4 rounded-2xl border border-gray-200">
+                                <div class="flex items-center gap-1.5" @mouseleave="hoverRating = 0">
+                                    <template x-for="star in 5" :key="star">
+                                        <button 
+                                            type="button"
+                                            @click="rating = star"
+                                            @mouseenter="hoverRating = star"
+                                            class="p-1 focus:outline-none transition-transform hover:scale-125 duration-150 cursor-pointer"
+                                            :title="star + ' sao'"
+                                        >
+                                            <svg 
+                                                class="w-8 h-8 sm:w-9 sm:h-9 transition-colors duration-150" 
+                                                :class="(hoverRating ? star <= hoverRating : star <= rating) ? 'text-amber-400 fill-amber-400 drop-shadow-sm' : 'text-gray-200 fill-gray-200'"
+                                                viewBox="0 0 20 20"
+                                            >
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                            </svg>
+                                        </button>
+                                    </template>
+                                </div>
+
+                                <span 
+                                    class="text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl bg-white border border-gray-200 text-amber-600 shadow-xs"
+                                    x-text="labels[hoverRating || rating]"
+                                ></span>
+                            </div>
+                        </div>
+
+                        <!-- Ô NHẬP NHẬN XÉT -->
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label for="comment-input" class="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                                    2. Nhận xét chi tiết <span class="text-red-500">*</span>
+                                </label>
+                                <span class="text-xs text-gray-400 font-mono">
+                                    <span x-text="comment.length">0</span>/2000 ký tự
+                                </span>
+                            </div>
+
+                            <textarea 
+                                id="comment-input"
+                                name="comment" 
+                                rows="4" 
+                                x-model="comment"
+                                required
+                                minlength="5"
+                                maxlength="2000"
+                                placeholder="Hãy chia sẻ trải nghiệm sử dụng thực tế: cảm giác gõ phím/cầm chuột/âm thanh, chất lượng hoàn thiện, thời lượng pin, độ nhạy hay quy cách đóng gói..."
+                                class="w-full px-4 py-3.5 text-sm text-gray-900 placeholder-gray-400 bg-white border border-gray-300 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition outline-none resize-y"
+                            ></textarea>
+                        </div>
+
+                        <!-- NÚT TẢI ẢNH GÓC CHỤP THẬT (Góc setup / Unbox) -->
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                                    3. Ảnh góc chụp thật (Setup / Unbox thực tế)
+                                </label>
+                                <span class="text-xs text-gray-400 font-medium">Tối đa 3 ảnh (JPG, PNG, WebP)</span>
+                            </div>
+
+                            <div class="flex items-center gap-4 flex-wrap">
+                                <label 
+                                    for="review-photos-input"
+                                    class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-dashed border-gray-300 hover:border-primary hover:bg-red-50/40 text-xs font-bold text-gray-700 hover:text-primary transition cursor-pointer group"
+                                >
+                                    <svg class="w-5 h-5 text-gray-400 group-hover:text-primary transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                    <span>Tải ảnh góc chụp thật</span>
+                                </label>
+                                <input 
+                                    type="file" 
+                                    id="review-photos-input" 
+                                    name="photos[]" 
+                                    multiple 
+                                    accept="image/jpeg,image/png,image/webp" 
+                                    class="hidden"
+                                    @change="handleFileChange($event)"
+                                >
+
+                                <p class="text-xs text-gray-400">
+                                    Khuyên dùng: Ảnh chụp góc máy làm việc hoặc góc unbox để giúp cộng đồng tham khảo trực quan!
+                                </p>
+                            </div>
+
+                            <!-- Ảnh xem trước (Previews) -->
+                            <div class="flex items-center gap-3 flex-wrap pt-1" x-show="previews.length > 0">
+                                <template x-for="(preview, idx) in previews" :key="idx">
+                                    <div class="relative w-20 h-20 rounded-2xl overflow-hidden border border-gray-200 shadow-xs group">
+                                        <img :src="preview" class="w-full h-full object-cover">
+                                        <button 
+                                            type="button" 
+                                            @click="removePreview(idx)" 
+                                            class="absolute top-1 right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-700 transition"
+                                            title="Xóa ảnh"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Hiển thị ảnh cũ đã lưu nếu đang sửa review -->
+                            @if ($currentUserReview && !empty($currentUserReview->photos))
+                                <div class="pt-1">
+                                    <span class="text-xs font-bold text-gray-500 block mb-1.5">Ảnh hiện tại:</span>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        @foreach ($currentUserReview->photos as $ph)
+                                            <div class="w-16 h-16 rounded-xl overflow-hidden border border-gray-200">
+                                                <img 
+                                                    src="{{ \Illuminate\Support\Str::startsWith($ph, ['http', 'images/']) ? asset($ph) : asset('storage/' . $ph) }}" 
+                                                    class="w-full h-full object-cover"
+                                                >
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
+                            <button 
+                                type="button" 
+                                @click="showReviewForm = false"
+                                class="px-5 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs transition"
+                            >
+                                Hủy bỏ
+                            </button>
+
+                            <button 
+                                type="submit" 
+                                :disabled="submitting"
+                                class="px-6 py-3 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-xs shadow-md shadow-primary/20 transition flex items-center gap-2 disabled:opacity-50"
+                            >
+                                <svg x-show="submitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                </svg>
+                                <span x-text="submitting ? 'Đang gửi...' : '{{ $currentUserReview ? 'Cập nhật đánh giá' : 'Gửi đánh giá & Ảnh' }}'">
+                                    {{ $currentUserReview ? 'Cập nhật đánh giá' : 'Gửi đánh giá & Ảnh' }}
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                @else
+                    <!-- Khách chưa đăng nhập -->
+                    <div class="p-8 text-center space-y-4">
+                        <div class="w-14 h-14 mx-auto rounded-3xl bg-amber-50 text-amber-500 flex items-center justify-center border border-amber-200 shadow-sm">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <h4 class="text-base font-bold text-gray-900">Đăng nhập để gửi đánh giá sản phẩm</h4>
+                        <p class="text-xs text-gray-500 max-w-md mx-auto">
+                            Chỉ những tài khoản đã đăng nhập mới có thể gửi đánh giá, chấm sao và đính kèm hình ảnh góc máy thực tế tại GearHub.
+                        </p>
+                        <div class="pt-2">
+                            <a 
+                                href="{{ route('login') }}?redirect={{ urlencode(url()->current() . '#reviews') }}"
+                                class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-xs shadow-md shadow-primary/20 transition"
+                            >
+                                <span>Đăng nhập ngay</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                @endauth
+            </div>
+
+            <!-- 4. DANH SÁCH REVIEWS KÈM NHÃN "ĐÃ MUA HÀNG TẠI GEARHUB" (Verified Purchase) -->
+            <div class="space-y-4">
+                
+                <!-- Thanh công cụ lọc đánh giá (Filter Pills) -->
+                <div class="flex items-center justify-between flex-wrap gap-3 border-b border-gray-100 pb-3">
+                    <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                        <span>Đánh giá từ khách hàng</span>
+                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-bold font-mono">
+                            {{ $reviewsCount }}
+                        </span>
+                    </h3>
+
+                    <!-- Filter buttons -->
+                    <div class="flex items-center gap-1.5 flex-wrap text-xs font-bold">
+                        <button 
+                            type="button" 
+                            @click="filterRating = 'all'" 
+                            :class="filterRating === 'all' ? 'bg-gray-900 text-white shadow-xs' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'"
+                            class="px-3 py-1.5 rounded-xl transition"
+                        >
+                            Tất cả ({{ $reviewsCount }})
+                        </button>
+                        
+                        <button 
+                            type="button" 
+                            @click="filterRating = 'photo'" 
+                            :class="filterRating === 'photo' ? 'bg-gray-900 text-white shadow-xs' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'"
+                            class="px-3 py-1.5 rounded-xl transition flex items-center gap-1"
+                        >
+                            <span>📸 Có ảnh</span>
+                        </button>
+
+                        @foreach ([5, 4, 3] as $st)
+                            @if ($starDistribution[$st]['count'] > 0)
+                                <button 
+                                    type="button" 
+                                    @click="filterRating = '{{ $st }}'" 
+                                    :class="filterRating === '{{ $st }}' ? 'bg-amber-500 text-white shadow-xs' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'"
+                                    class="px-3 py-1.5 rounded-xl transition"
+                                >
+                                    {{ $st }} ★ ({{ $starDistribution[$st]['count'] }})
+                                </button>
+                            @endif
+                        @endforeach
+                    </div>
                 </div>
 
-                <div class="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                    <div class="flex items-center justify-between text-xs mb-2">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-gray-900">Nguyễn Văn An</span>
-                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                ✓ Đã mua hàng tại GearHub
-                            </span>
-                        </div>
-                        <span class="text-amber-500 font-bold">★★★★★ 5.0</span>
+                <!-- Danh sách từng review -->
+                @if ($reviews->isNotEmpty())
+                    <div class="space-y-3.5">
+                        @foreach ($reviews as $rev)
+                            @php
+                                $isVerified = in_array($rev->user_id, $verifiedUserIds, true);
+                                $hasPhotos = !empty($rev->photos) && is_array($rev->photos) && count($rev->photos) > 0;
+                            @endphp
+
+                            <div 
+                                class="p-6 bg-white rounded-3xl border border-gray-100 hover:border-gray-200 shadow-xs hover:shadow-md transition-all duration-200 space-y-3"
+                                x-show="filterRating === 'all' || (filterRating === 'photo' && {{ $hasPhotos ? 'true' : 'false' }}) || filterRating === '{{ $rev->rating }}'"
+                                x-transition
+                            >
+                                <div class="flex items-start justify-between flex-wrap gap-3">
+                                    
+                                    <!-- Người đánh giá & Nhãn Verified Purchase -->
+                                    <div class="flex items-center gap-3">
+                                        <!-- Avatar Initials Gradient -->
+                                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-gray-700 to-gray-900 text-white font-bold flex items-center justify-center text-sm shadow-xs flex-shrink-0">
+                                            {{ mb_substr($rev->user?->name ?? 'G', 0, 1) }}
+                                        </div>
+
+                                        <div>
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <span class="font-bold text-gray-900 text-sm">
+                                                    {{ $rev->user?->name ?? 'Khách hàng GearHub' }}
+                                                </span>
+
+                                                <!-- Nhãn "Đã mua hàng tại GearHub" (Verified Purchase) -->
+                                                @if ($isVerified)
+                                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80 shadow-xs">
+                                                        <svg class="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                        Đã mua hàng tại GearHub
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            <span class="text-[11px] text-gray-400 font-medium">
+                                                Đánh giá vào {{ $rev->created_at->diffForHumans() }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stars badge -->
+                                    <div class="flex items-center gap-1 text-amber-500 font-bold text-xs bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200/60">
+                                        <div class="flex items-center text-amber-400">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                @if ($i <= $rev->rating)
+                                                    ★
+                                                @else
+                                                    <span class="text-gray-300">★</span>
+                                                @endif
+                                            @endfor
+                                        </div>
+                                        <span class="font-mono">{{ number_format($rev->rating, 1) }}</span>
+                                    </div>
+
+                                </div>
+
+                                <!-- Nội dung nhận xét -->
+                                <p class="text-xs sm:text-sm text-gray-700 leading-relaxed pl-0 sm:pl-13">
+                                    {{ $rev->comment }}
+                                </p>
+
+                                <!-- Gallery ảnh góc chụp thật (Setup / Unbox) -->
+                                @if ($hasPhotos)
+                                    <div class="pl-0 sm:pl-13 pt-1">
+                                        <div class="flex items-center gap-2.5 flex-wrap">
+                                            @foreach ($rev->photos as $photo)
+                                                @php
+                                                    $photoUrl = \Illuminate\Support\Str::startsWith($photo, ['http', 'images/']) 
+                                                        ? asset($photo) 
+                                                        : asset('storage/' . $photo);
+                                                @endphp
+                                                <button 
+                                                    type="button"
+                                                    @click="activePhotoModal = '{{ $photoUrl }}'"
+                                                    class="relative w-20 h-20 rounded-2xl overflow-hidden border border-gray-200 hover:border-primary shadow-xs hover:shadow-md transition group focus:outline-none"
+                                                    title="Bấm để xem ảnh phóng to"
+                                                >
+                                                    <img src="{{ $photoUrl }}" alt="Ảnh thực tế" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                                                    <div class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition"></div>
+                                                    <div class="absolute bottom-1 right-1 p-1 bg-black/60 rounded-md text-white text-[10px] opacity-0 group-hover:opacity-100 transition">
+                                                        🔍
+                                                    </div>
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <!-- Tương tác hữu ích -->
+                                <div class="pl-0 sm:pl-13 pt-2 flex items-center justify-between text-xs text-gray-400 border-t border-gray-50" x-data="{ liked: false, count: {{ rand(2, 9) }} }">
+                                    <button 
+                                        type="button" 
+                                        @click="liked = !liked; liked ? count++ : count--"
+                                        :class="liked ? 'text-primary font-bold' : 'hover:text-gray-600'"
+                                        class="inline-flex items-center gap-1.5 transition"
+                                    >
+                                        <svg class="w-3.5 h-3.5" :fill="liked ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+                                        </svg>
+                                        <span>Hữu ích (<span x-text="count"></span>)</span>
+                                    </button>
+
+                                    <span class="text-[11px] text-gray-400">Đã kiểm duyệt bởi GearHub</span>
+                                </div>
+
+                            </div>
+                        @endforeach
                     </div>
-                    <p class="text-xs text-gray-600 leading-relaxed">
-                        Sản phẩm chất lượng cực kỳ cao, pin trâu dùng liên tục cả tuần chưa phải sạc lại. Rất hài lòng về thái độ tư vấn nhiệt tình của shop. 10/10 điểm!
-                    </p>
-                    <span class="text-[11px] text-gray-400 mt-2 block">Đánh giá vào 1 tuần trước</span>
+                @else
+                    <!-- Trạng thái trống (Empty Reviews) -->
+                    <div class="p-10 text-center bg-gray-50/70 rounded-3xl border border-dashed border-gray-200 space-y-3">
+                        <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center border border-amber-200 text-xl">
+                            ★
+                        </div>
+                        <h4 class="text-sm font-bold text-gray-900">Chưa có đánh giá nào cho sản phẩm này</h4>
+                        <p class="text-xs text-gray-500 max-w-sm mx-auto">
+                            Hãy là khách hàng đầu tiên chia sẻ cảm nhận và hình ảnh thực tế để giúp cộng đồng GearHub lựa chọn dễ dàng hơn!
+                        </p>
+                        <button 
+                            type="button" 
+                            @click="showReviewForm = true; $nextTick(() => document.getElementById('review-form-anchor')?.scrollIntoView({ behavior: 'smooth' }))"
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-gray-200 hover:border-primary text-xs font-bold text-gray-700 hover:text-primary transition shadow-xs"
+                        >
+                            <span>✍️ Viết đánh giá đầu tiên</span>
+                        </button>
+                    </div>
+                @endif
+
+            </div>
+
+            <!-- MODAL PHÓNG TO ẢNH THỰC TẾ (Lightbox) -->
+            <div 
+                x-show="activePhotoModal !== null" 
+                style="display: none;"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4"
+                @click.self="activePhotoModal = null"
+                @keydown.escape.window="activePhotoModal = null"
+            >
+                <div class="relative max-w-3xl max-h-[90vh] bg-white rounded-3xl overflow-hidden shadow-2xl p-2 animate-scale-up">
+                    <button 
+                        type="button" 
+                        @click="activePhotoModal = null" 
+                        class="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center text-sm font-bold transition"
+                    >
+                        ✕
+                    </button>
+                    <img :src="activePhotoModal" class="max-w-full max-h-[82vh] object-contain rounded-2xl">
+                    <p class="text-center text-xs text-gray-500 py-2 font-medium">Ảnh góc chụp thật từ khách hàng đã mua tại GearHub</p>
                 </div>
             </div>
+
         </div>
 
     </div>

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -247,10 +249,39 @@ class ShopController extends Controller
                     : asset('storage/' . $img->path)));
         }
 
-        $reviewsCount = $dbProduct->reviews->count();
+        $reviews = $dbProduct->reviews->sortByDesc('created_at')->values();
+        $reviewsCount = $reviews->count();
         $averageRating = $reviewsCount > 0 
-            ? number_format($dbProduct->reviews->avg('rating'), 1) 
-            : '4.9';
+            ? number_format($reviews->avg('rating'), 1) 
+            : '5.0';
+
+        // Phân phối tỷ lệ số sao (5★ -> 1★)
+        $starDistribution = [];
+        foreach ([5, 4, 3, 2, 1] as $star) {
+            $count = $reviews->where('rating', $star)->count();
+            $percent = $reviewsCount > 0 ? round(($count / $reviewsCount) * 100) : 0;
+            $starDistribution[$star] = [
+                'count'   => $count,
+                'percent' => $percent,
+            ];
+        }
+
+        // Danh sách ID người dùng đã mua sản phẩm này (đơn hoàn thành hoặc đang giao)
+        $verifiedUserIds = OrderItem::where('product_id', $dbProduct->id)
+            ->whereHas('order', function ($q) {
+                $q->whereIn('status', [Order::STATUS_COMPLETED, Order::STATUS_SHIPPING]);
+            })
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->pluck('orders.user_id')
+            ->unique()
+            ->filter()
+            ->values()
+            ->all();
+
+        $isVerifiedBuyer = auth()->check() && in_array(auth()->id(), $verifiedUserIds, true);
+        $currentUserReview = auth()->check()
+            ? $reviews->firstWhere('user_id', auth()->id())
+            : null;
 
         $product = [
             'id'             => $dbProduct->id,
@@ -262,7 +293,7 @@ class ShopController extends Controller
             'price'          => (int) $dbProduct->price,
             'sale_price'     => $dbProduct->sale_price ? (int) $dbProduct->sale_price : null,
             'rating'         => $averageRating,
-            'reviews_count'  => $reviewsCount ?: 128,
+            'reviews_count'  => $reviewsCount,
             'description'    => $dbProduct->description ?? 'Sản phẩm gaming gear và phụ kiện chính hãng, phân phối bởi GearHub.',
             'thumbnail'      => $thumb,
             'gallery'        => $gallery->unique()->values()->all(),
@@ -308,6 +339,16 @@ class ShopController extends Controller
             'rating'     => '4.8',
         ]);
 
-        return view('client.shop.show', compact('product', 'relatedProducts'));
+        return view('client.shop.show', compact(
+            'product',
+            'relatedProducts',
+            'reviews',
+            'reviewsCount',
+            'averageRating',
+            'starDistribution',
+            'verifiedUserIds',
+            'isVerifiedBuyer',
+            'currentUserReview'
+        ));
     }
 }
