@@ -268,6 +268,25 @@
                     @endif
                 </div>
 
+                <!-- Nút Thêm vào so sánh thông số kỹ thuật -->
+                <div 
+                    x-data="{ isCompared: false }" 
+                    x-on:compare-active-ids.window="isCompared = ($event.detail.ids || []).includes({{ $product['id'] }})"
+                    class="pt-1"
+                >
+                    <button
+                        type="button"
+                        @click="window.dispatchEvent(new CustomEvent('toggle-compare', { detail: { id: {{ $product['id'] }} } }))"
+                        :class="isCompared ? 'bg-primary/10 text-primary border-primary/40' : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'"
+                        class="w-full py-3 px-5 rounded-2xl border font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.99]"
+                    >
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+                        </svg>
+                        <span x-text="isCompared ? '✓ Đang trong danh sách so sánh (Bấm để bỏ)' : '⚖ Thêm vào so sánh thông số'"></span>
+                    </button>
+                </div>
+
                 <!-- Toast feedback khi thêm giỏ hàng thành công -->
                 <div 
                     x-show="addedToast" 
@@ -519,20 +538,36 @@
                     </div>
 
                     @if (!empty($parsedSpecs) && count($parsedSpecs) > 0)
-                        <button 
-                            type="button" 
-                            @click="copySpecs()" 
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold text-gray-700 transition shadow-sm active:scale-95"
-                            title="Sao chép toàn bộ thông số"
-                        >
-                            <svg x-show="!copied" class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                            </svg>
-                            <svg x-show="copied" class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: none;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            <span x-text="copied ? 'Đã chép thông số!' : 'Sao chép thông số'">Sao chép thông số</span>
-                        </button>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <!-- Nút So sánh gear này -->
+                            <button 
+                                type="button" 
+                                onclick="window.dispatchEvent(new CustomEvent('toggle-compare', { detail: { id: {{ $product['id'] }} } }))"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold text-gray-700 transition shadow-sm active:scale-95"
+                                title="So sánh với sản phẩm khác"
+                            >
+                                <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+                                </svg>
+                                <span>So sánh gear này</span>
+                            </button>
+
+                            <!-- Nút Sao chép thông số -->
+                            <button 
+                                type="button" 
+                                @click="copySpecs()" 
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-semibold text-gray-700 transition shadow-sm active:scale-95"
+                                title="Sao chép toàn bộ thông số"
+                            >
+                                <svg x-show="!copied" class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                                <svg x-show="copied" class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: none;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                <span x-text="copied ? 'Đã chép thông số!' : 'Sao chép thông số'">Sao chép thông số</span>
+                            </button>
+                        </div>
                     @endif
                 </div>
 

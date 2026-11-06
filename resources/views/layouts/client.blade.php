@@ -293,6 +293,9 @@
         </div>
     </footer>
 
+    <!-- Global Sticky Compare Bar (Thanh công cụ So sánh dính đáy) -->
+    <x-sticky-compare-bar />
+
     <!-- Global Cart Feedback Toast -->
     <div 
         x-data="{ show: false, message: '' }" 

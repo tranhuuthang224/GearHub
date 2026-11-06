@@ -39,7 +39,11 @@
     $url = $slug !== '#' ? route('shop.show', $slug) : '#';
 @endphp
 
-<div {{ $attributes->merge(['class' => 'group flex flex-col bg-white rounded-2xl transition duration-300 hover:-translate-y-1 hover:shadow-lg']) }}>
+<div 
+    x-data="{ isCompared: false }" 
+    x-on:compare-active-ids.window="isCompared = ($event.detail.ids || []).includes({{ $id ?? 0 }})"
+    {{ $attributes->merge(['class' => 'group flex flex-col bg-white rounded-2xl transition duration-300 hover:-translate-y-1 hover:shadow-lg']) }}
+>
     <!-- Image Box with soft grey background -->
     <div class="relative aspect-square w-full bg-[#F4F5F7] rounded-2xl overflow-hidden flex items-center justify-center p-6">
         @if ($hasDiscount)
@@ -67,17 +71,33 @@
             @endif
         </a>
 
-        <!-- Quick Add to Cart button on hover -->
-        <button
-            type="button"
-            class="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white text-gray-800 shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white"
-            title="Thêm vào giỏ"
-            onclick="event.preventDefault(); window.dispatchEvent(new CustomEvent('add-to-cart', { detail: { id: {{ $id ?? 0 }} } }))"
-        >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-        </button>
+        <!-- Quick Action Buttons: So sánh & Thêm vào giỏ -->
+        <div class="absolute bottom-3 right-3 flex items-center gap-1.5 z-10 sm:opacity-0 sm:group-hover:opacity-100 opacity-90 transition-all duration-300">
+            <!-- Nút So sánh (Icon cân) -->
+            <button
+                type="button"
+                :class="isCompared ? 'bg-primary text-white ring-2 ring-primary/40' : 'bg-white text-gray-700 hover:bg-[#18181B] hover:text-white'"
+                class="w-9 h-9 rounded-full shadow-md flex items-center justify-center transition-all duration-200 transform hover:scale-105 active:scale-95"
+                :title="isCompared ? 'Đang chọn so sánh (bấm để bỏ)' : 'Thêm vào so sánh'"
+                onclick="event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new CustomEvent('toggle-compare', { detail: { id: {{ $id ?? 0 }} } }))"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+                </svg>
+            </button>
+
+            <!-- Nút Thêm vào giỏ (Icon túi) -->
+            <button
+                type="button"
+                class="w-9 h-9 rounded-full bg-white text-gray-800 shadow-md flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-200 transform hover:scale-105 active:scale-95"
+                title="Thêm vào giỏ"
+                onclick="event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new CustomEvent('add-to-cart', { detail: { id: {{ $id ?? 0 }} } }))"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+            </button>
+        </div>
     </div>
 
     <!-- Product Info -->

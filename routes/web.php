@@ -3,6 +3,7 @@
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\ShopController;
 use App\Http\Controllers\Client\CartController;
+use App\Http\Controllers\Client\CompareController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController;
@@ -27,6 +28,16 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::patch('/update', [CartController::class, 'update'])->name('update');
     Route::delete('/remove/{id}', [CartController::class, 'remove'])->name('remove');
     Route::delete('/clear', [CartController::class, 'clear'])->name('clear');
+});
+
+// Comparison Routes (Session-based)
+Route::prefix('compare')->name('compare.')->group(function () {
+    Route::get('/', [CompareController::class, 'index'])->name('index');
+    Route::get('/items', [CompareController::class, 'items'])->name('items');
+    Route::post('/add/{id}', [CompareController::class, 'add'])->name('add');
+    Route::post('/toggle/{id}', [CompareController::class, 'toggle'])->name('toggle');
+    Route::delete('/remove/{id}', [CompareController::class, 'remove'])->name('remove');
+    Route::delete('/clear', [CompareController::class, 'clear'])->name('clear');
 });
 
 Route::get('/dashboard', function () {
