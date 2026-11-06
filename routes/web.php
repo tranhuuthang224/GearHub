@@ -47,7 +47,10 @@ Route::prefix('compare')->name('compare.')->group(function () {
 // Community Showcase Routes (Diễn đàn khoe góc máy)
 Route::prefix('community')->name('community.')->group(function () {
     Route::get('/', [CommunityController::class, 'index'])->name('index');
-    Route::get('/{post}', [CommunityController::class, 'show'])->name('show');
+    Route::get('/create', [CommunityController::class, 'create'])->middleware('auth')->name('create');
+    Route::post('/', [CommunityController::class, 'store'])->middleware('auth')->name('store');
+    Route::get('/search-products', [CommunityController::class, 'searchProducts'])->name('search-products');
+    Route::get('/{slug}', [CommunityController::class, 'show'])->name('show');
     Route::post('/{post}/like', [CommunityController::class, 'like'])->name('like');
     Route::post('/{post}/comments', [CommunityController::class, 'comment'])->name('comment');
 });

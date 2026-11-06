@@ -6,12 +6,27 @@ use App\Http\Controllers\Controller;
 use App\Models\CommunityPost;
 use App\Models\CommunityPostComment;
 use App\Models\CommunityPostLike;
+use App\Models\Product;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CommunityController extends Controller
 {
+    /**
+     * Tìm bài viết theo slug hoặc id.
+     */
+    protected function resolvePost(string $idOrSlug): CommunityPost
+    {
+        return CommunityPost::query()
+            ->where('slug', $idOrSlug)
+            ->orWhere('id', is_numeric($idOrSlug) ? (int) $idOrSlug : 0)
+            ->firstOrFail();
+    }
+
     /**
      * Hiển thị trang chủ Diễn đàn Khoe Góc Máy (Pinterest / Masonry Grid).
      */
@@ -77,10 +92,122 @@ class CommunityController extends Controller
     }
 
     /**
-     * Xem chi tiết bài viết (Hỗ trợ Modal AJAX và trang độc lập).
+     * Hiển thị form đăng bài khoe góc máy (/community/create).
      */
-    public function show(Request $request, CommunityPost $post)
+    public function create(): View
     {
+        // Gợi ý sẵn một số sản phẩm mới / nổi bật để tag nhanh
+        $suggestedProducts = Product::where('is_active', true)
+            ->with(['brand', 'category'])
+            ->latest('id')
+            ->take(8)
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id'              => $product->id,
+                    'name'            => $product->name,
+                    'brand'           => $product->brand?->name ?? 'GearHub',
+                    'category'        => $product->category?->name ?? 'Gear',
+                    'thumbnail'       => $product->thumbnail ? asset($product->thumbnail) : 'https://placehold.co/400x400/png?text=GearHub',
+                    'effective_price' => $product->effective_price,
+                    'formatted_price' => number_format($product->effective_price, 0, ',', '.') . '₫',
+                ];
+            });
+
+        return view('client.community.create', [
+            'styles'            => CommunityPost::STYLES,
+            'suggestedProducts' => $suggestedProducts,
+        ]);
+    }
+
+    /**
+     * Tìm kiếm sản phẩm phục vụ tính năng Tag Gear (AJAX).
+     */
+    public function searchProducts(Request $request): JsonResponse
+    {
+        $keyword = trim((string) $request->query('q', ''));
+
+        $query = Product::where('is_active', true)->with(['brand', 'category']);
+
+        if (! empty($keyword)) {
+            $query->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', "%{$keyword}%")
+                  ->orWhere('sku', 'like', "%{$keyword}%");
+            });
+        }
+
+        $products = $query->latest('id')->take(10)->get()->map(function ($product) {
+            return [
+                'id'              => $product->id,
+                'name'            => $product->name,
+                'brand'           => $product->brand?->name ?? 'GearHub',
+                'category'        => $product->category?->name ?? 'Gear',
+                'thumbnail'       => $product->thumbnail ? asset($product->thumbnail) : 'https://placehold.co/400x400/png?text=GearHub',
+                'price'           => $product->price,
+                'sale_price'      => $product->sale_price,
+                'effective_price' => $product->effective_price,
+                'formatted_price' => number_format($product->effective_price, 0, ',', '.') . '₫',
+                'in_stock'        => $product->stock_quantity > 0,
+            ];
+        });
+
+        return response()->json($products);
+    }
+
+    /**
+     * Lưu bài đăng khoe góc máy mới.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title'         => ['required', 'string', 'min:5', 'max:200'],
+            'style'         => ['required', 'string', 'in:' . implode(',', array_keys(CommunityPost::STYLES))],
+            'image'         => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:10240'],
+            'description'   => ['nullable', 'string', 'max:3000'],
+            'product_ids'   => ['nullable', 'array', 'max:10'],
+            'product_ids.*' => ['exists:products,id'],
+        ], [
+            'title.required'       => 'Vui lòng nhập tiêu đề cho góc máy của bạn.',
+            'title.min'            => 'Tiêu đề bài viết cần tối thiểu 5 ký tự.',
+            'title.max'            => 'Tiêu đề không được vượt quá 200 ký tự.',
+            'style.required'       => 'Vui lòng chọn phong cách setup phù hợp.',
+            'style.in'             => 'Phong cách setup không hợp lệ.',
+            'image.required'       => 'Vui lòng tải lên ảnh chụp góc máy của bạn.',
+            'image.image'          => 'Tệp tải lên phải là định dạng hình ảnh.',
+            'image.mimes'          => 'Chỉ chấp nhận các định dạng ảnh: JPEG, JPG, PNG, WEBP.',
+            'image.max'            => 'Dung lượng ảnh tối đa là 10MB.',
+            'product_ids.*.exists' => 'Sản phẩm được gắn thẻ không tồn tại trong hệ thống.',
+        ]);
+
+        $imagePath = $request->file('image')->store('community', 'public');
+
+        $slugBase = Str::slug($validated['title']);
+        $slug = $slugBase . '-' . Str::lower(Str::random(6));
+
+        $post = CommunityPost::create([
+            'user_id'     => $request->user()->id,
+            'title'       => $validated['title'],
+            'slug'        => $slug,
+            'style'       => $validated['style'],
+            'image'       => $imagePath,
+            'description' => $validated['description'] ?? null,
+        ]);
+
+        if (! empty($validated['product_ids'])) {
+            $post->products()->sync($validated['product_ids']);
+        }
+
+        return redirect()->route('community.show', $post->slug)
+            ->with('success', 'Chúc mừng! Góc máy của bạn đã được đăng thành công lên GearHub Community.');
+    }
+
+    /**
+     * Xem chi tiết bài viết (Khung chi tiết /community/{slug} hoặc Modal AJAX).
+     */
+    public function show(Request $request, string $slug)
+    {
+        $post = $this->resolvePost($slug);
+
         $post->load([
             'user',
             'products.brand',
@@ -88,7 +215,7 @@ class CommunityController extends Controller
             'comments.user',
         ])->loadCount(['products', 'comments']);
 
-        // Tăng lượt xem nhẹ
+        // Tăng lượt xem
         $post->increment('views_count');
 
         $isLiked = false;
@@ -96,6 +223,7 @@ class CommunityController extends Controller
             $isLiked = $post->isLikedBy($user);
         }
 
+        // Nếu là yêu cầu AJAX hoặc muốn nhận JSON (cho Quick View Modal)
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'id'             => $post->id,
@@ -141,64 +269,87 @@ class CommunityController extends Controller
             ]);
         }
 
-        // Chuyển hướng về trang chủ community kèm anchor hoặc modal param
-        return redirect()->route('community.index', ['post' => $post->id]);
+        // Lấy danh sách các góc máy cùng phong cách (Related Posts)
+        $relatedPosts = CommunityPost::query()
+            ->where('style', $post->style)
+            ->where('id', '!=', $post->id)
+            ->with(['user'])
+            ->withCount(['products', 'comments'])
+            ->latest('id')
+            ->take(4)
+            ->get();
+
+        // Tổng giá trị bộ gear có trong bài
+        $totalGearValue = $post->products->sum(fn ($p) => $p->effective_price);
+
+        return view('client.community.show', [
+            'post'           => $post,
+            'isLiked'        => $isLiked,
+            'relatedPosts'   => $relatedPosts,
+            'totalGearValue' => $totalGearValue,
+        ]);
     }
 
     /**
      * Thả tim / Bỏ thả tim cho bài viết (AJAX).
      */
-    public function like(Request $request, CommunityPost $post): JsonResponse
+    public function like(Request $request, string $post): JsonResponse
     {
         $user = $request->user();
 
         if (! $user) {
             return response()->json([
-                'success' => false,
-                'message' => 'Vui lòng đăng nhập để thả tim cho góc máy này.',
+                'success'  => false,
+                'message'  => 'Vui lòng đăng nhập để thả tim cho góc máy này.',
                 'redirect' => route('login'),
             ], 401);
         }
 
-        $existingLike = CommunityPostLike::where('community_post_id', $post->id)
+        $communityPost = $this->resolvePost($post);
+
+        $existingLike = CommunityPostLike::where('community_post_id', $communityPost->id)
             ->where('user_id', $user->id)
             ->first();
 
         if ($existingLike) {
             $existingLike->delete();
-            $post->decrement('likes_count');
+            $communityPost->decrement('likes_count');
             $liked = false;
         } else {
             CommunityPostLike::create([
-                'community_post_id' => $post->id,
+                'community_post_id' => $communityPost->id,
                 'user_id'           => $user->id,
             ]);
-            $post->increment('likes_count');
+            $communityPost->increment('likes_count');
             $liked = true;
         }
 
-        $post->refresh();
+        $communityPost->refresh();
 
         return response()->json([
             'success'     => true,
             'liked'       => $liked,
-            'likes_count' => $post->likes_count,
+            'likes_count' => $communityPost->likes_count,
         ]);
     }
 
     /**
-     * Thêm bình luận cho bài viết (AJAX).
+     * Thêm bình luận cho bài viết (AJAX hoặc Form submit).
      */
-    public function comment(Request $request, CommunityPost $post): JsonResponse
+    public function comment(Request $request, string $post)
     {
         $user = $request->user();
 
         if (! $user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Vui lòng đăng nhập để bình luận.',
-                'redirect' => route('login'),
-            ], 401);
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success'  => false,
+                    'message'  => 'Vui lòng đăng nhập để bình luận.',
+                    'redirect' => route('login'),
+                ], 401);
+            }
+
+            return redirect()->route('login');
         }
 
         $validated = $request->validate([
@@ -209,23 +360,29 @@ class CommunityController extends Controller
             'content.max'      => 'Bình luận không quá 1000 ký tự.',
         ]);
 
+        $communityPost = $this->resolvePost($post);
+
         $comment = CommunityPostComment::create([
-            'community_post_id' => $post->id,
+            'community_post_id' => $communityPost->id,
             'user_id'           => $user->id,
             'content'           => $validated['content'],
         ]);
 
-        $post->increment('comments_count');
+        $communityPost->increment('comments_count');
 
-        return response()->json([
-            'success'        => true,
-            'comments_count' => $post->fresh()->comments_count,
-            'comment'        => [
-                'id'         => $comment->id,
-                'user_name'  => $user->name,
-                'content'    => $comment->content,
-                'created_at' => $comment->created_at->diffForHumans(),
-            ],
-        ]);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success'        => true,
+                'comments_count' => $communityPost->fresh()->comments_count,
+                'comment'        => [
+                    'id'         => $comment->id,
+                    'user_name'  => $user->name,
+                    'content'    => $comment->content,
+                    'created_at' => $comment->created_at->diffForHumans(),
+                ],
+            ]);
+        }
+
+        return back()->with('success', 'Bình luận của bạn đã được đăng tải thành công!');
     }
 }

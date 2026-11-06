@@ -10,6 +10,8 @@ use App\Models\CommunityPostLike;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class CommunityTest extends TestCase
@@ -123,7 +125,7 @@ class CommunityTest extends TestCase
 
     public function test_community_post_json_detail_can_be_retrieved(): void
     {
-        $response = $this->getJson(route('community.show', $this->minimalistPost));
+        $response = $this->getJson(route('community.show', $this->minimalistPost->slug));
 
         $response->assertOk();
         $response->assertJson([
@@ -136,7 +138,7 @@ class CommunityTest extends TestCase
 
     public function test_guest_cannot_like_post(): void
     {
-        $response = $this->postJson(route('community.like', $this->minimalistPost));
+        $response = $this->postJson(route('community.like', $this->minimalistPost->slug));
 
         $response->assertStatus(401);
         $response->assertJson([
@@ -150,7 +152,7 @@ class CommunityTest extends TestCase
 
         // Thả tim lần đầu
         $response = $this->actingAs($this->user)
-            ->postJson(route('community.like', $this->minimalistPost));
+            ->postJson(route('community.like', $this->minimalistPost->slug));
 
         $response->assertOk();
         $response->assertJson([
@@ -166,7 +168,7 @@ class CommunityTest extends TestCase
 
         // Thả tim lần 2 (bỏ tim)
         $response2 = $this->actingAs($this->user)
-            ->postJson(route('community.like', $this->minimalistPost));
+            ->postJson(route('community.like', $this->minimalistPost->slug));
 
         $response2->assertOk();
         $response2->assertJson([
@@ -184,7 +186,7 @@ class CommunityTest extends TestCase
     public function test_authenticated_user_can_comment_on_post(): void
     {
         $response = $this->actingAs($this->user)
-            ->postJson(route('community.comment', $this->minimalistPost), [
+            ->postJson(route('community.comment', $this->minimalistPost->slug), [
                 'content' => 'Góc máy đẹp quá bạn ơi!',
             ]);
 
@@ -199,5 +201,67 @@ class CommunityTest extends TestCase
             'user_id'           => $this->user->id,
             'content'           => 'Góc máy đẹp quá bạn ơi!',
         ]);
+    }
+
+    public function test_guest_redirected_to_login_when_accessing_create_page(): void
+    {
+        $response = $this->get(route('community.create'));
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_authenticated_user_can_access_create_page(): void
+    {
+        $response = $this->actingAs($this->user)->get(route('community.create'));
+
+        $response->assertOk();
+        $response->assertSee('Khoe Góc Máy Lên GearHub');
+        $response->assertSee('Gắn thẻ (Tag) sản phẩm GearHub');
+    }
+
+    public function test_can_search_products_for_tagging(): void
+    {
+        $response = $this->getJson(route('community.search-products', ['q' => 'Aula F75']));
+
+        $response->assertOk();
+        $response->assertJsonFragment([
+            'name' => 'Bàn phím Aula F75',
+        ]);
+    }
+
+    public function test_authenticated_user_can_store_post_with_image_and_tagged_gears(): void
+    {
+        Storage::fake('public');
+
+        $file = UploadedFile::fake()->image('my-battlestation.jpg', 1920, 1080);
+
+        $response = $this->actingAs($this->user)->post(route('community.store'), [
+            'title'       => 'Setup Bàn Gỗ Tự Nhiên Siêu Chill',
+            'style'       => CommunityPost::STYLE_WOOD,
+            'description' => 'Mặt bàn gỗ sồi tự nhiên phối cùng phím cơ âm trầm đục.',
+            'image'       => $file,
+            'product_ids' => [$this->product1->id, $this->product2->id],
+        ]);
+
+        $post = CommunityPost::where('title', 'Setup Bàn Gỗ Tự Nhiên Siêu Chill')->first();
+        $this->assertNotNull($post);
+
+        $response->assertRedirect(route('community.show', $post->slug));
+        Storage::disk('public')->assertExists($post->image);
+
+        $this->assertCount(2, $post->products);
+    }
+
+    public function test_post_detail_page_renders_with_sidebar_gears_and_buy_now_buttons(): void
+    {
+        $response = $this->get(route('community.show', $this->minimalistPost->slug));
+
+        $response->assertOk();
+        $response->assertSee($this->minimalistPost->title);
+        $response->assertSee('Gear có trong ảnh');
+        $response->assertSee('Bàn phím Aula F75');
+        $response->assertSee('Chuột Aula SC580');
+        $response->assertSee('Mua ngay');
+        $response->assertSee('Thảo luận');
     }
 }

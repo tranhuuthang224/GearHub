@@ -47,16 +47,15 @@
 
                 <!-- CTA Action Buttons -->
                 <div class="flex items-center gap-3 shrink-0">
-                    <button 
-                        type="button" 
-                        @click="showUploadInfo = true"
+                    <a 
+                        href="{{ route('community.create') }}"
                         class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-bold shadow-lg shadow-primary/25 hover:shadow-xl transition transform active:scale-95"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
                         <span>Khoe góc máy của bạn</span>
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -246,7 +245,9 @@
                         <!-- Card Body Content -->
                         <div class="p-4 sm:p-5 flex flex-col flex-1">
                             <h2 class="font-bold text-gray-900 text-base leading-snug group-hover:text-primary transition line-clamp-2">
-                                {{ $post->title }}
+                                <a href="{{ route('community.show', $post->slug) }}" @click.stop class="hover:underline">
+                                    {{ $post->title }}
+                                </a>
                             </h2>
                             
                             @if($post->description)
@@ -378,19 +379,32 @@
                                         </div>
                                     </div>
 
-                                    <!-- Like Button -->
-                                    <button 
-                                        type="button"
-                                        @click="toggleLike(activePost.id, $event)"
-                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shadow-xs"
-                                        :class="likedPosts[activePost.id] ? 'bg-red-500 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'"
-                                    >
-                                        <svg class="w-4 h-4" :fill="likedPosts[activePost.id] ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                        </svg>
-                                        <span x-text="likesCount[activePost.id] ?? activePost.likes_count"></span>
-                                        <span>Tim</span>
-                                    </button>
+                                    <div class="flex items-center gap-2">
+                                        <!-- Like Button -->
+                                        <button 
+                                            type="button"
+                                            @click="toggleLike(activePost.id, $event)"
+                                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shadow-xs"
+                                            :class="likedPosts[activePost.id] ? 'bg-red-500 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'"
+                                        >
+                                            <svg class="w-4 h-4" :fill="likedPosts[activePost.id] ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                            </svg>
+                                            <span x-text="likesCount[activePost.id] ?? activePost.likes_count"></span>
+                                            <span>Tim</span>
+                                        </button>
+
+                                        <!-- Open Full Page -->
+                                        <a 
+                                            :href="'/community/' + activePost.slug" 
+                                            class="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 transition" 
+                                            title="Mở xem trang chi tiết"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                            </svg>
+                                        </a>
+                                    </div>
                                 </div>
 
                                 <!-- Post Title & Style Badge -->
