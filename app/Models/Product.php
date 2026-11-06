@@ -110,4 +110,40 @@ class Product extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+        /**
+     * Điểm sao đánh giá trung bình (vd: 4.8)
+     */
+    public function averageRating(): float
+    {
+        return (float) round($this->reviews()->avg('rating') ?? 0, 1);
+    }
+
+    /**
+     * Thống kê tỷ lệ phân bổ các mức sao (1-5 sao) phục vụ vẽ biểu đồ (Member A)
+     */
+    public function ratingBreakdown(): array
+    {
+        $total = $this->reviews()->count();
+        $counts = $this->reviews()
+            ->selectRaw('rating, count(*) as count')
+            ->groupBy('rating')
+            ->pluck('count', 'rating')
+            ->toArray();
+
+        $breakdown = [];
+        for ($star = 5; $star >= 1; $star--) {
+            $starCount = $counts[$star] ?? 0;
+            $breakdown[$star] = [
+                'count'      => $starCount,
+                'percentage' => $total > 0 ? round(($starCount / $total) * 100, 1) : 0,
+            ];
+        }
+
+        return [
+            'average'     => $this->averageRating(),
+            'total'       => $total,
+            'breakdown'   => $breakdown,
+        ];
+    }
 }

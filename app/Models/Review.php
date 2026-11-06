@@ -10,11 +10,22 @@ class Review extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'product_id', 'rating', 'comment'];
+    protected $fillable = [
+        'user_id',
+        'product_id',
+        'rating',
+        'comment',
+        'images',
+        'is_verified_purchase',
+    ];
 
     protected function casts(): array
     {
-        return ['rating' => 'integer'];
+        return [
+            'rating'               => 'integer',
+            'images'               => 'array',
+            'is_verified_purchase' => 'boolean',
+        ];
     }
 
     public function user(): BelongsTo
@@ -24,6 +35,6 @@ class Review extends Model
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class)->withTrashed();
+        return $this->belongsTo(Product::class);
     }
 }

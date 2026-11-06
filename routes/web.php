@@ -14,6 +14,12 @@ use App\Http\Controllers\Client\CheckoutCouponController;
 use App\Http\Controllers\Client\CheckoutController;
 use App\Http\Controllers\Client\OrderController as ClientOrderController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Client\CompareController;
+use App\Http\Controllers\Client\QuizController;
+use App\Http\Controllers\Client\ReviewController;
+use App\Http\Controllers\Client\CommunityController;
+use App\Http\Controllers\Admin\CommunityModerationController;
+
 
 // Storefront Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -28,6 +34,45 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::delete('/remove/{id}', [CartController::class, 'remove'])->name('remove');
     Route::delete('/clear', [CartController::class, 'clear'])->name('clear');
 });
+
+// Compare Routes (Session-based)
+Route::prefix('compare')->name('compare.')->group(function () {
+    Route::get('/', [CompareController::class, 'index'])->name('index');
+    Route::post('/add/{id}', [CompareController::class, 'add'])->name('add');
+    Route::delete('/remove/{id}', [CompareController::class, 'remove'])->name('remove');
+    Route::delete('/clear', [CompareController::class, 'clear'])->name('clear');
+});
+
+// Smart Gear Finder Quiz Routes
+Route::prefix('quiz')->name('quiz.')->group(function () {
+    Route::get('/', [QuizController::class, 'index'])->name('index');
+    Route::post('/submit', [QuizController::class, 'submit'])->name('submit');
+});
+
+// Product Reviews Routes
+Route::get('/products/{product}/reviews', [ReviewController::class, 'index'])->name('products.reviews.index');
+Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])
+    ->middleware('auth')
+    ->name('products.reviews.store');
+
+// Community Routes
+Route::prefix('community')->name('community.')->group(function () {
+    Route::get('/', [CommunityController::class, 'index'])->name('index');
+    Route::get('/create', [CommunityController::class, 'create'])->middleware('auth')->name('create');
+    Route::post('/', [CommunityController::class, 'store'])->middleware('auth')->name('store');
+    Route::get('/{slug}', [CommunityController::class, 'show'])->name('show');
+    
+    // Tương tác Like & Comment (Yêu cầu đăng nhập)
+    Route::middleware('auth')->group(function () {
+        Route::post('/{id}/like', [CommunityController::class, 'toggleLike'])->name('like');
+        Route::post('/{id}/comments', [CommunityController::class, 'storeComment'])->name('comments.store');
+    });
+});
+
+    // Community Moderation
+    Route::get('community', [CommunityModerationController::class, 'index'])->name('community.index');
+    Route::patch('community/{post}/status', [CommunityModerationController::class, 'updateStatus'])->name('community.status');
+    Route::delete('community/{post}', [CommunityModerationController::class, 'destroy'])->name('community.destroy');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
