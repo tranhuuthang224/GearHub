@@ -84,28 +84,64 @@ function comparePage() {
             </div>
 
             @if ($products->isNotEmpty())
-                <!-- Bộ điều khiển chế độ hiển thị & Xóa tất cả -->
+                <!-- Bộ điều khiển chế độ hiển thị & Xóa tất cả (Tương tác Alpine.js tức thì) -->
                 <div class="flex flex-wrap items-center gap-3 sm:gap-4 bg-white p-3 rounded-2xl border border-gray-200/90 shadow-sm">
-                    <!-- Toggle 1: Highlight khác biệt -->
-                    <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-gray-700 select-none">
-                        <input type="checkbox" x-model="highlightDiff" class="sr-only peer">
-                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500 relative"></div>
-                        <span class="flex items-center gap-1">
+                    
+                    <!-- Toggle 1: Làm nổi bật khác biệt -->
+                    <button 
+                        type="button" 
+                        @click="highlightDiff = !highlightDiff"
+                        class="inline-flex items-center gap-2.5 cursor-pointer text-xs font-bold select-none group focus:outline-none"
+                    >
+                        <!-- Switch Track -->
+                        <div 
+                            class="w-10 h-6 rounded-full p-0.5 transition-colors duration-200 ease-in-out relative flex items-center shadow-inner"
+                            :class="highlightDiff ? 'bg-amber-500' : 'bg-gray-200'"
+                        >
+                            <!-- Knob -->
+                            <div 
+                                class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out"
+                                :class="highlightDiff ? 'translate-x-4' : 'translate-x-0'"
+                            ></div>
+                        </div>
+
+                        <span class="flex items-center gap-1.5 transition-colors" :class="highlightDiff ? 'text-amber-800' : 'text-gray-600'">
                             <span>⚡ Làm nổi bật khác biệt</span>
                             @if ($diffCount > 0)
-                                <span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">({{ $diffCount }})</span>
+                                <span 
+                                    class="text-[10px] px-2 py-0.5 rounded-full font-bold transition-colors"
+                                    :class="highlightDiff ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-gray-100 text-gray-500'"
+                                >
+                                    ({{ $diffCount }})
+                                </span>
                             @endif
                         </span>
-                    </label>
+                    </button>
 
                     <span class="text-gray-300 hidden sm:inline">|</span>
 
                     <!-- Toggle 2: Chỉ xem điểm khác nhau -->
-                    <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-gray-700 select-none">
-                        <input type="checkbox" x-model="diffOnly" class="sr-only peer">
-                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary relative"></div>
-                        <span>Chỉ xem dòng khác nhau</span>
-                    </label>
+                    <button 
+                        type="button" 
+                        @click="diffOnly = !diffOnly"
+                        class="inline-flex items-center gap-2.5 cursor-pointer text-xs font-bold select-none group focus:outline-none"
+                    >
+                        <!-- Switch Track -->
+                        <div 
+                            class="w-10 h-6 rounded-full p-0.5 transition-colors duration-200 ease-in-out relative flex items-center shadow-inner"
+                            :class="diffOnly ? 'bg-primary' : 'bg-gray-200'"
+                        >
+                            <!-- Knob -->
+                            <div 
+                                class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out"
+                                :class="diffOnly ? 'translate-x-4' : 'translate-x-0'"
+                            ></div>
+                        </div>
+
+                        <span class="transition-colors" :class="diffOnly ? 'text-primary' : 'text-gray-600'">
+                            Chỉ xem dòng khác nhau
+                        </span>
+                    </button>
 
                     <span class="text-gray-300 hidden sm:inline">|</span>
 
@@ -146,6 +182,24 @@ function comparePage() {
                 </div>
             </div>
         @else
+            <!-- Thông báo chế độ lọc dòng khác nhau -->
+            <div 
+                x-show="diffOnly" 
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-2"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                class="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-2xl flex items-center justify-between text-xs text-primary font-semibold shadow-xs"
+                style="display: none;"
+            >
+                <div class="flex items-center gap-2.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></span>
+                    <span>Đang bật chế độ: <strong>Chỉ xem các dòng có thông số khác nhau ({{ $diffCount }} mục)</strong>. Các dòng có thông số giống nhau đã được ẩn để bạn đối chiếu nhanh nhất.</span>
+                </div>
+                <button type="button" @click="diffOnly = false" class="underline text-gray-700 hover:text-primary font-bold ml-4 whitespace-nowrap">
+                    Hiện lại tất cả dòng
+                </button>
+            </div>
+
             <!-- 4. BẢNG SO SÁNH ĐA CỘT CỐ ĐỊNH TIÊU ĐỀ KHI CUỘN (STICKY SIDE-BY-SIDE TABLE) -->
             <div class="bg-white rounded-3xl border border-gray-200 shadow-md overflow-hidden relative">
                 
@@ -278,7 +332,7 @@ function comparePage() {
                         <tbody class="divide-y divide-gray-100 text-xs sm:text-sm">
                             
                             <!-- ===== NHÓM 1: THÔNG TIN TỔNG QUAN ===== -->
-                            <tr class="bg-gray-100/70">
+                            <tr class="bg-gray-100/70" x-show="!diffOnly || {{ ($brandDiff || $categoryDiff || $stockDiff) ? 'true' : 'false' }}">
                                 <td 
                                     colspan="{{ $products->count() + ($products->count() < 4 ? 2 : 1) }}" 
                                     class="sticky left-0 py-2.5 px-4 sm:px-6 font-black text-xs uppercase tracking-wider text-gray-800 bg-gray-100"
@@ -288,12 +342,34 @@ function comparePage() {
                             </tr>
                             
                             <!-- Hãng sản xuất -->
-                            <tr class="hover:bg-gray-50/50 transition">
-                                <td class="sticky left-0 bg-white z-20 py-3.5 px-4 sm:px-6 font-bold text-gray-600 border-r border-gray-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
-                                    Thương hiệu
+                            <tr 
+                                x-show="!diffOnly || {{ $brandDiff ? 'true' : 'false' }}"
+                                class="transition-colors duration-150"
+                                :class="{
+                                    'bg-amber-50/70 border-l-4 border-amber-500': highlightDiff && {{ $brandDiff ? 'true' : 'false' }},
+                                    'hover:bg-gray-50/50': !(highlightDiff && {{ $brandDiff ? 'true' : 'false' }})
+                                }"
+                            >
+                                <td 
+                                    class="sticky left-0 z-20 py-3.5 px-4 sm:px-6 border-r border-gray-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)] transition-colors duration-150"
+                                    :class="{
+                                        'bg-amber-100/90 text-amber-950 font-black': highlightDiff && {{ $brandDiff ? 'true' : 'false' }},
+                                        'bg-white text-gray-700 font-bold': !(highlightDiff && {{ $brandDiff ? 'true' : 'false' }})
+                                    }"
+                                >
+                                    <div class="flex items-center gap-1.5">
+                                        <span x-show="highlightDiff && {{ $brandDiff ? 'true' : 'false' }}" class="text-amber-500 font-bold shrink-0">⚡</span>
+                                        <span>Thương hiệu</span>
+                                    </div>
                                 </td>
                                 @foreach ($products as $p)
-                                    <td class="py-3.5 px-4 sm:px-6 font-semibold text-gray-900 border-r border-gray-50">
+                                    <td 
+                                        class="py-3.5 px-4 sm:px-6 font-semibold border-r border-gray-50 transition-colors duration-150"
+                                        :class="{
+                                            'bg-amber-50/40 text-amber-950 font-bold': highlightDiff && {{ $brandDiff ? 'true' : 'false' }},
+                                            'text-gray-900': !(highlightDiff && {{ $brandDiff ? 'true' : 'false' }})
+                                        }"
+                                    >
                                         <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-100 text-xs font-bold text-gray-800">
                                             {{ $p->brand?->name ?? 'GearHub' }}
                                         </span>
@@ -303,12 +379,34 @@ function comparePage() {
                             </tr>
 
                             <!-- Danh mục phân loại -->
-                            <tr class="hover:bg-gray-50/50 transition">
-                                <td class="sticky left-0 bg-white z-20 py-3.5 px-4 sm:px-6 font-bold text-gray-600 border-r border-gray-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
-                                    Danh mục sản phẩm
+                            <tr 
+                                x-show="!diffOnly || {{ $categoryDiff ? 'true' : 'false' }}"
+                                class="transition-colors duration-150"
+                                :class="{
+                                    'bg-amber-50/70 border-l-4 border-amber-500': highlightDiff && {{ $categoryDiff ? 'true' : 'false' }},
+                                    'hover:bg-gray-50/50': !(highlightDiff && {{ $categoryDiff ? 'true' : 'false' }})
+                                }"
+                            >
+                                <td 
+                                    class="sticky left-0 z-20 py-3.5 px-4 sm:px-6 border-r border-gray-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)] transition-colors duration-150"
+                                    :class="{
+                                        'bg-amber-100/90 text-amber-950 font-black': highlightDiff && {{ $categoryDiff ? 'true' : 'false' }},
+                                        'bg-white text-gray-700 font-bold': !(highlightDiff && {{ $categoryDiff ? 'true' : 'false' }})
+                                    }"
+                                >
+                                    <div class="flex items-center gap-1.5">
+                                        <span x-show="highlightDiff && {{ $categoryDiff ? 'true' : 'false' }}" class="text-amber-500 font-bold shrink-0">⚡</span>
+                                        <span>Danh mục sản phẩm</span>
+                                    </div>
                                 </td>
                                 @foreach ($products as $p)
-                                    <td class="py-3.5 px-4 sm:px-6 text-gray-700 font-medium border-r border-gray-50">
+                                    <td 
+                                        class="py-3.5 px-4 sm:px-6 font-medium border-r border-gray-50 transition-colors duration-150"
+                                        :class="{
+                                            'bg-amber-50/40 text-amber-950 font-bold': highlightDiff && {{ $categoryDiff ? 'true' : 'false' }},
+                                            'text-gray-700': !(highlightDiff && {{ $categoryDiff ? 'true' : 'false' }})
+                                        }"
+                                    >
                                         {{ $p->category?->name ?? 'Phụ kiện' }}
                                     </td>
                                 @endforeach
@@ -316,7 +414,7 @@ function comparePage() {
                             </tr>
 
                             <!-- Mã SKU -->
-                            <tr class="hover:bg-gray-50/50 transition">
+                            <tr class="hover:bg-gray-50/50 transition" x-show="!diffOnly">
                                 <td class="sticky left-0 bg-white z-20 py-3.5 px-4 sm:px-6 font-bold text-gray-600 border-r border-gray-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
                                     Mã SKU
                                 </td>
@@ -329,7 +427,7 @@ function comparePage() {
                             </tr>
 
                             <!-- Đánh giá khách hàng -->
-                            <tr class="hover:bg-gray-50/50 transition">
+                            <tr class="hover:bg-gray-50/50 transition" x-show="!diffOnly">
                                 <td class="sticky left-0 bg-white z-20 py-3.5 px-4 sm:px-6 font-bold text-gray-600 border-r border-gray-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
                                     Đánh giá trung bình
                                 </td>
@@ -345,12 +443,34 @@ function comparePage() {
                             </tr>
 
                             <!-- Tình trạng kho -->
-                            <tr class="hover:bg-gray-50/50 transition">
-                                <td class="sticky left-0 bg-white z-20 py-3.5 px-4 sm:px-6 font-bold text-gray-600 border-r border-gray-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
-                                    Tình trạng kho
+                            <tr 
+                                x-show="!diffOnly || {{ $stockDiff ? 'true' : 'false' }}"
+                                class="transition-colors duration-150"
+                                :class="{
+                                    'bg-amber-50/70 border-l-4 border-amber-500': highlightDiff && {{ $stockDiff ? 'true' : 'false' }},
+                                    'hover:bg-gray-50/50': !(highlightDiff && {{ $stockDiff ? 'true' : 'false' }})
+                                }"
+                            >
+                                <td 
+                                    class="sticky left-0 z-20 py-3.5 px-4 sm:px-6 border-r border-gray-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)] transition-colors duration-150"
+                                    :class="{
+                                        'bg-amber-100/90 text-amber-950 font-black': highlightDiff && {{ $stockDiff ? 'true' : 'false' }},
+                                        'bg-white text-gray-700 font-bold': !(highlightDiff && {{ $stockDiff ? 'true' : 'false' }})
+                                    }"
+                                >
+                                    <div class="flex items-center gap-1.5">
+                                        <span x-show="highlightDiff && {{ $stockDiff ? 'true' : 'false' }}" class="text-amber-500 font-bold shrink-0">⚡</span>
+                                        <span>Tình trạng kho</span>
+                                    </div>
                                 </td>
                                 @foreach ($products as $p)
-                                    <td class="py-3.5 px-4 sm:px-6 border-r border-gray-50">
+                                    <td 
+                                        class="py-3.5 px-4 sm:px-6 border-r border-gray-50 transition-colors duration-150"
+                                        :class="{
+                                            'bg-amber-50/40 text-amber-950 font-bold': highlightDiff && {{ $stockDiff ? 'true' : 'false' }},
+                                            'text-gray-800': !(highlightDiff && {{ $stockDiff ? 'true' : 'false' }})
+                                        }"
+                                    >
                                         @if ($p->stock_quantity > 0)
                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -375,7 +495,10 @@ function comparePage() {
                                     class="sticky left-0 py-2.5 px-4 sm:px-6 font-black text-xs uppercase tracking-wider text-gray-800 bg-gray-100 flex items-center justify-between"
                                 >
                                     <span>2. Đặc tả thông số kỹ thuật (Specs Matrix)</span>
-                                    <span class="text-[11px] font-medium text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full normal-case hidden sm:inline">
+                                    <span 
+                                        x-show="highlightDiff" 
+                                        class="text-[11px] font-bold text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full normal-case hidden sm:inline border border-amber-300"
+                                    >
                                         ⚡ Dòng màu vàng thể hiện sự khác biệt giữa các dòng gear
                                     </span>
                                 </td>
@@ -387,15 +510,26 @@ function comparePage() {
                                 @endphp
                                 <tr 
                                     x-show="!diffOnly || {{ $isDiff ? 'true' : 'false' }}"
-                                    class="transition-colors duration-150 {{ $isDiff ? 'bg-amber-50/40' : 'hover:bg-gray-50/50' }}"
-                                    :class="highlightDiff && {{ $isDiff ? 'true' : 'false' }} ? 'bg-amber-50/60 border-l-4 border-amber-500' : ''"
+                                    class="transition-colors duration-150"
+                                    :class="{
+                                        'bg-amber-50/70 border-l-4 border-amber-500': highlightDiff && {{ $isDiff ? 'true' : 'false' }},
+                                        'hover:bg-gray-50/50': !(highlightDiff && {{ $isDiff ? 'true' : 'false' }})
+                                    }"
                                 >
                                     <!-- Cột tên thông số kỹ thuật (Sticky Left) -->
-                                    <td class="sticky left-0 z-20 py-3.5 px-4 sm:px-6 font-bold text-gray-800 align-top border-r border-gray-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)] {{ $isDiff ? 'bg-amber-50/90' : 'bg-white' }}">
+                                    <td 
+                                        class="sticky left-0 z-20 py-3.5 px-4 sm:px-6 align-top border-r border-gray-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)] transition-colors duration-150"
+                                        :class="{
+                                            'bg-amber-100/90 text-amber-950 font-black': highlightDiff && {{ $isDiff ? 'true' : 'false' }},
+                                            'bg-white text-gray-800 font-bold': !(highlightDiff && {{ $isDiff ? 'true' : 'false' }})
+                                        }"
+                                    >
                                         <div class="flex items-center gap-1.5">
-                                            @if ($isDiff)
-                                                <span class="text-amber-500 font-bold shrink-0" title="Thông số khác biệt">⚡</span>
-                                            @endif
+                                            <span 
+                                                x-show="highlightDiff && {{ $isDiff ? 'true' : 'false' }}" 
+                                                class="text-amber-500 font-bold shrink-0 animate-pulse" 
+                                                title="Thông số khác biệt"
+                                            >⚡</span>
                                             <span>{{ $specKey }}</span>
                                         </div>
                                     </td>
@@ -406,7 +540,13 @@ function comparePage() {
                                             $val = $matrixData['values'][$p->id] ?? '—';
                                             $displayVal = is_array($val) ? implode(', ', $val) : $val;
                                         @endphp
-                                        <td class="py-3.5 px-4 sm:px-6 align-top border-r border-gray-50 text-xs sm:text-sm {{ $isDiff ? 'font-semibold text-gray-900' : 'text-gray-600' }}">
+                                        <td 
+                                            class="py-3.5 px-4 sm:px-6 align-top border-r border-gray-50 text-xs sm:text-sm transition-colors duration-150"
+                                            :class="{
+                                                'font-bold text-amber-950 bg-amber-50/40': highlightDiff && {{ $isDiff ? 'true' : 'false' }},
+                                                'text-gray-600': !(highlightDiff && {{ $isDiff ? 'true' : 'false' }})
+                                            }"
+                                        >
                                             @if ($val === '—')
                                                 <span class="text-gray-300 font-mono">—</span>
                                             @else

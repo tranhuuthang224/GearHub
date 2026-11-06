@@ -60,29 +60,55 @@ class CompareController extends Controller
             // Xây dựng ma trận thông số kỹ thuật: [specKey => [productId => value]]
             foreach ($allSpecKeys as $key) {
                 $rowValues = [];
-                $uniqueValues = [];
                 foreach ($products as $p) {
                     $specs = is_array($p->specs) ? $p->specs : (json_decode($p->specs, true) ?? []);
                     $val = $specs[$key] ?? '—';
                     $rowValues[$p->id] = $val;
-                    if ($val !== '—') {
-                        $uniqueValues[$val] = true;
-                    }
                 }
-                // Đánh dấu dòng này có sự khác biệt (để highlight) nếu có nhiều hơn 1 giá trị khác nhau
-                $isDifferent = count($uniqueValues) > 1;
+
+                // Chuẩn hóa giá trị để so sánh chính xác giữa các sản phẩm
+                $normalizedValues = array_values(array_map(function ($v) {
+                    if (is_array($v)) {
+                        return json_encode($v, JSON_UNESCAPED_UNICODE);
+                    }
+                    return trim((string) $v);
+                }, $rowValues));
+
+                // Khác biệt nếu các sản phẩm có giá trị khác nhau
+                $isDifferent = count(array_unique($normalizedValues)) > 1;
                 if ($isDifferent) {
                     $diffCount++;
                 }
 
                 $specsMatrix[$key] = [
-                    'values'      => $rowValues,
-                    'is_different'=> $isDifferent,
+                    'values'       => $rowValues,
+                    'is_different' => $isDifferent,
                 ];
             }
+            // Tính toán khác biệt thông tin cơ bản
+            $brandDiff = $products->pluck('brand_id')->unique()->count() > 1;
+            $categoryDiff = $products->pluck('category_id')->unique()->count() > 1;
+            $stockDiff = $products->map(fn ($p) => $p->stock_quantity > 0)->unique()->count() > 1;
+
+            if ($brandDiff) $diffCount++;
+            if ($categoryDiff) $diffCount++;
+            if ($stockDiff) $diffCount++;
+        } else {
+            $brandDiff = false;
+            $categoryDiff = false;
+            $stockDiff = false;
         }
 
-        return view('client.compare.index', compact('products', 'specsMatrix', 'allSpecKeys', 'diffCount', 'rootCategory'));
+        return view('client.compare.index', compact(
+            'products',
+            'specsMatrix',
+            'allSpecKeys',
+            'diffCount',
+            'rootCategory',
+            'brandDiff',
+            'categoryDiff',
+            'stockDiff'
+        ));
     }
 
     /**
