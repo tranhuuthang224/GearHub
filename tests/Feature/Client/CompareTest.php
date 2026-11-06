@@ -132,6 +132,10 @@ class CompareTest extends TestCase
         $viewRes->assertSee('Bàn phím Aula S100 Pro');
         $viewRes->assertSee('Reaper');
         $viewRes->assertSee('Custom Linear');
+        $viewRes->assertSee('Mua ngay');
+        $viewRes->assertSee('Thêm vào giỏ');
+        $viewRes->assertSee('Đặc tả thông số kỹ thuật (Specs Matrix)');
+        $viewRes->assertSee('Điểm khác biệt:');
     }
 
     public function test_cannot_compare_products_from_different_category_families(): void

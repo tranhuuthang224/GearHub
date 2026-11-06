@@ -26,6 +26,8 @@ class CompareController extends Controller
         $products = collect();
         $specsMatrix = [];
         $allSpecKeys = [];
+        $diffCount = 0;
+        $rootCategory = null;
 
         if (!empty($productIds)) {
             $dbProducts = Product::query()
@@ -39,6 +41,11 @@ class CompareController extends Controller
                 ->map(fn ($id) => $dbProducts->firstWhere('id', $id))
                 ->filter()
                 ->values();
+
+            if ($products->isNotEmpty()) {
+                $firstCat = $products->first()->category;
+                $rootCategory = $firstCat ? ($firstCat->parent ?: $firstCat) : null;
+            }
 
             // Trích xuất toàn bộ các key thông số kỹ thuật (specs) duy nhất
             foreach ($products as $p) {
@@ -64,6 +71,9 @@ class CompareController extends Controller
                 }
                 // Đánh dấu dòng này có sự khác biệt (để highlight) nếu có nhiều hơn 1 giá trị khác nhau
                 $isDifferent = count($uniqueValues) > 1;
+                if ($isDifferent) {
+                    $diffCount++;
+                }
 
                 $specsMatrix[$key] = [
                     'values'      => $rowValues,
@@ -72,7 +82,7 @@ class CompareController extends Controller
             }
         }
 
-        return view('client.compare.index', compact('products', 'specsMatrix', 'allSpecKeys'));
+        return view('client.compare.index', compact('products', 'specsMatrix', 'allSpecKeys', 'diffCount', 'rootCategory'));
     }
 
     /**
