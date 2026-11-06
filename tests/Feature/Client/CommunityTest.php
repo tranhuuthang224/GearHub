@@ -161,7 +161,7 @@ class CommunityTest extends TestCase
             'likes_count' => $initialLikes + 1,
         ]);
 
-        $this->assertDatabaseHas('community_post_likes', [
+        $this->assertDatabaseHas('post_likes', [
             'community_post_id' => $this->minimalistPost->id,
             'user_id'           => $this->user->id,
         ]);
@@ -177,7 +177,7 @@ class CommunityTest extends TestCase
             'likes_count' => $initialLikes,
         ]);
 
-        $this->assertDatabaseMissing('community_post_likes', [
+        $this->assertDatabaseMissing('post_likes', [
             'community_post_id' => $this->minimalistPost->id,
             'user_id'           => $this->user->id,
         ]);
@@ -196,7 +196,7 @@ class CommunityTest extends TestCase
             'comments_count' => 2,
         ]);
 
-        $this->assertDatabaseHas('community_post_comments', [
+        $this->assertDatabaseHas('post_comments', [
             'community_post_id' => $this->minimalistPost->id,
             'user_id'           => $this->user->id,
             'content'           => 'Góc máy đẹp quá bạn ơi!',

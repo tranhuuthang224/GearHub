@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\CommunityPost;
-use App\Models\CommunityPostComment;
-use App\Models\CommunityPostLike;
+use App\Models\PostComment;
+use App\Models\PostLike;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -112,7 +112,7 @@ class CommunitySeeder extends Seeder
             'Con chuột GearHub kia cầm ôm tay không bạn? Đang tính xúc một em.',
         ];
 
-        foreach ($postsData as $index => $item) {
+        foreach ($postsData as $item) {
             $user = $users->random();
             $slug = Str::slug($item['title']) . '-' . Str::random(5);
 
@@ -121,8 +121,10 @@ class CommunitySeeder extends Seeder
                 'title'          => $item['title'],
                 'slug'           => $slug,
                 'description'    => $item['description'],
+                'content'        => $item['description'],
                 'image'          => $item['image'],
                 'style'          => $item['style'],
+                'status'         => CommunityPost::STATUS_PUBLISHED,
                 'likes_count'    => $item['likes'],
                 'comments_count' => rand(2, 5),
                 'views_count'    => rand(300, 1500),
@@ -140,7 +142,7 @@ class CommunitySeeder extends Seeder
             $likerCount = min(rand(1, 3), $users->count());
             $likers = $users->random($likerCount);
             foreach ($likers as $liker) {
-                CommunityPostLike::firstOrCreate([
+                PostLike::firstOrCreate([
                     'community_post_id' => $post->id,
                     'user_id'           => $liker->id,
                 ]);
@@ -149,7 +151,7 @@ class CommunitySeeder extends Seeder
             // Tạo comments
             $numComments = rand(2, 4);
             for ($c = 0; $c < $numComments; $c++) {
-                CommunityPostComment::create([
+                PostComment::create([
                     'community_post_id' => $post->id,
                     'user_id'           => $users->random()->id,
                     'content'           => $sampleComments[array_rand($sampleComments)],

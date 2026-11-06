@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\GeneratesSlug;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +14,11 @@ use Illuminate\Support\Str;
 
 class CommunityPost extends Model
 {
-    use HasFactory;
+    use HasFactory, GeneratesSlug;
+
+    public const STATUS_PENDING   = 'pending';
+    public const STATUS_PUBLISHED = 'published';
+    public const STATUS_HIDDEN    = 'hidden';
 
     public const STYLE_MINIMALIST = 'minimalist';
     public const STYLE_CYBERPUNK  = 'cyberpunk_rgb';
@@ -31,6 +38,12 @@ class CommunityPost extends Model
             'badge_color' => 'bg-purple-100 text-purple-800 border-purple-200',
             'icon'        => '⚡',
         ],
+        'rgb' => [
+            'name'        => 'Cyberpunk / RGB',
+            'slug'        => 'cyberpunk_rgb',
+            'badge_color' => 'bg-purple-100 text-purple-800 border-purple-200',
+            'icon'        => '⚡',
+        ],
         self::STYLE_WHITE => [
             'name'        => 'White Aesthetic',
             'slug'        => 'white_aesthetic',
@@ -43,6 +56,18 @@ class CommunityPost extends Model
             'badge_color' => 'bg-amber-100 text-amber-900 border-amber-200',
             'icon'        => '🪵',
         ],
+        'vintage' => [
+            'name'        => 'Gỗ & Cổ điển (Vintage / Retro)',
+            'slug'        => 'wood_classic',
+            'badge_color' => 'bg-amber-100 text-amber-900 border-amber-200',
+            'icon'        => '🪵',
+        ],
+        'dark_mode' => [
+            'name'        => 'Dark Mode Huyền Bí',
+            'slug'        => 'dark_mode',
+            'badge_color' => 'bg-gray-800 text-gray-100 border-gray-700',
+            'icon'        => '🌑',
+        ],
     ];
 
     protected $fillable = [
@@ -50,8 +75,10 @@ class CommunityPost extends Model
         'title',
         'slug',
         'description',
+        'content',
         'image',
         'style',
+        'status',
         'likes_count',
         'comments_count',
         'views_count',
@@ -68,6 +95,11 @@ class CommunityPost extends Model
         ];
     }
 
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_PUBLISHED);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -75,18 +107,18 @@ class CommunityPost extends Model
 
     public function products(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'community_post_product')
+        return $this->belongsToMany(Product::class, 'post_product_tags')
             ->withTimestamps();
     }
 
     public function likes(): HasMany
     {
-        return $this->hasMany(CommunityPostLike::class);
+        return $this->hasMany(PostLike::class);
     }
 
     public function comments(): HasMany
     {
-        return $this->hasMany(CommunityPostComment::class)->latest();
+        return $this->hasMany(PostComment::class)->latest();
     }
 
     public function isLikedBy(?User $user): bool
@@ -114,6 +146,8 @@ class CommunityPost extends Model
 
     public function getDisplayImageAttribute(): string
     {
+        if (!$this->image) return 'https://placehold.co/800x600/png?text=GearHub';
+
         if (Str::startsWith($this->image, ['http://', 'https://'])) {
             return $this->image;
         }
@@ -123,5 +157,20 @@ class CommunityPost extends Model
         }
 
         return asset('storage/' . $this->image);
+    }
+
+    protected function imageUrl(): Attribute
+    {
+        return Attribute::get(fn () => $this->display_image);
+    }
+
+    public function getDescriptionAttribute(): ?string
+    {
+        return $this->attributes['description'] ?? $this->attributes['content'] ?? null;
+    }
+
+    public function getContentAttribute(): ?string
+    {
+        return $this->attributes['content'] ?? $this->attributes['description'] ?? null;
     }
 }

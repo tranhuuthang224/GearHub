@@ -4,18 +4,26 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\CommunityPost;
-use App\Models\CommunityPostComment;
-use App\Models\CommunityPostLike;
+use App\Models\PostComment;
+use App\Models\PostLike;
 use App\Models\Product;
+use App\Services\CommunityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CommunityController extends Controller
 {
+    public function __construct(
+        protected ?CommunityService $communityService = null
+    ) {
+        $this->communityService = $communityService ?? app(CommunityService::class);
+    }
+
     /**
      * Tìm bài viết theo slug hoặc id.
      */
@@ -30,7 +38,7 @@ class CommunityController extends Controller
     /**
      * Hiển thị trang chủ Diễn đàn Khoe Góc Máy (Pinterest / Masonry Grid).
      */
-    public function index(Request $request): View
+    public function index(Request $request)
     {
         $style = $request->query('style');
         $sort = $request->query('sort', 'trending');
@@ -49,7 +57,8 @@ class CommunityController extends Controller
         if (! empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('content', 'like', "%{$search}%");
             });
         }
 
@@ -74,10 +83,17 @@ class CommunityController extends Controller
         // Danh sách ID các bài mà user hiện tại đã like
         $userLikedPostIds = [];
         if ($user = $request->user()) {
-            $userLikedPostIds = CommunityPostLike::where('user_id', $user->id)
+            $userLikedPostIds = PostLike::where('user_id', $user->id)
                 ->whereIn('community_post_id', $posts->pluck('id'))
                 ->pluck('community_post_id')
                 ->all();
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'posts'   => $posts,
+            ]);
         }
 
         return view('client.community.index', [
@@ -96,7 +112,6 @@ class CommunityController extends Controller
      */
     public function create(): View
     {
-        // Gợi ý sẵn một số sản phẩm mới / nổi bật để tag nhanh
         $suggestedProducts = Product::where('is_active', true)
             ->with(['brand', 'category'])
             ->latest('id')
@@ -157,13 +172,14 @@ class CommunityController extends Controller
     /**
      * Lưu bài đăng khoe góc máy mới.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'title'         => ['required', 'string', 'min:5', 'max:200'],
-            'style'         => ['required', 'string', 'in:' . implode(',', array_keys(CommunityPost::STYLES))],
+            'style'         => ['required', 'string'],
             'image'         => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:10240'],
             'description'   => ['nullable', 'string', 'max:3000'],
+            'content'       => ['nullable', 'string', 'max:3000'],
             'product_ids'   => ['nullable', 'array', 'max:10'],
             'product_ids.*' => ['exists:products,id'],
         ], [
@@ -171,7 +187,6 @@ class CommunityController extends Controller
             'title.min'            => 'Tiêu đề bài viết cần tối thiểu 5 ký tự.',
             'title.max'            => 'Tiêu đề không được vượt quá 200 ký tự.',
             'style.required'       => 'Vui lòng chọn phong cách setup phù hợp.',
-            'style.in'             => 'Phong cách setup không hợp lệ.',
             'image.required'       => 'Vui lòng tải lên ảnh chụp góc máy của bạn.',
             'image.image'          => 'Tệp tải lên phải là định dạng hình ảnh.',
             'image.mimes'          => 'Chỉ chấp nhận các định dạng ảnh: JPEG, JPG, PNG, WEBP.',
@@ -184,17 +199,29 @@ class CommunityController extends Controller
         $slugBase = Str::slug($validated['title']);
         $slug = $slugBase . '-' . Str::lower(Str::random(6));
 
+        $desc = $validated['description'] ?? $validated['content'] ?? null;
+
         $post = CommunityPost::create([
             'user_id'     => $request->user()->id,
             'title'       => $validated['title'],
             'slug'        => $slug,
             'style'       => $validated['style'],
             'image'       => $imagePath,
-            'description' => $validated['description'] ?? null,
+            'description' => $desc,
+            'content'     => $desc,
+            'status'      => CommunityPost::STATUS_PUBLISHED,
         ]);
 
         if (! empty($validated['product_ids'])) {
             $post->products()->sync($validated['product_ids']);
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đăng bài khoe góc máy thành công!',
+                'slug'    => $post->slug,
+            ]);
         }
 
         return redirect()->route('community.show', $post->slug)
@@ -223,13 +250,13 @@ class CommunityController extends Controller
             $isLiked = $post->isLikedBy($user);
         }
 
-        // Nếu là yêu cầu AJAX hoặc muốn nhận JSON (cho Quick View Modal)
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'id'             => $post->id,
                 'title'          => $post->title,
                 'slug'           => $post->slug,
                 'description'    => $post->description,
+                'content'        => $post->content,
                 'image'          => $post->display_image,
                 'style'          => $post->style,
                 'style_info'     => $post->style_info,
@@ -291,7 +318,7 @@ class CommunityController extends Controller
     }
 
     /**
-     * Thả tim / Bỏ thả tim cho bài viết (AJAX).
+     * Thả tim / Bỏ thả tim cho bài viết (AJAX, bọc DB transaction).
      */
     public function like(Request $request, string $post): JsonResponse
     {
@@ -307,30 +334,42 @@ class CommunityController extends Controller
 
         $communityPost = $this->resolvePost($post);
 
-        $existingLike = CommunityPostLike::where('community_post_id', $communityPost->id)
-            ->where('user_id', $user->id)
-            ->first();
+        $result = DB::transaction(function () use ($user, $communityPost) {
+            $existingLike = PostLike::where('community_post_id', $communityPost->id)
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
 
-        if ($existingLike) {
-            $existingLike->delete();
-            $communityPost->decrement('likes_count');
-            $liked = false;
-        } else {
-            CommunityPostLike::create([
-                'community_post_id' => $communityPost->id,
-                'user_id'           => $user->id,
-            ]);
-            $communityPost->increment('likes_count');
-            $liked = true;
-        }
+            if ($existingLike) {
+                $existingLike->delete();
+                $communityPost->decrement('likes_count');
+                $liked = false;
+            } else {
+                PostLike::create([
+                    'community_post_id' => $communityPost->id,
+                    'user_id'           => $user->id,
+                ]);
+                $communityPost->increment('likes_count');
+                $liked = true;
+            }
 
-        $communityPost->refresh();
+            return [
+                'liked'       => $liked,
+                'likes_count' => (int) $communityPost->fresh()->likes_count,
+            ];
+        });
 
         return response()->json([
             'success'     => true,
-            'liked'       => $liked,
-            'likes_count' => $communityPost->likes_count,
+            'liked'       => $result['liked'],
+            'likes_count' => $result['likes_count'],
         ]);
+    }
+
+    /** Alias for toggleLike */
+    public function toggleLike(Request $request, int|string $id)
+    {
+        return $this->like($request, (string) $id);
     }
 
     /**
@@ -362,13 +401,17 @@ class CommunityController extends Controller
 
         $communityPost = $this->resolvePost($post);
 
-        $comment = CommunityPostComment::create([
-            'community_post_id' => $communityPost->id,
-            'user_id'           => $user->id,
-            'content'           => $validated['content'],
-        ]);
+        $comment = DB::transaction(function () use ($user, $communityPost, $validated) {
+            $cmt = PostComment::create([
+                'community_post_id' => $communityPost->id,
+                'user_id'           => $user->id,
+                'content'           => $validated['content'],
+            ]);
 
-        $communityPost->increment('comments_count');
+            $communityPost->increment('comments_count');
+
+            return $cmt->load('user:id,name');
+        });
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -384,5 +427,11 @@ class CommunityController extends Controller
         }
 
         return back()->with('success', 'Bình luận của bạn đã được đăng tải thành công!');
+    }
+
+    /** Alias for storeComment */
+    public function storeComment(Request $request, int|string $id)
+    {
+        return $this->comment($request, (string) $id);
     }
 }

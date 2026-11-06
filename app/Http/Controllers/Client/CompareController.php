@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Services\CompareService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,13 +16,25 @@ class CompareController extends Controller
      */
     public const MAX_COMPARE_ITEMS = 4;
 
+    public function __construct(
+        protected ?CompareService $compareService = null
+    ) {
+        $this->compareService = $compareService ?? app(CompareService::class);
+    }
+
     /**
      * Hiển thị trang Bảng so sánh thông số kỹ thuật đa cột.
      */
-    public function index(): View
+    public function index(Request $request): View|JsonResponse
     {
         $compareSession = session('compare_items', []);
-        $productIds = array_keys($compareSession);
+        
+        // Hỗ trợ cả mảng ID [1, 2] và mảng associative [1 => [...]]
+        if (array_is_list($compareSession)) {
+            $productIds = $compareSession;
+        } else {
+            $productIds = array_keys($compareSession);
+        }
 
         $products = collect();
         $specsMatrix = [];
@@ -85,6 +98,7 @@ class CompareController extends Controller
                     'is_different' => $isDifferent,
                 ];
             }
+
             // Tính toán khác biệt thông tin cơ bản
             $brandDiff = $products->pluck('brand_id')->unique()->count() > 1;
             $categoryDiff = $products->pluck('category_id')->unique()->count() > 1;
@@ -97,6 +111,16 @@ class CompareController extends Controller
             $brandDiff = false;
             $categoryDiff = false;
             $stockDiff = false;
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success'      => true,
+                'count'        => $products->count(),
+                'products'     => $products,
+                'specs_matrix' => $specsMatrix,
+                'diff_count'   => $diffCount,
+            ]);
         }
 
         return view('client.compare.index', compact(
@@ -112,118 +136,24 @@ class CompareController extends Controller
     }
 
     /**
-     * Lấy danh sách sản phẩm đang trong so sánh (API dùng cho Sticky Compare Bar).
+     * Lấy danh sách sản phẩm đang có trong thanh so sánh (JSON cho Alpine.js).
      */
     public function items(): JsonResponse
     {
-        $items = array_values(session('compare_items', []));
+        $compareSession = session('compare_items', []);
 
         return response()->json([
-            'success' => true,
-            'items'   => $items,
-            'count'   => count($items),
+            'count' => count($compareSession),
+            'items' => array_values($compareSession),
+            'ids'   => array_map('intval', array_keys($compareSession)),
         ]);
     }
 
     /**
-     * Bật/tắt sản phẩm trong danh sách so sánh (Toggle: thêm nếu chưa có, xóa nếu đã có).
+     * Thêm sản phẩm vào danh sách so sánh (AJAX).
      */
-    public function toggle(int $id): JsonResponse
+    public function add(Request $request, int $id): JsonResponse
     {
-        $compareItems = session('compare_items', []);
-
-        // Nếu sản phẩm đã có trong danh sách -> Xóa bỏ
-        if (isset($compareItems[$id])) {
-            $removedName = $compareItems[$id]['name'] ?? 'Sản phẩm';
-            unset($compareItems[$id]);
-            session(['compare_items' => $compareItems]);
-
-            return response()->json([
-                'success' => true,
-                'action'  => 'removed',
-                'id'      => $id,
-                'items'   => array_values($compareItems),
-                'count'   => count($compareItems),
-                'message' => "Đã xóa \"{$removedName}\" khỏi danh sách so sánh.",
-            ]);
-        }
-
-        // Nếu chưa có -> Kiểm tra điều kiện thêm mới
-        return $this->addDirect($id);
-    }
-
-    /**
-     * Thêm sản phẩm vào danh sách so sánh.
-     */
-    public function add(int $id): JsonResponse
-    {
-        return $this->addDirect($id);
-    }
-
-    /**
-     * Xóa 1 sản phẩm khỏi danh sách so sánh.
-     */
-    public function remove(int $id): JsonResponse
-    {
-        $compareItems = session('compare_items', []);
-
-        if (isset($compareItems[$id])) {
-            $name = $compareItems[$id]['name'] ?? 'Sản phẩm';
-            unset($compareItems[$id]);
-            session(['compare_items' => $compareItems]);
-
-            return response()->json([
-                'success' => true,
-                'action'  => 'removed',
-                'id'      => $id,
-                'items'   => array_values($compareItems),
-                'count'   => count($compareItems),
-                'message' => "Đã xóa \"{$name}\" khỏi danh sách so sánh.",
-            ]);
-        }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Sản phẩm không có trong danh sách so sánh.',
-            'items'   => array_values($compareItems),
-            'count'   => count($compareItems),
-        ], 404);
-    }
-
-    /**
-     * Xóa sạch toàn bộ danh sách so sánh.
-     */
-    public function clear(): JsonResponse
-    {
-        session()->forget('compare_items');
-
-        return response()->json([
-            'success' => true,
-            'action'  => 'cleared',
-            'items'   => [],
-            'count'   => 0,
-            'message' => 'Đã xóa toàn bộ sản phẩm trong danh sách so sánh.',
-        ]);
-    }
-
-    /**
-     * Xử lý kiểm tra ràng buộc nghiệp vụ và thêm sản phẩm vào session.
-     */
-    private function addDirect(int $id): JsonResponse
-    {
-        $compareItems = session('compare_items', []);
-
-        // 1. Kiểm tra giới hạn số lượng tối đa 4 món
-        if (count($compareItems) >= self::MAX_COMPARE_ITEMS) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bạn chỉ có thể so sánh tối đa 4 sản phẩm cùng lúc. Vui lòng xóa bớt sản phẩm để thêm mới.',
-                'items'   => array_values($compareItems),
-                'count'   => count($compareItems),
-            ], 422);
-        }
-
-        // 2. Kiểm tra sản phẩm có tồn tại và đang hoạt động không
         $product = Product::query()
             ->active()
             ->with(['category.parent', 'brand'])
@@ -232,57 +162,146 @@ class CompareController extends Controller
         if (!$product) {
             return response()->json([
                 'success' => false,
-                'message' => 'Sản phẩm không tồn tại hoặc đã ngừng kinh doanh.',
-                'items'   => array_values($compareItems),
-                'count'   => count($compareItems),
+                'message' => 'Không tìm thấy sản phẩm hoặc sản phẩm đã ngừng kinh doanh.',
             ], 404);
         }
 
-        // 3. Xác định nhóm danh mục cha (Root Category)
-        $category = $product->category;
-        $rootId   = $category ? ($category->parent_id ?: $category->id) : null;
-        $rootName = $category ? ($category->parent ? $category->parent->name : $category->name) : 'Sản phẩm';
+        $compareSession = session('compare_items', []);
 
-        // 4. Ràng buộc chỉ cho phép so sánh các sản phẩm cùng nhóm danh mục gốc
-        if (!empty($compareItems)) {
-            $firstItem = reset($compareItems);
-            $firstRootId = $firstItem['root_id'] ?? null;
-            $firstRootName = $firstItem['root_name'] ?? 'danh mục';
+        // 1. Kiểm tra đã tồn tại chưa
+        if (isset($compareSession[$id])) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Sản phẩm đã có trong danh sách so sánh.',
+                'action'  => 'exists',
+                'count'   => count($compareSession),
+                'items'   => array_values($compareSession),
+            ]);
+        }
 
-            if ($firstRootId !== null && $rootId !== null && $firstRootId !== $rootId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "Chỉ có thể so sánh các sản phẩm cùng nhóm danh mục ({$firstRootName}). Không thể so sánh với {$rootName}.",
-                    'items'   => array_values($compareItems),
-                    'count'   => count($compareItems),
-                ], 422);
+        // 2. Giới hạn tối đa 4 sản phẩm
+        if (count($compareSession) >= self::MAX_COMPARE_ITEMS) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ có thể so sánh tối đa 4 sản phẩm cùng lúc. Vui lòng xóa bớt để thêm mới.',
+                'count'   => count($compareSession),
+            ], 422);
+        }
+
+        // 3. Ràng buộc: Chỉ so sánh các sản phẩm cùng nhóm Danh mục gốc (Root Category)
+        if (!empty($compareSession)) {
+            $firstItemId = array_key_first($compareSession);
+            $firstProduct = Product::with('category.parent')->find($firstItemId);
+
+            if ($firstProduct && $product->category && $firstProduct->category) {
+                $currentRootId = $this->getRootCategoryId($product->category);
+                $firstRootId = $this->getRootCategoryId($firstProduct->category);
+
+                if ($currentRootId !== $firstRootId) {
+                    $firstCatName = $firstProduct->category->parent?->name ?? $firstProduct->category->name;
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Chỉ có thể so sánh các sản phẩm cùng nhóm '{$firstCatName}'. Vui lòng xóa bớt để chọn ngành hàng khác.",
+                        'count'   => count($compareSession),
+                    ], 422);
+                }
             }
         }
 
-        // 5. Thêm vào danh sách so sánh
-        $compareItems[$product->id] = [
-            'id'          => $product->id,
-            'name'        => $product->name,
-            'slug'        => $product->slug,
-            'sku'         => $product->sku,
-            'price'       => (int) $product->price,
-            'sale_price'  => $product->sale_price ? (int) $product->sale_price : null,
-            'thumbnail'   => $product->thumbnail_url ?? asset($product->thumbnail ?? 'images/hero-headphone.png'),
-            'category'    => $product->category?->name,
-            'brand'       => $product->brand?->name,
-            'root_id'     => $rootId,
-            'root_name'   => $rootName,
+        // Thêm vào session
+        $compareSession[$id] = [
+            'id'              => $product->id,
+            'name'            => $product->name,
+            'slug'            => $product->slug,
+            'price'           => $product->price,
+            'sale_price'      => $product->sale_price,
+            'effective_price' => $product->effective_price,
+            'thumbnail'       => $product->thumbnail ? asset($product->thumbnail) : 'https://placehold.co/100x100/png?text=GearHub',
+            'brand'           => $product->brand?->name,
+            'category'        => $product->category?->name,
         ];
 
-        session(['compare_items' => $compareItems]);
+        session(['compare_items' => $compareSession]);
 
         return response()->json([
             'success' => true,
+            'message' => "Đã thêm '{$product->name}' vào so sánh.",
             'action'  => 'added',
-            'id'      => $product->id,
-            'items'   => array_values($compareItems),
-            'count'   => count($compareItems),
-            'message' => "Đã thêm \"{$product->name}\" vào danh sách so sánh.",
+            'count'   => count($compareSession),
+            'items'   => array_values($compareSession),
         ]);
+    }
+
+    /**
+     * Bật/Tắt trạng thái so sánh của sản phẩm (Toggle - Dùng cho nút So sánh trên Card).
+     */
+    public function toggle(Request $request, int $id): JsonResponse
+    {
+        $compareSession = session('compare_items', []);
+
+        if (isset($compareSession[$id])) {
+            return $this->remove($request, $id);
+        }
+
+        return $this->add($request, $id);
+    }
+
+    /**
+     * Xóa 1 sản phẩm khỏi danh sách so sánh (AJAX).
+     */
+    public function remove(Request $request, int $id): JsonResponse
+    {
+        $compareSession = session('compare_items', []);
+
+        if (isset($compareSession[$id])) {
+            unset($compareSession[$id]);
+            session(['compare_items' => $compareSession]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã xóa sản phẩm khỏi danh sách so sánh.',
+                'action'  => 'removed',
+                'count'   => count($compareSession),
+                'items'   => array_values($compareSession),
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Sản phẩm không có trong danh sách so sánh.',
+            'count'   => count($compareSession),
+        ], 404);
+    }
+
+    /**
+     * Xóa toàn bộ danh sách so sánh.
+     */
+    public function clear(Request $request)
+    {
+        session()->forget('compare_items');
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã xóa tất cả sản phẩm so sánh.',
+                'count'   => 0,
+                'items'   => [],
+            ]);
+        }
+
+        return redirect()->route('shop.index')->with('success', 'Đã xóa danh sách so sánh.');
+    }
+
+    /**
+     * Tìm ID của danh mục gốc (Root Category).
+     */
+    protected function getRootCategoryId($category): ?int
+    {
+        if (!$category) return null;
+        $current = $category;
+        while ($current->parent_id && $current->parent) {
+            $current = $current->parent;
+        }
+        return $current->id;
     }
 }

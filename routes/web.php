@@ -1,22 +1,24 @@
 <?php
 
-use App\Http\Controllers\Client\HomeController;
-use App\Http\Controllers\Client\ShopController;
-use App\Http\Controllers\Client\ReviewController;
-use App\Http\Controllers\Client\CartController;
-use App\Http\Controllers\Client\CompareController;
-use App\Http\Controllers\Client\CommunityController;
-use App\Http\Controllers\ProfileController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CommunityModerationController;
+use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductTrashController;
-use App\Http\Controllers\Admin\CouponController;
-use App\Http\Controllers\Client\CheckoutCouponController;
+use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\CheckoutController;
+use App\Http\Controllers\Client\CheckoutCouponController;
+use App\Http\Controllers\Client\CommunityController;
+use App\Http\Controllers\Client\CompareController;
+use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\OrderController as ClientOrderController;
-use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Client\QuizController;
+use App\Http\Controllers\Client\ReviewController;
+use App\Http\Controllers\Client\ShopController;
+use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Route;
 
 // Storefront Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -24,6 +26,10 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
 Route::post('/shop/{slug}/reviews', [ReviewController::class, 'store'])->middleware('auth')->name('shop.reviews.store');
 Route::delete('/shop/{slug}/reviews', [ReviewController::class, 'destroy'])->middleware('auth')->name('shop.reviews.destroy');
+
+// Product Reviews API Routes (Hỗ trợ cả route /products/{product}/reviews)
+Route::get('/products/{product}/reviews', [ReviewController::class, 'index'])->name('products.reviews.index');
+Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->middleware('auth')->name('products.reviews.store');
 
 // Cart Routes (Session-based)
 Route::prefix('cart')->name('cart.')->group(function () {
@@ -44,6 +50,12 @@ Route::prefix('compare')->name('compare.')->group(function () {
     Route::delete('/clear', [CompareController::class, 'clear'])->name('clear');
 });
 
+// Smart Gear Finder Quiz Routes
+Route::prefix('quiz')->name('quiz.')->group(function () {
+    Route::get('/', [QuizController::class, 'index'])->name('index');
+    Route::post('/submit', [QuizController::class, 'submit'])->name('submit');
+});
+
 // Community Showcase Routes (Diễn đàn khoe góc máy)
 Route::prefix('community')->name('community.')->group(function () {
     Route::get('/', [CommunityController::class, 'index'])->name('index');
@@ -51,8 +63,13 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::post('/', [CommunityController::class, 'store'])->middleware('auth')->name('store');
     Route::get('/search-products', [CommunityController::class, 'searchProducts'])->name('search-products');
     Route::get('/{slug}', [CommunityController::class, 'show'])->name('show');
-    Route::post('/{post}/like', [CommunityController::class, 'like'])->name('like');
-    Route::post('/{post}/comments', [CommunityController::class, 'comment'])->name('comment');
+    
+    // Tương tác Like & Comment (Yêu cầu đăng nhập)
+    Route::middleware('auth')->group(function () {
+        Route::post('/{post}/like', [CommunityController::class, 'like'])->name('like');
+        Route::post('/{post}/comments', [CommunityController::class, 'comment'])->name('comment');
+        Route::post('/{post}/comments-alt', [CommunityController::class, 'comment'])->name('comments.store');
+    });
 });
 
 Route::get('/dashboard', function () {
@@ -65,6 +82,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Admin Control Panel Routes
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
@@ -88,6 +106,11 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('coupons', CouponController::class)->except(['show']);
         Route::resource('orders', OrderController::class)->only(['index', 'show']);
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+
+        // Community Moderation (Đặt chính xác trong group Admin bảo mật)
+        Route::get('community', [CommunityModerationController::class, 'index'])->name('community.index');
+        Route::patch('community/{post}/status', [CommunityModerationController::class, 'updateStatus'])->name('community.status');
+        Route::delete('community/{post}', [CommunityModerationController::class, 'destroy'])->name('community.destroy');
     });
 
 // Checkout & Order Routes (Requires Auth)

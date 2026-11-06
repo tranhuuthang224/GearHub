@@ -114,6 +114,49 @@ class Product extends Model
 
     public function communityPosts(): BelongsToMany
     {
-        return $this->belongsToMany(CommunityPost::class, 'community_post_product')->withTimestamps();
+        return $this->belongsToMany(CommunityPost::class, 'post_product_tags')->withTimestamps();
+    }
+
+    /**
+     * Điểm sao đánh giá trung bình (vd: 4.8)
+     */
+    public function averageRating(): float
+    {
+        if ($this->relationLoaded('reviews')) {
+            $avg = $this->reviews->avg('rating');
+        } else {
+            $avg = $this->reviews()->avg('rating');
+        }
+
+        return (float) round($avg ?? 0, 1);
+    }
+
+    /**
+     * Thống kê tỷ lệ phân bổ các mức sao (1-5 sao) phục vụ vẽ biểu đồ
+     */
+    public function ratingBreakdown(): array
+    {
+        $total = $this->relationLoaded('reviews') ? $this->reviews->count() : $this->reviews()->count();
+        
+        $counts = $this->reviews()
+            ->selectRaw('rating, count(*) as count')
+            ->groupBy('rating')
+            ->pluck('count', 'rating')
+            ->toArray();
+
+        $breakdown = [];
+        for ($star = 5; $star >= 1; $star--) {
+            $starCount = $counts[$star] ?? 0;
+            $breakdown[$star] = [
+                'count'      => $starCount,
+                'percentage' => $total > 0 ? round(($starCount / $total) * 100, 1) : 0,
+            ];
+        }
+
+        return [
+            'average'     => $this->averageRating(),
+            'total'       => $total,
+            'breakdown'   => $breakdown,
+        ];
     }
 }

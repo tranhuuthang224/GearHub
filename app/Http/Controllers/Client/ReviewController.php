@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Review;
+use App\Services\ReviewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,18 +13,72 @@ use Illuminate\Support\Facades\Storage;
 
 class ReviewController extends Controller
 {
+    public function __construct(
+        protected ?ReviewService $reviewService = null
+    ) {
+        $this->reviewService = $reviewService ?? app(ReviewService::class);
+    }
+
+    /**
+     * Tìm sản phẩm theo Slug, ID hoặc Model.
+     */
+    protected function resolveProduct(Product|string $productOrSlug): Product
+    {
+        if ($productOrSlug instanceof Product) {
+            return $productOrSlug;
+        }
+
+        return Product::query()
+            ->where('slug', $productOrSlug)
+            ->orWhere('id', is_numeric($productOrSlug) ? (int) $productOrSlug : 0)
+            ->active()
+            ->firstOrFail();
+    }
+
+    /**
+     * Lấy danh sách reviews & thống kê sao của sản phẩm (API / AJAX)
+     * GET /products/{product}/reviews
+     */
+    public function index(Request $request, Product|string $product)
+    {
+        $product = $this->resolveProduct($product);
+
+        $reviews = $product->reviews()
+            ->with('user:id,name')
+            ->latest()
+            ->paginate(10);
+
+        $stats = $product->ratingBreakdown();
+        $eligibility = $this->reviewService->canUserReview($request->user(), $product);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success'     => true,
+                'stats'       => $stats,
+                'eligibility' => $eligibility,
+                'reviews'     => $reviews,
+            ]);
+        }
+
+        return redirect()->to(route('shop.show', $product->slug) . '#reviews');
+    }
+
     /**
      * Lưu hoặc cập nhật đánh giá sản phẩm.
+     * POST /shop/{slug}/reviews hoặc POST /products/{product}/reviews
      */
-    public function store(Request $request, string $slug): JsonResponse|RedirectResponse
+    public function store(Request $request, Product|string $slug): JsonResponse|RedirectResponse
     {
-        $product = Product::where('slug', $slug)->active()->firstOrFail();
+        $product = $this->resolveProduct($slug);
+        $user = $request->user();
 
         $validated = $request->validate([
-            'rating'   => ['required', 'integer', 'between:1,5'],
-            'comment'  => ['required', 'string', 'min:5', 'max:2000'],
-            'photos'   => ['nullable', 'array', 'max:3'],
-            'photos.*' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'rating'     => ['required', 'integer', 'between:1,5'],
+            'comment'    => ['required', 'string', 'min:5', 'max:2000'],
+            'photos'     => ['nullable', 'array', 'max:3'],
+            'photos.*'   => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'images'     => ['nullable', 'array', 'max:3'],
+            'images.*'   => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
         ], [
             'rating.required'  => 'Vui lòng chọn số sao đánh giá (từ 1 đến 5 sao).',
             'rating.between'   => 'Số sao đánh giá phải từ 1 đến 5.',
@@ -36,8 +91,6 @@ class ReviewController extends Controller
             'photos.*.max'     => 'Kích thước mỗi ảnh không được vượt quá 5MB.',
         ]);
 
-        $user = $request->user();
-
         // Tìm review cũ nếu có
         $existingReview = Review::where('user_id', $user->id)
             ->where('product_id', $product->id)
@@ -45,10 +98,11 @@ class ReviewController extends Controller
 
         $photoPaths = $existingReview ? ($existingReview->photos ?? []) : [];
 
-        // Nếu người dùng tải ảnh mới lên
-        if ($request->hasFile('photos')) {
+        // Hỗ trợ cả trường name="photos" và name="images"
+        $uploadedFiles = $request->file('photos') ?? $request->file('images') ?? [];
+        if (!empty($uploadedFiles)) {
             $newPaths = [];
-            foreach ($request->file('photos') as $file) {
+            foreach ($uploadedFiles as $file) {
                 if ($file && $file->isValid()) {
                     $path = $file->store('reviews', 'public');
                     $newPaths[] = $path;
@@ -66,13 +120,15 @@ class ReviewController extends Controller
                 'product_id' => $product->id,
             ],
             [
-                'rating'     => $validated['rating'],
-                'comment'    => $validated['comment'],
-                'photos'     => $photoPaths,
+                'rating'               => $validated['rating'],
+                'comment'              => $validated['comment'],
+                'photos'               => $photoPaths,
+                'images'               => $photoPaths,
+                'is_verified_purchase' => true,
             ]
         );
 
-        if ($request->wantsJson()) {
+        if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Cảm ơn bạn! Đánh giá đã được ghi nhận thành công.',
@@ -95,9 +151,9 @@ class ReviewController extends Controller
     /**
      * Xóa đánh giá của chính người dùng.
      */
-    public function destroy(Request $request, string $slug): RedirectResponse
+    public function destroy(Request $request, Product|string $slug): RedirectResponse
     {
-        $product = Product::where('slug', $slug)->active()->firstOrFail();
+        $product = $this->resolveProduct($slug);
         $user = $request->user();
 
         $review = Review::where('user_id', $user->id)
