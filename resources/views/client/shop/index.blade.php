@@ -12,8 +12,8 @@
         <span class="text-gray-900 font-semibold">All Products</span>
     </nav>
 
-    <!-- Page Title & Mobile Trigger -->
-    <div class="mb-8 flex items-center justify-between">
+    <!-- Page Title & Mobile Trigger / Quiz CTA -->
+    <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
             <h1 class="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
                 All Products
@@ -23,25 +23,37 @@
             </p>
         </div>
 
-        <!-- Mobile Filter Button Toggle -->
-        <button 
-            type="button" 
-            @click="mobileFilterOpen = !mobileFilterOpen"
-            class="lg:hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 bg-white shadow-sm hover:border-primary/40 transition"
-        >
-            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            Bộ lọc
-            @php
-                $activeFilterCount = count($selectedCategories) + count($selectedBrands) + ($minPrice ? 1 : 0) + ($maxPrice ? 1 : 0) + ($stockStatus ? 1 : 0);
-            @endphp
-            @if ($activeFilterCount > 0)
-                <span class="w-5 h-5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
-                    {{ $activeFilterCount }}
-                </span>
-            @endif
-        </button>
+        <div class="flex items-center gap-3 flex-wrap">
+            <!-- Nút Smart Gear Finder Quiz -->
+            <a 
+                href="{{ route('quiz.index') }}" 
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-red-600 via-primary to-rose-600 hover:from-primary hover:to-red-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-primary/20 hover:shadow-lg transition transform hover:-translate-y-0.5 active:scale-95 group"
+            >
+                <span class="text-base group-hover:rotate-12 transition-transform">🎯</span>
+                <span>Tìm Gear chuẩn gu (Quiz)</span>
+                <span class="bg-white/20 text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-extrabold hidden sm:inline">30s</span>
+            </a>
+
+            <!-- Mobile Filter Button Toggle -->
+            <button 
+                type="button" 
+                @click="mobileFilterOpen = !mobileFilterOpen"
+                class="lg:hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 bg-white shadow-sm hover:border-primary/40 transition"
+            >
+                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Bộ lọc
+                @php
+                    $activeFilterCount = count($selectedCategories) + count($selectedBrands) + ($minPrice ? 1 : 0) + ($maxPrice ? 1 : 0) + ($stockStatus ? 1 : 0);
+                @endphp
+                @if ($activeFilterCount > 0)
+                    <span class="w-5 h-5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
+                        {{ $activeFilterCount }}
+                    </span>
+                @endif
+            </button>
+        </div>
     </div>
 
     <!-- Main Layout: Sidebar Filter (Left) + Product Catalog (Right) -->
@@ -67,6 +79,25 @@
                     <button type="button" @click="mobileFilterOpen = false" class="lg:hidden text-gray-400 hover:text-gray-600">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
+                </div>
+
+                <!-- Quiz Banner CTA in Sidebar -->
+                <div class="p-4 rounded-2xl bg-gradient-to-br from-red-50/80 via-white to-amber-50/50 border border-primary/20 shadow-xs space-y-2.5">
+                    <div class="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-wider">
+                        <span>🎯 Smart Gear Finder</span>
+                    </div>
+                    <p class="text-xs text-gray-600 leading-relaxed font-medium">
+                        Chưa biết chọn gear nào? Trả lời 4 câu hỏi đơn giản để hệ thống gợi ý chuẩn gu!
+                    </p>
+                    <a 
+                        href="{{ route('quiz.index') }}" 
+                        class="w-full inline-flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold shadow-sm transition active:scale-95 group"
+                    >
+                        <span>Làm trắc nghiệm ngay</span>
+                        <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </a>
                 </div>
 
                 <form id="filter-form" action="{{ url('/shop') }}" method="GET" class="space-y-7">
