@@ -408,7 +408,8 @@
                                     x-model="couponCode"
                                     placeholder="Nhập mã (VD: GEARHUB10)"
                                     @keydown.enter.prevent="applyCoupon()"
-                                    class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 bg-[#F4F5F7] text-xs font-mono font-bold uppercase placeholder:text-gray-400 placeholder:font-sans placeholder:normal-case focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+                                    style="padding-left: 2.5rem !important;"
+                                    class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-gray-200 bg-[#F4F5F7] text-xs font-mono font-bold uppercase placeholder:text-gray-400 placeholder:font-sans placeholder:normal-case focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
                                 >
                             </div>
 

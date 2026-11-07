@@ -151,7 +151,8 @@
                                     x-model="receiverName"
                                     required
                                     placeholder="Ví dụ: Nguyễn Văn A"
-                                    class="w-full pl-10 pr-4 py-3 rounded-2xl border @error('receiver_name') border-rose-500 bg-rose-50/20 @else border-gray-200 bg-[#F8FAFC] @enderror text-sm focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition placeholder:text-gray-400 font-medium"
+                                    style="padding-left: 2.75rem !important;"
+                                    class="w-full pl-11 pr-4 py-3 rounded-2xl border @error('receiver_name') border-rose-500 bg-rose-50/20 @else border-gray-200 bg-[#F8FAFC] @enderror text-sm focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition placeholder:text-gray-400 font-medium"
                                 >
                             </div>
                             @error('receiver_name')
@@ -178,7 +179,8 @@
                                         x-model="receiverPhone"
                                         required
                                         placeholder="Ví dụ: 0912345678"
-                                        class="w-full pl-10 pr-4 py-3 rounded-2xl border @error('phone') border-rose-500 bg-rose-50/20 @else border-gray-200 bg-[#F8FAFC] @enderror text-sm focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition placeholder:text-gray-400 font-medium"
+                                        style="padding-left: 2.75rem !important;"
+                                        class="w-full pl-11 pr-4 py-3 rounded-2xl border @error('phone') border-rose-500 bg-rose-50/20 @else border-gray-200 bg-[#F8FAFC] @enderror text-sm focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition placeholder:text-gray-400 font-medium"
                                     >
                                 </div>
                                 @error('phone')
@@ -201,7 +203,8 @@
                                         type="email" 
                                         value="{{ $user->email ?? '' }}" 
                                         disabled
-                                        class="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200 bg-gray-100/70 text-sm text-gray-500 font-medium cursor-not-allowed select-none"
+                                        style="padding-left: 2.75rem !important;"
+                                        class="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 bg-gray-100/70 text-sm text-gray-500 font-medium cursor-not-allowed select-none"
                                     >
                                 </div>
                                 <p class="text-[11px] text-gray-400 mt-1">Hóa đơn điện tử sẽ tự động gửi về email này</p>
@@ -226,7 +229,8 @@
                                     rows="3" 
                                     required
                                     placeholder="Số nhà, tên tòa nhà/tổ dân phố, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..."
-                                    class="w-full pl-10 pr-4 py-3 rounded-2xl border @error('shipping_address') border-rose-500 bg-rose-50/20 @else border-gray-200 bg-[#F8FAFC] @enderror text-sm focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition placeholder:text-gray-400 font-medium leading-relaxed"
+                                    style="padding-left: 2.75rem !important;"
+                                    class="w-full pl-11 pr-4 py-3 rounded-2xl border @error('shipping_address') border-rose-500 bg-rose-50/20 @else border-gray-200 bg-[#F8FAFC] @enderror text-sm focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition placeholder:text-gray-400 font-medium leading-relaxed"
                                 ></textarea>
                             </div>
                             @error('shipping_address')
@@ -250,7 +254,8 @@
                                     name="note" 
                                     value="{{ old('note') }}" 
                                     placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi đến 15 phút..."
-                                    class="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200 bg-[#F8FAFC] text-sm focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition placeholder:text-gray-400 font-medium"
+                                    style="padding-left: 2.75rem !important;"
+                                    class="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 bg-[#F8FAFC] text-sm focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition placeholder:text-gray-400 font-medium"
                                 >
                             </div>
                         </div>
@@ -436,7 +441,8 @@
                                     x-model="inputCoupon"
                                     placeholder="Nhập mã (VD: GEAR10)"
                                     @keydown.enter.prevent="checkCoupon()"
-                                    class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-gray-200 bg-[#F4F5F7] text-xs font-mono font-bold uppercase placeholder:font-sans placeholder:normal-case placeholder:text-gray-400 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary transition"
+                                    style="padding-left: 2.5rem !important;"
+                                    class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-200 bg-[#F4F5F7] text-xs font-mono font-bold uppercase placeholder:font-sans placeholder:normal-case placeholder:text-gray-400 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary transition"
                                 >
                             </div>
 
