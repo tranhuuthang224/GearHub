@@ -98,9 +98,13 @@
                     @auth
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" class="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-primary transition focus:outline-none">
-                                <div class="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
-                                    {{ substr(Auth::user()->name, 0, 2) }}
-                                </div>
+                                @if (Auth::user()->avatar_url)
+                                    <img src="{{ Auth::user()->avatar_url }}" alt="{{ Auth::user()->name }}" class="w-8 h-8 rounded-full object-cover ring-2 ring-gray-100 shadow-sm">
+                                @else
+                                    <div class="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+                                        {{ substr(Auth::user()->name, 0, 2) }}
+                                    </div>
+                                @endif
                                 <span class="hidden sm:inline line-clamp-1 max-w-[120px]">{{ Auth::user()->name }}</span>
                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />

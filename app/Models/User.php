@@ -7,11 +7,12 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'email', 'password', 'phone'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'avatar'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -39,6 +40,7 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'avatar',
     ];
 
     protected $hidden = [
@@ -52,13 +54,26 @@ class User extends Authenticatable
      * @return array<string, string>
      */
     protected function casts(): array
-{
-    return [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'is_active' => 'boolean',
-    ];
-}
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'is_active' => 'boolean',
+        ];
+    }
+
+    protected function avatarUrl(): Attribute
+    {
+        return Attribute::get(function () {
+            if (!empty($this->avatar)) {
+                if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
+                    return $this->avatar;
+                }
+                return asset('storage/' . $this->avatar);
+            }
+            return null;
+        });
+    }
 
 
 
