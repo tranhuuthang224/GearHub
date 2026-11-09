@@ -1,6 +1,9 @@
 @extends('layouts.client')
 
 @section('title', 'Diễn đàn Khoe Góc Máy & Battlestation | GearHub Community')
+@section('meta_description', 'Khám phá thế giới góc máy gaming, góc làm việc minimalist, cyberpunk, retro đỉnh cao và tìm đúng gear GearHub có trong các góc máy đẹp nhất.')
+@section('og_type', 'website')
+@section('og_title', 'Diễn đàn Khoe Góc Máy & Setup Đỉnh Cao | GearHub Community')
 
 @section('content')
 <div 
@@ -191,6 +194,7 @@
                                 src="{{ $post->display_image }}" 
                                 alt="{{ $post->title }}"
                                 loading="lazy"
+                                decoding="async"
                                 class="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                             >
 
@@ -426,7 +430,7 @@
                                     <div class="space-y-2.5">
                                         <template x-for="item in activePost.products" :key="item.id">
                                             <div class="flex items-center gap-3 p-2.5 rounded-2xl border border-gray-150 bg-slate-50/70 hover:bg-white hover:border-primary/40 hover:shadow-sm transition">
-                                                <img :src="item.thumbnail" :alt="item.name" class="w-12 h-12 object-cover rounded-xl bg-white border border-gray-150 shrink-0">
+                                                <img :src="item.thumbnail" :alt="item.name" loading="lazy" decoding="async" class="w-12 h-12 object-cover rounded-xl bg-white border border-gray-150 shrink-0">
                                                 <div class="min-w-0 flex-1">
                                                     <div class="text-[11px] font-semibold text-gray-400 uppercase" x-text="item.brand"></div>
                                                     <a :href="item.url" class="font-bold text-gray-900 text-xs hover:text-primary transition line-clamp-1" x-text="item.name"></a>

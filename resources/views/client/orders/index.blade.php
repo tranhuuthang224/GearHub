@@ -1,5 +1,7 @@
 @extends('layouts.client')
 
+@section('title', 'Đơn Hàng Của Tôi | GearHub')
+
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
 
@@ -167,6 +169,8 @@
                                         <img 
                                             src="{{ $item->product?->thumbnail ? (str_starts_with($item->product->thumbnail, 'http') ? $item->product->thumbnail : asset('storage/' . $item->product->thumbnail)) : asset('images/hero-headphone.png') }}" 
                                             alt="{{ $item->product_name }}" 
+                                            loading="lazy"
+                                            decoding="async"
                                             class="max-h-full max-w-full object-contain"
                                             onerror="this.src='{{ asset('images/hero-headphone.png') }}'"
                                         >

@@ -1,5 +1,18 @@
 @extends('layouts.client')
 
+@section('title', $product['name'] . ' - Chính Hãng Giá Tốt | GearHub')
+@section('meta_description', Str::limit(strip_tags($product['description'] ?? 'Mua ' . $product['name'] . ' chính hãng tại GearHub, bảo hành 12-24 tháng, hỗ trợ 1 đổi 1 trong 30 ngày.'), 160))
+@section('og_type', 'product')
+@section('og_title', $product['name'] . ' | GearHub')
+@section('og_image', $product['thumbnail'] ?? asset('images/hero-banner-clean.png'))
+@push('meta')
+    <meta property="product:price:amount" content="{{ $product['sale_price'] ?? $product['price'] }}">
+    <meta property="product:price:currency" content="VND">
+    <meta property="product:availability" content="{{ ($product['stock_quantity'] ?? 0) > 0 ? 'in stock' : 'out of stock' }}">
+    <meta property="product:brand" content="{{ $product['brand'] ?? 'GearHub' }}">
+    <meta property="product:condition" content="new">
+@endpush
+
 @section('content')
 <script>
 function productDetailOrder(productId, maxStock, cartAddUrl, checkoutUrl, csrfToken) {
@@ -140,6 +153,8 @@ function productReviewForm(initialRating, initialComment) {
                 <img 
                     :src="activeImage" 
                     alt="{{ $product['name'] }}"
+                    fetchpriority="high"
+                    decoding="async"
                     class="max-h-full max-w-full object-contain drop-shadow-2xl transition duration-500 transform group-hover:scale-105"
                 >
             </div>
@@ -155,7 +170,7 @@ function productReviewForm(initialRating, initialComment) {
                             class="aspect-square bg-[#F4F5F7] rounded-2xl p-2.5 flex items-center justify-center border-2 transition duration-200 cursor-pointer overflow-hidden focus:outline-none"
                             title="Xem ảnh"
                         >
-                            <img src="{{ $img }}" alt="Thumbnail" class="max-h-full max-w-full object-contain">
+                            <img src="{{ $img }}" alt="Thumbnail" loading="lazy" decoding="async" class="max-h-full max-w-full object-contain">
                         </button>
                     @endforeach
                 </div>
@@ -1282,7 +1297,7 @@ function productReviewForm(initialRating, initialComment) {
                                                     class="relative w-20 h-20 rounded-2xl overflow-hidden border border-gray-200 hover:border-primary shadow-xs hover:shadow-md transition group focus:outline-none"
                                                     title="Bấm để xem ảnh phóng to"
                                                 >
-                                                    <img src="{{ $photoUrl }}" alt="Ảnh thực tế" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                                                    <img src="{{ $photoUrl }}" alt="Ảnh thực tế" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                                                     <div class="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition"></div>
                                                     <div class="absolute bottom-1 right-1 p-1 bg-black/60 rounded-md text-white text-[10px] opacity-0 group-hover:opacity-100 transition">
                                                         🔍

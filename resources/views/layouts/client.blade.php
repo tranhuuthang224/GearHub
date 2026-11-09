@@ -2,10 +2,37 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full scroll-smooth">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'GearHub - Phụ kiện công nghệ cao cấp' }}</title>
+    <!-- Primary Meta SEO -->
+    <title>@yield('title', $title ?? 'GearHub - Thế Giới Gaming Gear & Setup Đỉnh Cao')</title>
+    <meta name="title" content="@yield('title', $title ?? 'GearHub - Thế Giới Gaming Gear & Setup Đỉnh Cao')">
+    <meta name="description" content="@yield('meta_description', 'Khám phá thế giới gaming gear, bàn phím cơ, chuột không dây, tai nghe chính hãng và diễn đàn chia sẻ góc máy setup hiện đại tại GearHub.')">
+    <meta name="keywords" content="@yield('meta_keywords', 'gearhub, gaming gear, bàn phím cơ, chuột gaming, tai nghe, màn hình, góc máy setup, đồ chơi công nghệ, phụ kiện pc')">
+    <meta name="author" content="GearHub Team">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="@yield('canonical_url', url()->current())">
+    <meta name="theme-color" content="#FF0000">
+
+    <!-- Open Graph / Facebook / Zalo Preview Protocol -->
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:site_name" content="GearHub">
+    <meta property="og:url" content="@yield('canonical_url', url()->current())">
+    <meta property="og:title" content="@yield('og_title', View::yieldContent('title', $title ?? 'GearHub - Thế Giới Gaming Gear & Setup Đỉnh Cao'))">
+    <meta property="og:description" content="@yield('meta_description', 'Khám phá thế giới gaming gear, bàn phím cơ, chuột không dây, tai nghe chính hãng và diễn đàn chia sẻ góc máy setup hiện đại tại GearHub.')">
+    <meta property="og:image" content="@yield('og_image', asset('images/hero-banner-clean.png'))">
+    <meta property="og:image:alt" content="GearHub Gaming Gear & Setup">
+    <meta property="og:locale" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="@yield('canonical_url', url()->current())">
+    <meta name="twitter:title" content="@yield('og_title', View::yieldContent('title', $title ?? 'GearHub - Thế Giới Gaming Gear & Setup Đỉnh Cao'))">
+    <meta name="twitter:description" content="@yield('meta_description', 'Khám phá thế giới gaming gear, bàn phím cơ, chuột không dây, tai nghe chính hãng và diễn đàn chia sẻ góc máy setup hiện đại tại GearHub.')">
+    <meta name="twitter:image" content="@yield('og_image', asset('images/hero-banner-clean.png'))">
+
+    @stack('meta')
 
     <!-- Google Font: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +43,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
-<body class="font-sans antialiased bg-white text-gray-900 min-h-full flex flex-col selection:bg-primary selection:text-white" x-data="{ mobileMenuOpen: false, searchOpen: false }">
+<body class="font-sans antialiased bg-white text-gray-900 min-h-full flex flex-col selection:bg-primary selection:text-white overflow-x-hidden" x-data="{ mobileMenuOpen: false, searchOpen: false }">
 
     <!-- Top Banner Notification (Optional announcement) -->
     <div class="bg-secondary text-white text-xs py-2 px-4 text-center font-medium">
@@ -99,7 +126,7 @@
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" class="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-primary transition focus:outline-none">
                                 @if (Auth::user()->avatar_url)
-                                    <img src="{{ Auth::user()->avatar_url }}" alt="{{ Auth::user()->name }}" class="w-8 h-8 rounded-full object-cover ring-2 ring-gray-100 shadow-sm">
+                                    <img src="{{ Auth::user()->avatar_url }}" alt="{{ Auth::user()->name }}" loading="lazy" decoding="async" class="w-8 h-8 rounded-full object-cover ring-2 ring-gray-100 shadow-sm">
                                 @else
                                     <div class="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
                                         {{ substr(Auth::user()->name, 0, 2) }}
@@ -268,6 +295,8 @@
                                         <img 
                                             :src="item.thumbnail" 
                                             :alt="item.name" 
+                                            loading="lazy"
+                                            decoding="async"
                                             class="w-11 h-11 rounded-lg object-contain bg-white border border-gray-100 p-0.5 shrink-0 group-hover:scale-105 transition"
                                         >
                                         <div class="flex-1 min-w-0">

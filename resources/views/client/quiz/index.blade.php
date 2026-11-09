@@ -1,6 +1,8 @@
 @extends('layouts.client')
 
 @section('title', 'Smart Gear Finder Quiz | Trợ lý Chọn Gear Phù Hợp - GearHub')
+@section('meta_description', 'Khám phá trợ lý trắc nghiệm chọn gear thông minh của GearHub: trả lời 4 câu hỏi đơn giản để hệ thống gợi ý gear chuẩn xác theo phong cách và ngân sách của bạn.')
+@section('og_title', 'Smart Gear Finder Quiz - Tìm Gear Chuẩn Gu | GearHub')
 
 @section('content')
 <div 
@@ -280,7 +282,7 @@
                                 <span class="text-xs font-bold text-gray-400">#<span x-text="index + 1"></span></span>
                             </div>
 
-                            <img :src="product.thumbnail ? '/' + product.thumbnail : 'https://placehold.co/400x400/png?text=GearHub'" :alt="product.name" class="w-full h-44 object-contain rounded-2xl bg-gray-50 p-2 mb-4">
+                            <img :src="product.thumbnail ? '/' + product.thumbnail : 'https://placehold.co/400x400/png?text=GearHub'" :alt="product.name" loading="lazy" decoding="async" class="w-full h-44 object-contain rounded-2xl bg-gray-50 p-2 mb-4">
 
                             <div class="text-[10px] font-bold uppercase text-gray-400" x-text="product.brand?.name"></div>
                             <h3 class="font-bold text-gray-900 text-sm line-clamp-2 mt-0.5" x-text="product.name"></h3>

@@ -1,6 +1,7 @@
 @extends('layouts.client')
 
 @section('title', 'Đăng bài Khoe Góc Máy | GearHub Community')
+@section('meta_description', 'Chia sẻ góc máy setup gaming hoặc không gian làm việc của bạn tới cộng đồng GearHub và gắn thẻ các món gear có trong ảnh.')
 
 @section('content')
 <div 
@@ -259,7 +260,7 @@
                                         @click="addGear(item)"
                                         class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-blue-50/70 transition cursor-pointer"
                                     >
-                                        <img :src="item.thumbnail" :alt="item.name" class="w-11 h-11 object-cover rounded-lg bg-gray-100 shrink-0 border border-gray-150">
+                                        <img :src="item.thumbnail" :alt="item.name" loading="lazy" decoding="async" class="w-11 h-11 object-cover rounded-lg bg-gray-100 shrink-0 border border-gray-150">
                                         <div class="min-w-0 flex-1">
                                             <div class="text-[10px] font-bold text-gray-400 uppercase" x-text="item.brand"></div>
                                             <div class="text-xs font-bold text-gray-900 truncate" x-text="item.name"></div>
@@ -296,7 +297,7 @@
                                 <template x-for="(gear, index) in taggedGears" :key="gear.id">
                                     <div class="flex items-center justify-between p-2.5 rounded-2xl border border-blue-200 bg-blue-50/40 shadow-2xs">
                                         <div class="flex items-center gap-3 min-w-0">
-                                            <img :src="gear.thumbnail" :alt="gear.name" class="w-10 h-10 object-cover rounded-xl bg-white border border-gray-150 shrink-0">
+                                            <img :src="gear.thumbnail" :alt="gear.name" loading="lazy" decoding="async" class="w-10 h-10 object-cover rounded-xl bg-white border border-gray-150 shrink-0">
                                             <div class="min-w-0">
                                                 <div class="text-[10px] font-bold text-primary uppercase" x-text="gear.brand"></div>
                                                 <div class="text-xs font-bold text-gray-900 truncate max-w-xs sm:max-w-md" x-text="gear.name"></div>

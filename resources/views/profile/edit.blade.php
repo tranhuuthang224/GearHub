@@ -1,5 +1,7 @@
 @extends('layouts.client', ['title' => 'Quản lý Hồ sơ cá nhân - GearHub'])
 
+@section('title', 'Quản Lý Hồ Sơ Cá Nhân | GearHub')
+
 @section('content')
 <div 
     x-data="{
@@ -106,6 +108,8 @@
                             <img 
                                 src="{{ $user->avatar_url }}" 
                                 alt="{{ $user->name }}" 
+                                loading="lazy"
+                                decoding="async"
                                 class="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-4 ring-primary/20 shadow-lg"
                             >
                         @else

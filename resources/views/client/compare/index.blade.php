@@ -1,5 +1,9 @@
 @extends('layouts.client', ['title' => 'So sánh thông số kỹ thuật chi tiết - GearHub'])
 
+@section('title', 'So Sánh Thông Số Kỹ Thuật Chi Tiết | GearHub')
+@section('meta_description', 'Công cụ so sánh trực quan tối đa 4 sản phẩm gaming gear cùng loại: đối chiếu giá bán, cấu hình, thông số chi tiết và làm nổi bật khác biệt.')
+@section('og_title', 'So Sánh Chi Tiết Thông Số Kỹ Thuật | GearHub')
+
 @section('content')
 <script>
 function comparePage() {
@@ -258,8 +262,9 @@ function comparePage() {
                                                 <img 
                                                     src="{{ $p->thumbnail_url ?? asset($p->thumbnail ?? 'images/hero-headphone.png') }}" 
                                                     alt="{{ $p->name }}"
-                                                    class="max-h-28 sm:max-h-32 max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
                                                     loading="lazy"
+                                                    decoding="async"
+                                                    class="max-h-28 sm:max-h-32 max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
                                                 >
                                             </a>
                                         </div>

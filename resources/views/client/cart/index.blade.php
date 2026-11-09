@@ -1,5 +1,7 @@
 @extends('layouts.client')
 
+@section('title', 'Giỏ Hàng Của Bạn | GearHub')
+
 @section('content')
 <div 
     class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12"
@@ -164,6 +166,8 @@
                                         <img 
                                             src="{{ $item['thumbnail'] }}" 
                                             alt="{{ $item['name'] }}" 
+                                            loading="lazy"
+                                            decoding="async"
                                             class="max-h-full max-w-full object-contain drop-shadow transition duration-300 group-hover:scale-105"
                                         >
                                     </div>

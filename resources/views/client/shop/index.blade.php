@@ -1,5 +1,9 @@
 @extends('layouts.client')
 
+@section('title', 'Cửa Hàng Gaming Gear & Phụ Kiện Cao Cấp | GearHub')
+@section('meta_description', 'Khám phá hàng trăm phụ kiện gaming gear, bàn phím cơ, chuột gaming, tai nghe không dây, màn hình chính hãng với giá tốt nhất tại GearHub.')
+@section('og_title', 'Cửa Hàng Gaming Gear Chính Hãng | GearHub')
+
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16" x-data="{ mobileFilterOpen: false, isFiltering: false, triggerFilter() { this.isFiltering = true; document.getElementById('filter-form').submit(); } }">
 

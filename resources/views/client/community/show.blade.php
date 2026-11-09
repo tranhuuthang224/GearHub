@@ -1,6 +1,15 @@
 @extends('layouts.client')
 
 @section('title', $post->title . ' | GearHub Community')
+@section('meta_description', Str::limit(strip_tags($post->description ?? $post->content ?? 'Khám phá góc máy setup của ' . $post->user->name . ' trên GearHub.'), 160))
+@section('og_type', 'article')
+@section('og_title', $post->title . ' - Khoe Góc Máy Setup | GearHub')
+@section('og_image', $post->display_image)
+@push('meta')
+    <meta property="article:author" content="{{ $post->user->name }}">
+    <meta property="article:published_time" content="{{ $post->created_at->toIso8601String() }}">
+    <meta property="article:section" content="{{ $post->style_info['name'] ?? 'Góc máy' }}">
+@endpush
 
 @section('content')
 <div 
@@ -48,6 +57,8 @@
                         <img 
                             src="{{ $post->display_image }}" 
                             alt="{{ $post->title }}"
+                            fetchpriority="high"
+                            decoding="async"
                             class="w-full h-auto max-h-[640px] object-contain select-none"
                         >
 
@@ -276,6 +287,8 @@
                                             <img 
                                                 src="{{ $product->thumbnail ? asset($product->thumbnail) : 'https://placehold.co/400x400/png?text=GearHub' }}" 
                                                 alt="{{ $product->name }}" 
+                                                loading="lazy"
+                                                decoding="async"
                                                 class="w-14 h-14 object-cover group-hover:scale-105 transition-transform duration-300"
                                             >
                                         </a>
@@ -387,6 +400,8 @@
                                 <img 
                                     src="{{ $rel->display_image }}" 
                                     alt="{{ $rel->title }}" 
+                                    loading="lazy"
+                                    decoding="async"
                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 >
                                 <div class="absolute bottom-2 left-2">

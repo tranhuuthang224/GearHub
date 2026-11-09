@@ -1,5 +1,9 @@
 @extends('layouts.client')
 
+@section('title', 'GearHub - Thế Giới Gaming Gear & Setup Đỉnh Cao')
+@section('meta_description', 'Khám phá thế giới gaming gear, bàn phím cơ, chuột không dây, tai nghe chính hãng và diễn đàn chia sẻ góc máy setup hiện đại tại GearHub.')
+@section('og_image', asset('images/hero-banner-clean.png'))
+
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-24 pt-4 pb-12">
 
@@ -13,6 +17,8 @@
             <img 
                 src="{{ asset('images/hero-banner-clean.png') }}" 
                 alt="HyperX Cloud Wireless Headphone - Shop By Category" 
+                fetchpriority="high"
+                decoding="async"
                 class="w-full h-auto block rounded-3xl transform group-hover:scale-[1.01] transition duration-500"
             >
             <span class="sr-only">Shop by Category</span>
@@ -36,6 +42,8 @@
                 <img 
                     src="{{ asset('images/1.png') }}" 
                     alt="Enjoy With EARPHONE" 
+                    loading="lazy"
+                    decoding="async"
                     class="w-full h-full object-cover block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
                 >
             </a>
@@ -47,6 +55,8 @@
                 <img 
                     src="{{ asset('images/2.png') }}" 
                     alt="New Wireless MOUSE" 
+                    loading="lazy"
+                    decoding="async"
                     class="w-full h-full object-cover block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
                 >
             </a>
@@ -58,6 +68,8 @@
                 <img 
                     src="{{ asset('images/3.png') }}" 
                     alt="Best Gaming LAPTOP" 
+                    loading="lazy"
+                    decoding="async"
                     class="w-full h-full object-cover block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
                 >
             </a>
@@ -72,6 +84,8 @@
                 <img 
                     src="{{ asset('images/4.png') }}" 
                     alt="New Trend CONSOLE" 
+                    loading="lazy"
+                    decoding="async"
                     class="w-full h-full object-cover block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
                 >
             </a>
@@ -83,6 +97,8 @@
                 <img 
                     src="{{ asset('images/5.png') }}" 
                     alt="Mechanical Elite DECK" 
+                    loading="lazy"
+                    decoding="async"
                     class="w-full h-full object-cover block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
                 >
             </a>
@@ -94,6 +110,8 @@
                 <img 
                     src="{{ asset('images/6.png') }}" 
                     alt="New Hyperx SPEAKER" 
+                    loading="lazy"
+                    decoding="async"
                     class="w-full h-full object-cover block rounded-3xl transform group-hover:scale-[1.02] transition duration-500"
                 >
             </a>
@@ -175,6 +193,8 @@
                 <img 
                     src="{{ asset('images/png-transparent-playstation-4-headphones-hyperx-cloud-audio-video-game-headphones-electronics-video-game-playstation-4.png') }}" 
                     alt="HyperX Cloud Headset"
+                    loading="lazy"
+                    decoding="async"
                     class="max-h-[260px] sm:max-h-[320px] lg:max-h-[380px] w-auto object-contain drop-shadow-2xl transform hover:scale-105 transition duration-500"
                 >
             </div>

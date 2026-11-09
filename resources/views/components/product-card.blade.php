@@ -59,8 +59,9 @@
                 <img
                     src="{{ $thumbSrc }}"
                     alt="{{ $name }}"
-                    class="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
+                    decoding="async"
+                    class="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-105"
                 >
             @else
                 <div class="w-24 h-24 rounded-xl bg-gray-200/70 flex items-center justify-center text-gray-400 group-hover:scale-105 transition-transform">

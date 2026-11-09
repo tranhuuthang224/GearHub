@@ -1,5 +1,7 @@
 @extends('layouts.client')
 
+@section('title', 'Thanh Toán Đơn Hàng | GearHub')
+
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-24" x-data="checkoutPage()">
 
@@ -361,6 +363,8 @@
                                     <img 
                                         src="{{ $item['thumbnail'] ?? asset('images/hero-headphone.png') }}" 
                                         alt="{{ $item['name'] }}" 
+                                        loading="lazy"
+                                        decoding="async"
                                         class="max-h-full max-w-full object-contain transition group-hover:scale-105"
                                         onerror="this.src='{{ asset('images/hero-headphone.png') }}'"
                                     >
