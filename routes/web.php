@@ -31,7 +31,9 @@ Route::delete('/shop/{slug}/reviews', [ReviewController::class, 'destroy'])->mid
 
 // Product Reviews API Routes (Hỗ trợ cả route /products/{product}/reviews)
 Route::get('/products/{product}/reviews', [ReviewController::class, 'index'])->name('products.reviews.index');
-Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->middleware('auth')->name('products.reviews.store');
+Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])
+    ->middleware(['auth', 'throttle:reviews-submit'])
+    ->name('products.reviews.store');
 
 // Cart Routes (Session-based)
 Route::prefix('cart')->name('cart.')->group(function () {
@@ -55,7 +57,9 @@ Route::prefix('compare')->name('compare.')->group(function () {
 // Smart Gear Finder Quiz Routes
 Route::prefix('quiz')->name('quiz.')->group(function () {
     Route::get('/', [QuizController::class, 'index'])->name('index');
-    Route::post('/submit', [QuizController::class, 'submit'])->name('submit');
+    Route::post('/submit', [QuizController::class, 'submit'])
+        ->middleware('throttle:quiz-submit')
+        ->name('submit');
 });
 
 // Community Showcase Routes (Diễn đàn khoe góc máy)
@@ -68,6 +72,18 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::post('/{post}/like', [CommunityController::class, 'like'])->name('like');
     Route::post('/{post}/comments', [CommunityController::class, 'comment'])->name('comment');
     Route::post('/{post}/comments-alt', [CommunityController::class, 'comment'])->name('comments.store');
+
+    Route::middleware('auth')->group(function () {
+        Route::post('/{post}/like', [CommunityController::class, 'like'])
+            ->middleware('throttle:community-interactions')
+            ->name('like');
+        Route::post('/{post}/comments', [CommunityController::class, 'comment'])
+            ->middleware('throttle:community-interactions')
+            ->name('comment');
+        Route::post('/{post}/comments-alt', [CommunityController::class, 'comment'])
+            ->middleware('throttle:community-interactions')
+            ->name('comments.store');
+    });
 });
 
 Route::get('/dashboard', function () {
@@ -118,7 +134,9 @@ Route::middleware(['auth', 'role:admin'])
 // Checkout & Order Routes (Requires Auth)
 Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::post('/checkout', [CheckoutController::class, 'store'])
+        ->middleware('throttle:checkout-order')
+        ->name('checkout.store');
     Route::get('/checkout/success/{code}', [CheckoutController::class, 'success'])->name('checkout.success');
 
     // Đơn hàng của tôi (Client Orders)

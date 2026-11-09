@@ -72,6 +72,7 @@ class ReviewController extends Controller
         $product = $this->resolveProduct($slug);
         $user = $request->user();
 
+
         $validated = $request->validate([
             'rating'     => ['required', 'integer', 'between:1,5'],
             'comment'    => ['required', 'string', 'min:5', 'max:2000'],
@@ -90,6 +91,8 @@ class ReviewController extends Controller
             'photos.*.mimes'   => 'Chỉ chấp nhận ảnh định dạng jpeg, jpg, png, webp.',
             'photos.*.max'     => 'Kích thước mỗi ảnh không được vượt quá 5MB.',
         ]);
+
+        $validated['comment'] = strip_tags(trim($validated['comment']));
 
         // Tìm review cũ nếu có
         $existingReview = Review::where('user_id', $user->id)
