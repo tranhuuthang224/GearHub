@@ -7,7 +7,7 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-24 pt-4 pb-12">
 
-    <!-- 1. HERO BANNER CAROUSEL SLIDER (Hỗ trợ lướt nhiều ảnh sắc nét, auto-slide & swipe) -->
+    <!-- 1. HERO BANNER CAROUSEL SLIDER (Hỗ trợ lướt nhiều ảnh sắc nét 1920x520, auto-slide & swipe) -->
     <section 
         x-data="heroSlider()" 
         x-init="startTimer()"
@@ -15,19 +15,22 @@
         @mouseleave="startTimer()"
         @touchstart="touchStart($event)"
         @touchend="touchEnd($event)"
-        class="relative block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 bg-white group select-none"
+        class="relative block w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 bg-gray-950 group select-none"
     >
-        <!-- Slide Container -->
-        <div class="relative w-full overflow-hidden rounded-3xl aspect-[16/9] sm:aspect-[21/9] lg:aspect-[24/8] bg-gray-100 flex items-center justify-center">
+        <!-- Slide Container: tỷ lệ chuẩn 1920/520 khớp 100% kích thước ảnh, không bị cắt xén bất kỳ chi tiết nào -->
+        <div 
+            class="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl bg-gray-950 flex items-center justify-center"
+            style="aspect-ratio: 1920 / 520;"
+        >
             @foreach ($heroSlides as $index => $slide)
                 <div 
                     x-show="currentSlide === {{ $index }}" 
                     x-transition:enter="transition ease-out duration-700"
-                    x-transition:enter-start="opacity-0 scale-[1.02]"
+                    x-transition:enter-start="opacity-0 scale-[1.01]"
                     x-transition:enter-end="opacity-100 scale-100"
                     x-transition:leave="transition ease-in duration-500 absolute inset-0"
                     x-transition:leave-start="opacity-100 scale-100"
-                    x-transition:leave-end="opacity-0 scale-95"
+                    x-transition:leave-end="opacity-0 scale-98"
                     class="w-full h-full flex items-center justify-center"
                     style="{{ $index === 0 ? '' : 'display: none;' }}"
                 >
@@ -41,7 +44,7 @@
                             alt="{{ $slide['alt'] }}" 
                             {{ $index === 0 ? 'fetchpriority="high"' : 'loading="lazy"' }}
                             decoding="async"
-                            class="w-full h-full object-cover object-center rounded-3xl transition duration-700 group-hover:scale-[1.01]"
+                            class="w-full h-full object-contain object-center rounded-2xl sm:rounded-3xl transition duration-500"
                             style="image-rendering: -webkit-optimize-contrast;"
                         >
                         <span class="sr-only">{{ $slide['title'] }}</span>
@@ -53,10 +56,10 @@
             <button 
                 type="button" 
                 @click.prevent="prevSlide()" 
-                class="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/70 text-white backdrop-blur-md flex items-center justify-center transition shadow-lg opacity-0 group-hover:opacity-100 focus:opacity-100 hover:scale-110 z-20 cursor-pointer"
+                class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-black/40 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center transition shadow-lg opacity-0 group-hover:opacity-100 focus:opacity-100 hover:scale-105 z-20 cursor-pointer"
                 title="Banner trước"
             >
-                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
                 </svg>
             </button>
@@ -65,22 +68,22 @@
             <button 
                 type="button" 
                 @click.prevent="nextSlide()" 
-                class="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/70 text-white backdrop-blur-md flex items-center justify-center transition shadow-lg opacity-0 group-hover:opacity-100 focus:opacity-100 hover:scale-110 z-20 cursor-pointer"
+                class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-black/40 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center transition shadow-lg opacity-0 group-hover:opacity-100 focus:opacity-100 hover:scale-105 z-20 cursor-pointer"
                 title="Banner tiếp theo"
             >
-                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
                 </svg>
             </button>
 
             <!-- Indicator Dots (Thanh chỉ số chuyển ảnh) -->
-            <div class="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20 bg-black/30 backdrop-blur-md px-3 py-1.5 rounded-full">
+            <div class="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2 z-20 bg-black/40 backdrop-blur-md px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full">
                 @foreach ($heroSlides as $index => $slide)
                     <button 
                         type="button" 
                         @click="goToSlide({{ $index }})" 
-                        class="h-2 rounded-full transition-all duration-300 cursor-pointer"
-                        :class="currentSlide === {{ $index }} ? 'w-6 bg-primary shadow-sm' : 'w-2 bg-white/60 hover:bg-white'"
+                        class="h-1.5 sm:h-2 rounded-full transition-all duration-300 cursor-pointer"
+                        :class="currentSlide === {{ $index }} ? 'w-5 sm:w-6 bg-primary shadow-sm' : 'w-1.5 sm:w-2 bg-white/60 hover:bg-white'"
                         title="Đến banner {{ $index + 1 }}"
                     ></button>
                 @endforeach
