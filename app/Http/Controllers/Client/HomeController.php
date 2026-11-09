@@ -143,6 +143,40 @@ class HomeController extends Controller
             ],
         ];
 
-        return view('client.home', compact('featuredCategories', 'bestSellerProducts', 'services'));
+        // Danh sách banner trượt trên đầu trang chủ (Hero Slider)
+        $heroSlides = [
+            [
+                'image' => asset('images/hero-banner-clean.png'),
+                'title' => 'HyperX Cloud Wireless Headphone - Shop By Category',
+                'link'  => url('/shop?categories[]=Tai nghe'),
+                'alt'   => 'HyperX Cloud Wireless Headphone',
+            ],
+            [
+                'image' => asset('images/Header/bannerpromo_cc17e3d10928480a8f076e1082a5f481.webp'),
+                'title' => 'Siêu Khuyến Mãi Gaming Gear Đỉnh Cao',
+                'link'  => url('/shop'),
+                'alt'   => 'Siêu Khuyến Mãi Gaming Gear',
+            ],
+            [
+                'image' => asset('images/Header/bannerslidegigaweb.jpg'),
+                'title' => 'Gaming Gear Gigabyte AORUS Chính Hãng',
+                'link'  => url('/shop?brands[]=Gigabyte'),
+                'alt'   => 'Gaming Gear Gigabyte',
+            ],
+            [
+                'image' => asset('images/Header/02_Oct98003ad4831ea85eff6f5aa9a7e499c9.jpg'),
+                'title' => 'Ưu Đãi Bàn Phím Cơ & Setup Góc Máy',
+                'link'  => url('/shop?categories[]=Bàn phím cơ'),
+                'alt'   => 'Bàn Phím Cơ & Setup',
+            ],
+            [
+                'image' => asset('images/Header/13_Octe701b213a8c6c1f7aa115256b257e3ff.jpg'),
+                'title' => 'Chuột Gaming Siêu Tốc & Màn Hình Đồ Họa',
+                'link'  => url('/shop?categories[]=Màn hình'),
+                'alt'   => 'Chuột Gaming & Màn Hình',
+            ],
+        ];
+
+        return view('client.home', compact('featuredCategories', 'bestSellerProducts', 'services', 'heroSlides'));
     }
 }
