@@ -92,6 +92,7 @@ class ReviewController extends Controller
             'photos.*.max'     => 'Kích thước mỗi ảnh không được vượt quá 5MB.',
         ]);
 
+        $comment = preg_replace('~<script\b[^>]*>.*?</script\s*>~is', '', $validated['comment']);
         $validated['comment'] = strip_tags(trim($validated['comment']));
 
         // Tìm review cũ nếu có

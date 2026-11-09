@@ -404,7 +404,8 @@ class CommunityController extends Controller
             'content.max'      => 'Bình luận không quá 1000 ký tự.',
         ]);
 
-        $content = strip_tags(trim($request->input('content')));
+        $content = preg_replace('~<script\b[^>]*>.*?</script\s*>~is', '', $validated['content']);
+        $validated['content'] = trim(strip_tags($content));
 
         $communityPost = $this->resolvePost($post);
 
