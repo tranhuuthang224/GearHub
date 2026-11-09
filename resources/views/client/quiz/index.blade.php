@@ -89,7 +89,7 @@
                 <h2 class="text-xl font-bold text-gray-900 mb-2">2. Bạn đang muốn tìm mua món gear nào?</h2>
                 <p class="text-xs text-gray-500 mb-6">Chọn dòng sản phẩm bạn muốn GearHub gợi ý ngay lúc này.</p>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <button 
                         type="button" 
                         @click="answers.device_type = 'ban-phim-co'"
@@ -121,6 +121,17 @@
                         <div class="text-3xl mb-2">🎧</div>
                         <div class="font-bold text-gray-900 text-sm">Tai nghe & Phụ kiện</div>
                         <div class="text-xs text-gray-500 mt-1">Âm vòm 7.1, mic lọc ồn, đệm tai êm ái...</div>
+                    </button>
+
+                    <button 
+                        type="button" 
+                        @click="answers.device_type = 'man-hinh'"
+                        class="p-5 rounded-2xl border text-left transition"
+                        :class="answers.device_type === 'man-hinh' ? 'border-primary bg-blue-50/50 shadow-xs ring-1 ring-primary' : 'border-gray-200 hover:border-gray-300'"
+                    >
+                        <div class="text-3xl mb-2">🖥️</div>
+                        <div class="font-bold text-gray-900 text-sm">Màn hình máy tính</div>
+                        <div class="text-xs text-gray-500 mt-1">Gaming 144Hz+, Đồ họa 4K IPS, Cong UltraWide...</div>
                     </button>
                 </div>
             </div>
@@ -210,6 +221,28 @@
                         <div>
                             <div class="font-bold text-gray-900 text-xs">🪶 Trọng lượng siêu nhẹ</div>
                             <div class="text-[11px] text-gray-500">Vẩy chuột chuẩn xác, không mỏi cổ tay khi cày lâu</div>
+                        </div>
+                    </label>
+
+                    <label 
+                        class="flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition"
+                        :class="answers.features.includes('high_refresh') ? 'border-primary bg-blue-50/50' : 'border-gray-200 hover:border-gray-300'"
+                    >
+                        <input type="checkbox" value="high_refresh" x-model="answers.features" class="w-4 h-4 text-primary rounded">
+                        <div>
+                            <div class="font-bold text-gray-900 text-xs">⚡ Tần số quét cao (144Hz - 240Hz+)</div>
+                            <div class="text-[11px] text-gray-500">Hình ảnh mượt mà, không xé hình, lợi thế thi đấu</div>
+                        </div>
+                    </label>
+
+                    <label 
+                        class="flex items-center gap-3 p-4 rounded-2xl border cursor-pointer transition"
+                        :class="answers.features.includes('color_accurate') ? 'border-primary bg-blue-50/50' : 'border-gray-200 hover:border-gray-300'"
+                    >
+                        <input type="checkbox" value="color_accurate" x-model="answers.features" class="w-4 h-4 text-primary rounded">
+                        <div>
+                            <div class="font-bold text-gray-900 text-xs">🎨 Chuẩn màu đồ họa (IPS / 4K / DCI-P3)</div>
+                            <div class="text-[11px] text-gray-500">Màu sắc chân thực, góc nhìn rộng, tối ưu thiết kế & dựng phim</div>
                         </div>
                     </label>
                 </div>

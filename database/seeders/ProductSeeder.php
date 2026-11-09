@@ -84,6 +84,16 @@ class ProductSeeder extends Seeder
             return 'Laptop gaming';
         }
 
+        if ($cat === 'Màn hình') {
+            if (str_contains($text, 'đồ họa') || str_contains($text, 'viewfinity') || str_contains($text, 'ultrafine') || str_contains($text, 'pro plus') || str_contains($text, 'ultrawide') || str_contains($text, '4k')) {
+                return 'Màn hình đồ họa';
+            }
+            if (str_contains($text, 'văn phòng') || str_contains($text, 'eye care') || str_contains($text, 'essential') || str_contains($text, 'thông minh') || str_contains($text, 'smart monitor') || str_contains($text, 'va27') || str_contains($text, 'p2726h')) {
+                return 'Màn hình văn phòng';
+            }
+            return 'Màn hình gaming';
+        }
+
         return $cat;
     }
 
@@ -364,6 +374,173 @@ class ProductSeeder extends Seeder
                 'Laptop văn phòng', 'Lenovo', 'Laptop Lenovo Yoga Slim 7 Siêu mỏng nhẹ', 'LT-LENOVO-YOGA7', 26990000, 23990000, 9,
                 ['CPU' => 'Intel Core Ultra 7-155H AI', 'RAM' => '32GB LPDDR5X', 'SSD' => '1TB', 'Màn hình' => '14.5 inch 3K PureSight 120Hz', 'Khung máy' => 'Nhôm cao cấp siêu nhẹ'],
                 'images/Laptop/Lenovo Yoga Slim 7 14LL10.webp'
+            ],
+
+            // ==================== MÀN HÌNH MÁY TÍNH ====================
+            [
+                'Màn hình văn phòng', 'Dahua', 'Màn hình Dahua DHI-LM27-E241B 27 inch 100Hz', 'MH-DH-LM27', 2390000, 2090000, 20,
+                ['Kích thước' => '27 inch', 'Độ phân giải' => 'FHD (1920x1080)', 'Tần số quét' => '100Hz', 'Tấm nền' => 'IPS', 'Thời gian phản hồi' => '1ms'],
+                'images/Monitor/62241_man_hinh_dahua_dhi_lm27_e241b_3.webp'
+            ],
+            [
+                'Màn hình đồ họa', 'Samsung', 'Màn hình đồ họa Samsung ViewFinity S8 LS32B800P 32 inch 4K UHD', 'MH-SS-VF-S8', 13990000, 12490000, 10,
+                ['Kích thước' => '32 inch', 'Độ phân giải' => '4K UHD (3840x2160)', 'Tấm nền' => 'IPS Chống chói Matte Display', 'Độ phủ màu' => '98% DCI-P3, HDR600', 'Cổng kết nối' => 'Type-C 90W, HDMI, DP, LAN'],
+                'images/Monitor/69884_man_hinh_samsung_viewfinity_ls32b800p_850x850_3.webp'
+            ],
+            [
+                'Màn hình đồ họa', 'Samsung', 'Màn hình cong Samsung ViewFinity S5 LS34C500 34 inch Ultra WQHD', 'MH-SS-S5-34', 7990000, 6890000, 15,
+                ['Kích thước' => '34 inch Cong 1000R', 'Độ phân giải' => 'Ultra WQHD (3440x1440)', 'Tỉ lệ' => '21:9', 'Tần số quét' => '100Hz', 'HDR' => 'HDR10'],
+                'images/Monitor/73240_man_hinh_samsung_ls34c500gaexxv_1.webp'
+            ],
+            [
+                'Màn hình văn phòng', 'ViewSonic', 'Màn hình ViewSonic VA3209U-4K 32 inch UHD IPS Type-C', 'MH-VS-VA3209U', 6990000, 6290000, 18,
+                ['Kích thước' => '32 inch', 'Độ phân giải' => '4K UHD (3840x2160)', 'Tấm nền' => 'SuperClear IPS', 'Cổng kết nối' => 'USB-C 65W, HDMI 2.0, DP'],
+                'images/Monitor/80703_man_hinh_viewsonic_va3209u_4k_850x850_7.webp'
+            ],
+            [
+                'Màn hình gaming', 'LG', 'Màn hình Gaming LG UltraGear OLED 32GS95UV-B 32 inch 4K 240Hz / FHD 480Hz', 'MH-LG-32GS95UV', 34990000, 31990000, 5,
+                ['Kích thước' => '31.5 inch', 'Tấm nền' => 'WOLED Dual-Mode', 'Tần số quét' => '240Hz (4K) / 480Hz (FHD)', 'Thời gian phản hồi' => '0.03ms (GtG)', 'Độ phủ màu' => '98.5% DCI-P3'],
+                'images/Monitor/86015_man_hinh_lg_oled_32gs95uv_b_1.webp'
+            ],
+            [
+                'Màn hình văn phòng', 'Asus', 'Màn hình Asus Eye Care VY249HGR 24 inch IPS 120Hz', 'MH-ASUS-VY249', 2890000, 2490000, 25,
+                ['Kích thước' => '23.8 inch', 'Độ phân giải' => 'FHD (1920x1080)', 'Tần số quét' => '120Hz', 'Tấm nền' => 'IPS Kháng khuẩn', 'Tính năng' => 'Eye Care Plus, SmoothMotion'],
+                'images/Monitor/87179_man_hinh_asus_vy249hgr_2.webp'
+            ],
+            [
+                'Màn hình gaming', 'Samsung', 'Màn hình Gaming Cong Samsung Odyssey OLED G8 LS34DG850 34 inch 175Hz', 'MH-SS-G8-OLED', 25990000, 22990000, 8,
+                ['Kích thước' => '34 inch Cong 1800R', 'Độ phân giải' => 'UWQHD (3440x1440)', 'Tấm nền' => 'OLED Neo Quantum Processor', 'Tần số quét' => '175Hz', 'Thời gian phản hồi' => '0.03ms'],
+                'images/Monitor/88055_man_hinh_samsung_odyssey_g8_ls34dg850sexxv_1.webp'
+            ],
+            [
+                'Màn hình văn phòng', 'Asus', 'Màn hình Asus VA279HG 27 inch FHD IPS 100Hz', 'MH-ASUS-VA279', 3390000, 2990000, 20,
+                ['Kích thước' => '27 inch', 'Độ phân giải' => 'FHD (1920x1080)', 'Tần số quét' => '100Hz', 'Tấm nền' => 'IPS', 'Góc nhìn' => '178°/178°'],
+                'images/Monitor/90181_man_hinh_asus_va279hg_2.webp'
+            ],
+            [
+                'Màn hình văn phòng', 'Samsung', 'Màn hình cong Samsung Essential S3 S39GD 32 inch FHD 100Hz', 'MH-SS-S39GD', 4890000, 4190000, 15,
+                ['Kích thước' => '32 inch Cong 1500R', 'Độ phân giải' => 'FHD (1920x1080)', 'Tần số quét' => '100Hz', 'Tấm nền' => 'VA', 'Bảo vệ mắt' => 'Eye Saver & Flicker Free'],
+                'images/Monitor/90249_man_hinh_samsung_s3_s39gd_ls32d390gaexxv_1.webp'
+            ],
+            [
+                'Màn hình đồ họa', 'Dell', 'Màn hình Dell Pro Plus P2725D 27 inch 2K QHD IPS 100Hz', 'MH-DELL-P2725D', 6490000, 5790000, 18,
+                ['Kích thước' => '27 inch', 'Độ phân giải' => '2K QHD (2560x1440)', 'Tần số quét' => '100Hz', 'Tấm nền' => 'IPS ComfortView Plus', 'Độ phủ màu' => '99% sRGB'],
+                'images/Monitor/90519_man_hinh_dell_pro_plus_p2725d_2.webp'
+            ],
+            [
+                'Màn hình gaming', 'HKC', 'Màn hình Gaming HKC MG25H320 24.5 inch Fast IPS 320Hz', 'MH-HKC-MG25H320', 5290000, 4790000, 12,
+                ['Kích thước' => '24.5 inch', 'Độ phân giải' => 'FHD (1920x1080)', 'Tần số quét' => '320Hz Siêu tốc', 'Tấm nền' => 'Fast IPS', 'Thời gian phản hồi' => '1ms (GtG)'],
+                'images/Monitor/90944_man_hinh_hkc_mg25h320_1.webp'
+            ],
+            [
+                'Màn hình gaming', 'HKC', 'Màn hình Gaming HKC MG25H29 24.5 inch Fast IPS 200Hz', 'MH-HKC-MG25H200', 3590000, 3190000, 20,
+                ['Kích thước' => '24.5 inch', 'Độ phân giải' => 'FHD (1920x1080)', 'Tần số quét' => '200Hz', 'Tấm nền' => 'Fast IPS', 'Thời gian phản hồi' => '1ms'],
+                'images/Monitor/90945_man_hinh_hkc_mg25h29_200hz_1.webp'
+            ],
+            [
+                'Màn hình gaming', 'Asus', 'Màn hình Gaming Asus TUF VG259Q5A 24.5 inch Fast IPS 180Hz', 'MH-ASUS-VG259', 3990000, 3490000, 22,
+                ['Kích thước' => '24.5 inch', 'Độ phân giải' => 'FHD (1920x1080)', 'Tần số quét' => '180Hz', 'Tấm nền' => 'Fast IPS', 'Công nghệ' => 'ELMB Sync, FreeSync Premium'],
+                'images/Monitor/91300_man_hinh_asus_tuf_vg259q5a_2.webp'
+            ],
+            [
+                'Màn hình văn phòng', 'Samsung', 'Màn hình thông minh Samsung Smart Monitor M7 LS32FM700 32 inch 4K', 'MH-SS-M7-32B', 9490000, 7990000, 10,
+                ['Kích thước' => '32 inch', 'Độ phân giải' => '4K UHD (3840x2160)', 'Hệ điều hành' => 'Tizen OS Smart Hub', 'Kết nối' => 'AirPlay, WiFi, Bluetooth, Type-C 65W', 'Loa' => 'Tích hợp loa ngoài stereo'],
+                'images/Monitor/91333_man_hinh_thong_minh_samsung_m7_ls32fm700_3.webp'
+            ],
+            [
+                'Màn hình văn phòng', 'Samsung', 'Màn hình thông minh Samsung Smart Monitor M7 LS32FM701 Trắng 32 inch 4K', 'MH-SS-M7-32W', 9990000, 8490000, 8,
+                ['Kích thước' => '32 inch Tone Trắng', 'Độ phân giải' => '4K UHD (3840x2160)', 'Hệ điều hành' => 'Tizen OS', 'Kết nối' => 'Type-C 65W, WiFi, AirPlay', 'Thiết kế' => 'Slim Design tối giản'],
+                'images/Monitor/91334_man_hinh_thong_minh_samsung_m7_ls32fm701_3.webp'
+            ],
+            [
+                'Màn hình gaming', 'ViewSonic', 'Màn hình Gaming Cong ViewSonic VX3418C-2K 34 inch UWQHD 144Hz', 'MH-VS-VX3418C', 8990000, 7690000, 10,
+                ['Kích thước' => '34 inch Cong 1500R', 'Độ phân giải' => 'UWQHD (3440x1440)', 'Tần số quét' => '144Hz', 'Thời gian phản hồi' => '1ms (MPRT)', 'Loa' => 'Loa kép 5W'],
+                'images/Monitor/93041_man_hinh_viewsonic_vx3418c_2k_2.webp'
+            ],
+            [
+                'Màn hình đồ họa', 'ViewSonic', 'Màn hình cong đồ họa ViewSonic VG3820C 38 inch WQHD+ Type-C', 'MH-VS-VG3820C', 21990000, 19500000, 5,
+                ['Kích thước' => '37.5 inch Cong 2300R', 'Độ phân giải' => 'WQHD+ (3840x1600)', 'Tấm nền' => 'IPS chuyên nghiệp', 'Cổng kết nối' => 'USB-C 90W, RJ45 LAN, KVM Switch'],
+                'images/Monitor/93042_man_hinh_viewsonic_vg3820c_1.webp'
+            ],
+            [
+                'Màn hình gaming', 'Asus', 'Màn hình Gaming Asus ROG Strix XG32WCS 32 inch 2K Fast VA 180Hz', 'MH-ASUS-XG32WCS', 9890000, 8790000, 12,
+                ['Kích thước' => '31.5 inch Cong', 'Độ phân giải' => '2K QHD (2560x1440)', 'Tần số quét' => '180Hz', 'Tấm nền' => 'Fast VA 1ms GtG', 'Chuẩn màu' => 'DisplayHDR 400'],
+                'images/Monitor/Asus rog strix wg32wcms.webp'
+            ],
+            [
+                'Màn hình gaming', 'MSI', 'Màn hình Gaming MSI MAG 275QF E20 27 inch 2K Rapid IPS 180Hz', 'MH-MSI-MAG275QF', 5490000, 4890000, 15,
+                ['Kích thước' => '27 inch', 'Độ phân giải' => '2K QHD (2560x1440)', 'Tần số quét' => '180Hz', 'Tấm nền' => 'Rapid IPS 0.5ms', 'Độ phủ màu' => '101% sRGB'],
+                'images/Monitor/File-pts-chuan-le_0000_imgi_2_13279_man_hinh_msi_mag_275qf_e20_1.webp'
+            ],
+            [
+                'Màn hình đồ họa', 'MSI', 'Màn hình Đồ Họa MSI Modern MD271UL 27 inch 4K UHD Type-C 65W', 'MH-MSI-MD271UL', 7990000, 6990000, 12,
+                ['Kích thước' => '27 inch Siêu Mỏng', 'Độ phân giải' => '4K UHD (3840x2160)', 'Tấm nền' => 'IPS 10-bit', 'Độ phủ màu' => '99% DCI-P3, 139% sRGB', 'Cổng kết nối' => 'Type-C 65W, HDMI 2.0b, DP 1.4a'],
+                'images/Monitor/File-pts-chuan-le_0005_Layer-1.webp'
+            ],
+            [
+                'Màn hình gaming', 'AOC', 'Màn hình Gaming AOC Q27G42ZE 27 inch 2K Fast IPS 240Hz', 'MH-AOC-Q27G42', 6290000, 5590000, 14,
+                ['Kích thước' => '27 inch', 'Độ phân giải' => '2K QHD (2560x1440)', 'Tần số quét' => '240Hz', 'Tấm nền' => 'Fast IPS 0.5ms', 'HDR' => 'HDR400'],
+                'images/Monitor/man-hinh-aoc-q27g42ze-moao0260-1.webp'
+            ],
+            [
+                'Màn hình gaming', 'Asus', 'Màn hình Siêu Cấp Asus ROG Swift OLED PG27AQWP 27 inch 2K 480Hz', 'MH-ASUS-PG27AQWP', 29990000, 27500000, 4,
+                ['Kích thước' => '26.5 inch', 'Tấm nền' => 'OLED Thế hệ 3', 'Tần số quét' => '480Hz Vô đối', 'Thời gian phản hồi' => '0.03ms', 'Tản nhiệt' => 'Custom Heatsink buồng hơi graphene'],
+                'images/Monitor/man-hinh-asus-rog-swift-oled-pg27aqwp-g-edition-20-moas0386-2.webp'
+            ],
+            [
+                'Màn hình văn phòng', 'Dell', 'Màn hình Dell Pro P2726H 27 inch FHD IPS 120Hz USB-C', 'MH-DELL-P2726H', 4690000, 4190000, 16,
+                ['Kích thước' => '27 inch', 'Độ phân giải' => 'FHD (1920x1080)', 'Tần số quét' => '120Hz', 'Tấm nền' => 'IPS', 'Cổng kết nối' => 'USB-C 15W, DP 1.4, HDMI, USB 3.2 Hub'],
+                'images/Monitor/Man-Hinh-Dell-Pro-P2726H-27-inchFHDIPS120Hz5msUSB-C-15W-1.webp'
+            ],
+            [
+                'Màn hình gaming', 'Gigabyte', 'Màn hình Gaming Cong Gigabyte G34WQC A 34 inch UWQHD 144Hz', 'MH-GB-G34WQC', 8890000, 7990000, 10,
+                ['Kích thước' => '34 inch Cong 1500R', 'Độ phân giải' => 'UWQHD (3440x1440)', 'Tần số quét' => '144Hz', 'Thời gian phản hồi' => '1ms (MPRT)', 'Màu sắc' => '90% DCI-P3, HDR400'],
+                'images/Monitor/man-hinh-gigabyte-g34wqc2-1.webp'
+            ],
+            [
+                'Màn hình đồ họa', 'LG', 'Màn hình LG UltraWide 34U511A-B 34 inch WFHD IPS 100Hz', 'MH-LG-34U511A', 6990000, 6190000, 12,
+                ['Kích thước' => '34 inch 21:9', 'Độ phân giải' => 'WFHD (2560x1080)', 'Tấm nền' => 'IPS 1ms MBR', 'Tần số quét' => '100Hz', 'Độ phủ màu' => 'sRGB 99% (CIE1931)'],
+                'images/Monitor/Man-hinh-LG-34U511A-B-34-inchWFHDIPS100Hz1ms-3.webp'
+            ],
+            [
+                'Màn hình đồ họa', 'LG', 'Màn hình Chuyên Đồ Họa LG UltraFine 27U711B-B 27 inch 4K UHD IPS', 'MH-LG-27U711B', 11490000, 10290000, 10,
+                ['Kích thước' => '27 inch', 'Độ phân giải' => '4K UHD (3840x2160)', 'Tấm nền' => 'IPS chuyên nghiệp', 'Độ phủ màu' => 'DCI-P3 95%, HDR10', 'Chân đế' => 'Ergonomic xoay dọc 90°'],
+                'images/Monitor/man-hinh-lg-ultrafine-27u711b-b-molg0330-1.webp'
+            ],
+            [
+                'Màn hình gaming', 'LG', 'Màn hình Gaming LG UltraGear 27G550B-B 27 inch FHD 180Hz', 'MH-LG-27G550B', 4490000, 3890000, 20,
+                ['Kích thước' => '27 inch', 'Độ phân giải' => 'FHD (1920x1080)', 'Tần số quét' => '180Hz', 'Tấm nền' => 'IPS 1ms (GtG)', 'Công nghệ' => 'AMD FreeSync, G-Sync Compatible'],
+                'images/Monitor/man-hinh-lg-ultragear-27g550b-b-molg0327-1.webp'
+            ],
+            [
+                'Màn hình gaming', 'LG', 'Màn hình Gaming LG UltraGear 27G64NA-B 27 inch 2K QHD Nano IPS 200Hz', 'MH-LG-27G64NA', 8990000, 7990000, 10,
+                ['Kích thước' => '27 inch', 'Độ phân giải' => '2K QHD (2560x1440)', 'Tần số quét' => '200Hz Overclock', 'Tấm nền' => 'Nano IPS 1ms GtG', 'Chuẩn màu' => 'DCI-P3 98%, VESA DisplayHDR 400'],
+                'images/Monitor/man-hinh-lg-ultragear-27g64na-b-molg0328-1.webp'
+            ],
+            [
+                'Màn hình gaming', 'LG', 'Màn hình Gaming LG UltraGear G4 27G440A-B 27 inch Fast IPS 240Hz', 'MH-LG-27G440A', 5990000, 5190000, 15,
+                ['Kích thước' => '27 inch', 'Độ phân giải' => 'FHD (1920x1080)', 'Tần số quét' => '240Hz', 'Tấm nền' => 'Fast IPS 1ms', 'Tương thích' => 'NVIDIA G-Sync & AMD FreeSync Premium'],
+                'images/Monitor/Man-hinh-LG-UltraGear-G4-27G440A-B-27-icnhFHDIPS240Hz1ms-3.webp'
+            ],
+            [
+                'Màn hình gaming', 'MSI', 'Màn hình Gaming MSI MAG 275QF E21 27 inch 2K Rapid IPS 200Hz', 'MH-MSI-MAG275E21', 5990000, 5290000, 16,
+                ['Kích thước' => '27 inch', 'Độ phân giải' => '2K QHD (2560x1440)', 'Tần số quét' => '200Hz', 'Tấm nền' => 'Rapid IPS 0.5ms', 'Tính năng' => 'AI Vision, Night Vision'],
+                'images/Monitor/man-hinh-msi-mag-275qf-e21-moms0188-4.webp'
+            ],
+            [
+                'Màn hình văn phòng', 'MSI', 'Màn hình Văn Phòng MSI PRO MP242 E14A 24 inch IPS 100Hz', 'MH-MSI-MP242', 2390000, 2050000, 25,
+                ['Kích thước' => '23.8 inch', 'Độ phân giải' => 'FHD (1920x1080)', 'Tần số quét' => '100Hz', 'Tấm nền' => 'IPS Chống chói', 'Loa' => 'Tích hợp 2 loa 2W', 'Chứng nhận' => 'TÜV Rheinland bảo vệ mắt'],
+                'images/Monitor/man-hinh-msi-pro-mp242-e14a-moms0181-2.webp'
+            ],
+            [
+                'Màn hình gaming', 'Samsung', 'Màn hình Gaming Samsung Odyssey G5 G53F LS27FG530 27 inch Fast IPS 180Hz', 'MH-SS-G5-G53F', 5290000, 4590000, 18,
+                ['Kích thước' => '27 inch', 'Độ phân giải' => '2K QHD (2560x1440)', 'Tần số quét' => '180Hz', 'Tấm nền' => 'Fast IPS 1ms', 'Hỗ trợ' => 'HDR10, FreeSync'],
+                'images/Monitor/man-hinh-samsung-odyssey-g5-g53f-ls27fg530eexxv-mosa0345-4.webp'
+            ],
+            [
+                'Màn hình văn phòng', 'ViewSonic', 'Màn hình ViewSonic VA27G1-H 27 inch IPS 100Hz Viền Siêu Mỏng', 'MH-VS-VA27G1', 2790000, 2390000, 20,
+                ['Kích thước' => '27 inch', 'Độ phân giải' => 'FHD (1920x1080)', 'Tần số quét' => '100Hz', 'Tấm nền' => 'SuperClear IPS', 'Viền màn hình' => '3 cạnh không viền thời thượng'],
+                'images/Monitor/man-hinh-viewsonic-va27g1-h-movi0282-1.webp'
             ],
         ];
     }

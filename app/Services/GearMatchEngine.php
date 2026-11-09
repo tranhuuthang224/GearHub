@@ -121,6 +121,24 @@ class GearMatchEngine
                         $reasons[] = 'Trọng lượng nhẹ, chống mỏi tay';
                     }
                     break;
+                case 'high_refresh':
+                    if (str_contains($specsText, 'hz') || str_contains($specsText, '144hz') || str_contains($specsText, '180hz') || str_contains($specsText, '240hz')) {
+                        $matched = true;
+                        $reasons[] = 'Tần số quét cao mượt mà không xé hình';
+                    }
+                    break;
+                case 'color_accurate':
+                    if (str_contains($specsText, 'dci-p3') || str_contains($specsText, 'srgb') || str_contains($specsText, '4k') || str_contains($specsText, 'ips')) {
+                        $matched = true;
+                        $reasons[] = 'Chuẩn màu đồ họa chuyên nghiệp';
+                    }
+                    break;
+                case 'typec_hub':
+                    if (str_contains($specsText, 'type-c') || str_contains($specsText, 'usb-c')) {
+                        $matched = true;
+                        $reasons[] = 'Cổng Type-C kết nối và sạc tiện lợi';
+                    }
+                    break;
             }
 
             if ($matched) {

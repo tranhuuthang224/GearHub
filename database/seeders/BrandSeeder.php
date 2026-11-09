@@ -17,7 +17,7 @@ class BrandSeeder extends Seeder
             'Aula', 'Akko', 'Asus', 'ATK', 'DareU', 'Keychron', 'Logitech', 'MChose',
             'E-Dra', 'Fuhlen', 'Rapoo', 'Acer', 'Lenovo', 'MSI', 'Gigabyte', 'HP',
             'HyperX', 'Razer', 'Corsair', 'Havit', 'Zidii', 'Anker', 'SteelSeries',
-            'Baseus', 'Ugreen'
+            'Baseus', 'Ugreen', 'Samsung', 'LG', 'Dell', 'ViewSonic', 'AOC', 'HKC', 'Dahua'
         ];
 
         foreach ($brands as $name) {
