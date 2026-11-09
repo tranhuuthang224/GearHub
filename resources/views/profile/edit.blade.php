@@ -3,55 +3,7 @@
 @section('title', 'Quản Lý Hồ Sơ Cá Nhân | GearHub')
 
 @section('content')
-<div 
-    x-data="{
-        activeTab: '{{ request('tab', session('active_tab', 'profile')) }}',
-        addressModalOpen: false,
-        isEditingAddress: false,
-        addressFormAction: '{{ route('profile.addresses.store') }}',
-        addressFormMethod: 'POST',
-        addressData: {
-            id: null,
-            receiver_name: '',
-            phone: '',
-            address_line: '',
-            is_default: false
-        },
-        openAddAddress() {
-            this.isEditingAddress = false;
-            this.addressFormAction = '{{ route('profile.addresses.store') }}';
-            this.addressFormMethod = 'POST';
-            this.addressData = {
-                id: null,
-                receiver_name: @js(old('receiver_name', $user->name)),
-                phone: @js(old('phone', $user->phone ?? '')),
-                address_line: '',
-                is_default: {{ $addresses->isEmpty() ? 'true' : 'false' }}
-            };
-            this.addressModalOpen = true;
-        },
-        openEditAddress(addr) {
-            this.isEditingAddress = true;
-            this.addressFormAction = '{{ url('/profile/addresses') }}/' + addr.id;
-            this.addressFormMethod = 'POST'; // Sẽ dùng @method('PUT')
-            this.addressData = {
-                id: addr.id,
-                receiver_name: addr.receiver_name,
-                phone: addr.phone,
-                address_line: addr.address_line,
-                is_default: Boolean(addr.is_default)
-            };
-            this.addressModalOpen = true;
-        },
-        deletePostId: null,
-        deletePostModalOpen: false,
-        confirmDeletePost(id) {
-            this.deletePostId = id;
-            this.deletePostModalOpen = true;
-        }
-    }"
-    class="bg-[#F8FAFC] min-h-screen text-gray-900 py-8 sm:py-12"
->
+<div x-data="profilePage()" class="bg-[#F8FAFC] min-h-screen text-gray-900 py-8 sm:py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
         <!-- 1. BREADCRUMB -->
@@ -950,4 +902,55 @@
     </div>
 
 </div>
+
+<script>
+function profilePage() {
+    return {
+        activeTab: '{{ request('tab', session('active_tab', 'profile')) }}',
+        addressModalOpen: false,
+        isEditingAddress: false,
+        addressFormAction: '{{ route('profile.addresses.store') }}',
+        addressFormMethod: 'POST',
+        addressData: {
+            id: null,
+            receiver_name: '',
+            phone: '',
+            address_line: '',
+            is_default: false
+        },
+        openAddAddress() {
+            this.isEditingAddress = false;
+            this.addressFormAction = '{{ route('profile.addresses.store') }}';
+            this.addressFormMethod = 'POST';
+            this.addressData = {
+                id: null,
+                receiver_name: @js(old('receiver_name', $user->name)),
+                phone: @js(old('phone', $user->phone ?? '')),
+                address_line: '',
+                is_default: {{ $addresses->isEmpty() ? 'true' : 'false' }}
+            };
+            this.addressModalOpen = true;
+        },
+        openEditAddress(addr) {
+            this.isEditingAddress = true;
+            this.addressFormAction = '{{ url('/profile/addresses') }}/' + addr.id;
+            this.addressFormMethod = 'POST';
+            this.addressData = {
+                id: addr.id,
+                receiver_name: addr.receiver_name,
+                phone: addr.phone,
+                address_line: addr.address_line,
+                is_default: Boolean(addr.is_default)
+            };
+            this.addressModalOpen = true;
+        },
+        deletePostId: null,
+        deletePostModalOpen: false,
+        confirmDeletePost(id) {
+            this.deletePostId = id;
+            this.deletePostModalOpen = true;
+        }
+    };
+}
+</script>
 @endsection

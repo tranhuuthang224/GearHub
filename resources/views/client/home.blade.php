@@ -129,8 +129,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h4 class="text-sm font-bold text-gray-900">Free Shipping</h4>
-                    <p class="text-xs text-gray-400 mt-0.5">Free Shipping On All Order</p>
+                    <h4 class="text-sm font-bold text-gray-900">Giao hàng miễn phí</h4>
+                    <p class="text-xs text-gray-400 mt-0.5">Miễn phí cho đơn từ 500.000đ</p>
                 </div>
             </div>
 
@@ -142,8 +142,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h4 class="text-sm font-bold text-gray-900">Money Guarantee</h4>
-                    <p class="text-xs text-gray-400 mt-0.5">30 Day On Back Guarantee</p>
+                    <h4 class="text-sm font-bold text-gray-900">Bảo hành 1 đổi 1</h4>
+                    <p class="text-xs text-gray-400 mt-0.5">Đổi mới trong 30 ngày nếu lỗi</p>
                 </div>
             </div>
 
@@ -155,8 +155,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h4 class="text-sm font-bold text-gray-900">Online Support 24/7</h4>
-                    <p class="text-xs text-gray-400 mt-0.5">Technical Support 24/7</p>
+                    <h4 class="text-sm font-bold text-gray-900">Hỗ trợ kỹ thuật 24/7</h4>
+                    <p class="text-xs text-gray-400 mt-0.5">Tư vấn setup & chọn gear tận tâm</p>
                 </div>
             </div>
 
@@ -168,8 +168,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h4 class="text-sm font-bold text-gray-900">Secure Payment</h4>
-                    <p class="text-xs text-gray-400 mt-0.5">All Cards Accepted & COD</p>
+                    <h4 class="text-sm font-bold text-gray-900">Thanh toán an toàn COD</h4>
+                    <p class="text-xs text-gray-400 mt-0.5">Đồng kiểm hàng trước khi thanh toán</p>
                 </div>
             </div>
         </div>
@@ -181,11 +181,11 @@
             
             <!-- Left: 20% OFF & FINE SMILE -->
             <div class="md:col-span-4 space-y-1 sm:space-y-2">
-                <span class="text-xs sm:text-sm font-semibold tracking-wider uppercase opacity-90 block">20% OFF</span>
+                <span class="text-xs sm:text-sm font-semibold tracking-wider uppercase opacity-90 block">GIẢM ĐẾN 20%</span>
                 <h2 class="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-none uppercase text-white select-none">
                     FINE<br>SMILE
                 </h2>
-                <p class="text-xs sm:text-sm opacity-80 pt-1 font-medium">5 Apr to 22 Apr</p>
+                <p class="text-xs sm:text-sm opacity-80 pt-1 font-medium">Áp dụng từ 01/11 đến 30/11</p>
             </div>
 
             <!-- Center: Floating Headphone (Overflowing on top like Figma) -->
@@ -201,16 +201,16 @@
 
             <!-- Right: Autumn Sale & CTA (Left-aligned as in Figma screenshot) -->
             <div class="md:col-span-4 space-y-2.5 sm:space-y-3 text-left">
-                <span class="text-xs sm:text-sm font-medium tracking-wide opacity-90 block">HyperX Cloud</span>
+                <span class="text-xs sm:text-sm font-medium tracking-wide opacity-90 block">Ưu Đãi Mùa Thu</span>
                 <h3 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
                     Autumn Sale
                 </h3>
                 <p class="text-xs sm:text-sm opacity-85 leading-relaxed max-w-sm">
-                    Company That’s grow from 270 to 480 employees in the last 12 months.
+                    Nâng tầm góc máy của bạn với bộ sưu tập bàn phím cơ, chuột gaming và màn hình đồ họa chính hãng.
                 </p>
                 <div class="pt-2">
                     <a href="{{ url('/shop') }}" class="inline-flex items-center justify-center px-8 py-2.5 rounded-full bg-white text-[#E22A2D] font-bold text-sm shadow-md hover:bg-gray-50 transition transform hover:scale-105">
-                        Shop
+                        Khám Phá Cửa Hàng
                     </a>
                 </div>
             </div>
@@ -223,10 +223,10 @@
         <!-- Section Header -->
         <div class="text-center max-w-2xl mx-auto space-y-2">
             <h2 class="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-                Best Seller Products
+                Sản Phẩm Bán Chạy Nhất
             </h2>
             <p class="text-xs sm:text-sm text-gray-500">
-                Sản phẩm được cộng đồng game thủ và lập trình viên tin tưởng lựa chọn nhiều nhất
+                Top gaming gear và màn hình máy tính được cộng đồng tin tưởng lựa chọn nhiều nhất
             </p>
         </div>
 

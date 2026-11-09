@@ -54,16 +54,51 @@ class HomeController extends Controller
             ],
         ];
 
-        // 8 Best Seller Products lấy trực tiếp từ Database để đảm bảo luôn khớp slug và link chi tiết
+        // 8 Best Seller Products lấy đa dạng từ các nhóm danh mục (Bàn phím, Chuột, Màn hình, Tai nghe, Laptop)
         $bestSellerProducts = [];
         try {
             if (\Illuminate\Support\Facades\Schema::hasTable('products')) {
-                $dbProducts = Product::query()
-                    ->active()
-                    ->with(['category', 'brand'])
-                    ->latest('id')
-                    ->take(8)
-                    ->get();
+                $categoryGroups = [
+                    'ban-phim-co' => 2, // 2 Bàn phím cơ
+                    'chuot'       => 2, // 2 Chuột gaming
+                    'man-hinh'    => 2, // 2 Màn hình máy tính
+                    'tai-nghe'    => 1, // 1 Tai nghe
+                    'laptop'      => 1, // 1 Laptop
+                ];
+
+                $curatedProducts = collect();
+
+                foreach ($categoryGroups as $catSlug => $count) {
+                    $items = Product::query()
+                        ->active()
+                        ->with(['category', 'brand'])
+                        ->whereHas('category', function ($q) use ($catSlug) {
+                            $q->where('slug', 'like', "%{$catSlug}%")
+                              ->orWhereHas('parent', fn ($pq) => $pq->where('slug', 'like', "%{$catSlug}%"));
+                        })
+                        ->orderByRaw('CASE WHEN sale_price IS NOT NULL THEN 0 ELSE 1 END')
+                        ->latest('id')
+                        ->take($count)
+                        ->get();
+
+                    $curatedProducts = $curatedProducts->merge($items);
+                }
+
+                // Nếu chưa đủ 8 sản phẩm, bổ sung các sản phẩm active khác
+                if ($curatedProducts->count() < 8) {
+                    $existingIds = $curatedProducts->pluck('id')->all();
+                    $fallback = Product::query()
+                        ->active()
+                        ->with(['category', 'brand'])
+                        ->whereNotIn('id', $existingIds)
+                        ->latest('id')
+                        ->take(8 - $curatedProducts->count())
+                        ->get();
+
+                    $curatedProducts = $curatedProducts->merge($fallback);
+                }
+
+                $dbProducts = $curatedProducts->unique('id')->take(8)->values();
 
                 if ($dbProducts->isNotEmpty()) {
                     $bestSellerProducts = $dbProducts->map(function ($p) {

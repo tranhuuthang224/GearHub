@@ -67,10 +67,13 @@
                 <!-- Desktop Navigation Menu -->
                 <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
                     <a href="{{ url('/') }}" class="{{ request()->is('/') ? 'text-primary font-bold' : 'text-gray-700 hover:text-primary' }} transition">
-                        Home
+                        Trang chủ
                     </a>
                     <a href="{{ url('/shop') }}" class="{{ request()->is('shop*') ? 'text-primary font-bold' : 'text-gray-700 hover:text-primary' }} transition">
-                        Shop
+                        Cửa hàng
+                    </a>
+                    <a href="{{ route('compare.index') }}" class="{{ request()->is('compare*') ? 'text-primary font-bold' : 'text-gray-700 hover:text-primary' }} transition flex items-center gap-1.5">
+                        <span>So sánh Gear</span>
                     </a>
                     <a href="{{ route('quiz.index') }}" class="{{ request()->is('quiz*') ? 'text-primary font-bold' : 'text-gray-700 hover:text-primary' }} transition flex items-center gap-1.5">
                         <span>Tư vấn chọn Gear</span>
@@ -79,15 +82,6 @@
                     <a href="{{ route('community.index') }}" class="{{ request()->is('community*') ? 'text-primary font-bold' : 'text-gray-700 hover:text-primary' }} transition flex items-center gap-1.5">
                         <span>Khoe góc máy</span>
                         <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 uppercase leading-none">Mới</span>
-                    </a>
-                    <a href="{{ url('/about') }}" class="{{ request()->is('about*') ? 'text-primary font-bold' : 'text-gray-700 hover:text-primary' }} transition">
-                        About us
-                    </a>
-                    <a href="{{ url('/blog') }}" class="{{ request()->is('blog*') ? 'text-primary font-bold' : 'text-gray-700 hover:text-primary' }} transition">
-                        Blog
-                    </a>
-                    <a href="{{ url('/contact') }}" class="{{ request()->is('contact*') ? 'text-primary font-bold' : 'text-gray-700 hover:text-primary' }} transition">
-                        Contact
                     </a>
                 </nav>
 
@@ -111,7 +105,7 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
-                        <span class="hidden sm:inline text-xs font-semibold">Cart</span>
+                        <span class="hidden sm:inline text-xs font-semibold">Giỏ hàng</span>
                         @php
                             $cart = session('cart', []);
                             $cartCount = array_sum(array_column($cart, 'quantity'));
@@ -173,10 +167,10 @@
                         </div>
                     @else
                         <a href="{{ route('login') }}" class="text-sm font-semibold text-gray-800 hover:text-primary transition px-3 py-1.5">
-                            Login
+                            Đăng nhập
                         </a>
                         <a href="{{ route('register') }}" class="hidden sm:inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-white bg-primary hover:bg-primary-hover rounded-xl shadow-sm transition">
-                            Register
+                            Đăng ký
                         </a>
                     @endauth
 
@@ -334,10 +328,13 @@
         <!-- Mobile Navigation Drawer -->
         <div x-show="mobileMenuOpen" x-transition class="md:hidden border-t border-gray-100 bg-white px-4 pt-3 pb-6 space-y-2 shadow-xl" style="display: none;">
             <a href="{{ url('/') }}" class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->is('/') ? 'bg-primary/10 text-primary font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
-                Home
+                Trang chủ
             </a>
             <a href="{{ url('/shop') }}" class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->is('shop*') ? 'bg-primary/10 text-primary font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
-                Shop
+                Cửa hàng
+            </a>
+            <a href="{{ route('compare.index') }}" class="flex items-center justify-between px-3 py-2 rounded-lg text-base font-medium {{ request()->is('compare*') ? 'bg-primary/10 text-primary font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
+                <span>So sánh Gear</span>
             </a>
             <a href="{{ route('quiz.index') }}" class="flex items-center justify-between px-3 py-2 rounded-lg text-base font-medium {{ request()->is('quiz*') ? 'bg-primary/10 text-primary font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
                 <span>Tư vấn chọn Gear (Quiz)</span>
@@ -347,22 +344,13 @@
                 <span>Khoe góc máy</span>
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">Mới</span>
             </a>
-            <a href="{{ url('/about') }}" class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->is('about*') ? 'bg-primary/10 text-primary font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
-                About us
-            </a>
-            <a href="{{ url('/blog') }}" class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->is('blog*') ? 'bg-primary/10 text-primary font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
-                Blog
-            </a>
-            <a href="{{ url('/contact') }}" class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->is('contact*') ? 'bg-primary/10 text-primary font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
-                Contact
-            </a>
             @guest
                 <div class="pt-4 border-t border-gray-100 flex gap-2">
                     <a href="{{ route('login') }}" class="w-1/2 text-center py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-800">
-                        Login
+                        Đăng nhập
                     </a>
                     <a href="{{ route('register') }}" class="w-1/2 text-center py-2.5 rounded-xl bg-primary text-white text-sm font-semibold">
-                        Register
+                        Đăng ký
                     </a>
                 </div>
             @endguest
@@ -406,43 +394,45 @@
 
                 <!-- Col 2: Quick links -->
                 <div>
-                    <h3 class="text-sm font-bold text-gray-900 tracking-wider mb-4">Quick links</h3>
+                    <h3 class="text-sm font-bold text-gray-900 tracking-wider mb-4">Liên kết nhanh</h3>
                     <ul class="space-y-2.5 text-sm text-gray-500">
-                        <li><a href="{{ url('/shop') }}" class="hover:text-primary transition">Shop</a></li>
-                        <li><a href="{{ url('/about') }}" class="hover:text-primary transition">About</a></li>
-                        <li><a href="{{ url('/blog') }}" class="hover:text-primary transition">Blog</a></li>
-                        <li><a href="{{ url('/contact') }}" class="hover:text-primary transition">Contact</a></li>
+                        <li><a href="{{ url('/') }}" class="hover:text-primary transition">Trang chủ</a></li>
+                        <li><a href="{{ url('/shop') }}" class="hover:text-primary transition">Cửa hàng sản phẩm</a></li>
+                        <li><a href="{{ route('compare.index') }}" class="hover:text-primary transition">So sánh Gear</a></li>
+                        <li><a href="{{ route('quiz.index') }}" class="hover:text-primary transition">Tư vấn chọn Gear</a></li>
+                        <li><a href="{{ route('community.index') }}" class="hover:text-primary transition">Diễn đàn Góc máy setup</a></li>
                     </ul>
                 </div>
 
                 <!-- Col 3: Support -->
                 <div>
-                    <h3 class="text-sm font-bold text-gray-900 tracking-wider mb-4">Support</h3>
+                    <h3 class="text-sm font-bold text-gray-900 tracking-wider mb-4">Chính sách & Hỗ trợ</h3>
                     <ul class="space-y-2.5 text-sm text-gray-500">
-                        <li><a href="#" class="hover:text-primary transition">FAQ</a></li>
-                        <li><a href="#" class="hover:text-primary transition">Shipping</a></li>
-                        <li><a href="#" class="hover:text-primary transition">Returns</a></li>
-                        <li><a href="#" class="hover:text-primary transition">Privacy Policy</a></li>
+                        <li><a href="{{ url('/orders') }}" class="hover:text-primary transition">Tra cứu đơn hàng</a></li>
+                        <li><a href="{{ url('/shop') }}" class="hover:text-primary transition">Bảo hành 12 - 24 tháng</a></li>
+                        <li><a href="{{ url('/shop') }}" class="hover:text-primary transition">Đổi trả 1 đổi 1 trong 30 ngày</a></li>
+                        <li><a href="{{ url('/shop') }}" class="hover:text-primary transition">Đồng kiểm hàng khi nhận COD</a></li>
                     </ul>
                 </div>
 
                 <!-- Col 4: Newsletter -->
                 <div>
-                    <h3 class="text-sm font-bold text-gray-900 tracking-wider mb-2">Subscribe for latest news</h3>
-                    <p class="text-xs text-gray-500 mb-4">Nhận ưu đãi độc quyền & thông báo sản phẩm mới nhất.</p>
-                    <form action="#" method="POST" class="space-y-2" onsubmit="event.preventDefault(); alert('Cảm ơn bạn đã đăng ký!');">
+                    <h3 class="text-sm font-bold text-gray-900 tracking-wider mb-2">Đăng ký nhận ưu đãi</h3>
+                    <p class="text-xs text-gray-500 mb-4">Nhận voucher độc quyền & thông báo sản phẩm mới nhất.</p>
+                    <form action="#" method="POST" class="space-y-2" onsubmit="event.preventDefault(); alert('Cảm ơn bạn đã đăng ký nhận ưu đãi!');">
                         <input 
                             type="email" 
-                            placeholder="Your email" 
+                            placeholder="Nhập email của bạn..." 
                             required 
                             class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-[#F4F5F7] text-sm text-gray-900 focus:bg-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition"
                         >
                         <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold shadow-sm transition">
-                            Subscribe
+                            Đăng ký nhận tin
                         </button>
                     </form>
-                    <div class="pt-4 text-xs text-gray-500">
-                        <span class="font-medium text-gray-700">Hotline:</span> +0918919816
+                    <div class="pt-4 text-xs text-gray-500 space-y-1">
+                        <p><span class="font-medium text-gray-700">Hotline:</span> 1900 6868 (8:00 - 21:30)</p>
+                        <p><span class="font-medium text-gray-700">Email:</span> contact@gearhub.vn</p>
                     </div>
                 </div>
 
