@@ -19,6 +19,7 @@ use App\Http\Controllers\Client\ReviewController;
 use App\Http\Controllers\Client\ShopController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\DashboardController;
 
 // Storefront Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -85,8 +86,7 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
         Route::redirect('/', '/admin/dashboard');
 
-        // Tạm thời, Dashboard thật làm ở tuần 7 (khi đó đổi sang controller)
-        Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::resource('categories', CategoryController::class)->except(['show']);
         Route::resource('brands', BrandController::class)->except(['show']);
