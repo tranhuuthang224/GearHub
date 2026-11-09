@@ -59,6 +59,8 @@
                         ['name' => 'Inventory', 'url' => url('/admin/inventory'), 'pattern' => 'admin/inventory*', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
                         ['name' => 'Orders', 'url' => url('/admin/orders'), 'pattern' => 'admin/orders*', 'icon' => 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z'],
                         ['name' => 'Trash', 'url' => url('/admin/trash'), 'pattern' => 'admin/trash*', 'icon' => 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'],
+                        ['name' => 'Customers', 'url' => url('/admin/users'), 'pattern' => 'admin/users*', 'icon' => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'],
+
                     ];
                 @endphp
 

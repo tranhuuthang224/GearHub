@@ -20,6 +20,7 @@ use App\Http\Controllers\Client\ShopController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UserController;
 
 // Storefront Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -107,6 +108,11 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('community', [CommunityModerationController::class, 'index'])->name('community.index');
         Route::patch('community/{post}/status', [CommunityModerationController::class, 'updateStatus'])->name('community.status');
         Route::delete('community/{post}', [CommunityModerationController::class, 'destroy'])->name('community.destroy');
+
+        // Quản lý khách hàng
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
+        Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
     });
 
 // Checkout & Order Routes (Requires Auth)
@@ -120,6 +126,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{code}', [ClientOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{code}/cancel', [ClientOrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/orders/{code}/reorder', [ClientOrderController::class, 'reorder'])->name('orders.reorder');
+
 });
 
 // Xem trước mã giảm giá ở Checkout (B). Giới hạn 20 lượt/phút để chống dò mã.
