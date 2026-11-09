@@ -604,10 +604,10 @@
 <script>
 function checkoutPage() {
     return {
-        baseSubtotal: {{ $subtotal }},
-        shippingFee: {{ $shipping }},
-        inputCoupon: '{{ old('coupon_code', '') }}',
-        appliedCouponCode: '{{ old('coupon_code', '') }}',
+        baseSubtotal: {{ (float) $subtotal }},
+        shippingFee: {{ (float) $shipping }},
+        inputCoupon: @js(old('coupon_code', '')),
+        appliedCouponCode: @js(old('coupon_code', '')),
         discountAmount: 0,
         couponError: '',
         couponSuccessMessage: '',
@@ -615,9 +615,9 @@ function checkoutPage() {
         submitting: false,
 
         // Form Fields (Hỗ trợ nạp nhanh từ địa chỉ đã lưu)
-        receiverName: '{{ old('receiver_name', $defaultAddress?->receiver_name ?? $user->name ?? '') }}',
-        receiverPhone: '{{ old('phone', $defaultAddress?->phone ?? $user->phone ?? '') }}',
-        shippingAddress: '{{ old('shipping_address', $defaultAddress?->address_line ?? '') }}',
+        receiverName: @js(old('receiver_name', $defaultAddress?->receiver_name ?? $user->name ?? '')),
+        receiverPhone: @js(old('phone', $defaultAddress?->phone ?? $user->phone ?? '')),
+        shippingAddress: @js(old('shipping_address', $defaultAddress?->address_line ?? '')),
 
         init() {
             if (this.inputCoupon) {

@@ -1,6 +1,105 @@
 @extends('layouts.client')
 
 @section('content')
+<script>
+function productDetailOrder(productId, maxStock, cartAddUrl, checkoutUrl, csrfToken) {
+    return {
+        qty: 1,
+        maxStock: maxStock,
+        addedToast: false,
+        toastMessage: '',
+        loading: false,
+        addToCart(isBuyNow = false) {
+            this.loading = true;
+            fetch(cartAddUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    quantity: this.qty,
+                    buy_now: isBuyNow ? 1 : 0
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.loading = false;
+                if (data.success) {
+                    const badge = document.querySelector("a[href*='cart'] span.bg-primary");
+                    if (badge && data.cartCount !== undefined) {
+                        badge.innerText = data.cartCount;
+                    }
+                    if (isBuyNow) {
+                        window.location.href = data.redirect_url || checkoutUrl;
+                    } else {
+                        this.toastMessage = data.message || 'Đã thêm vào giỏ hàng!';
+                        this.addedToast = true;
+                        setTimeout(() => { this.addedToast = false; }, 3500);
+                        window.dispatchEvent(new CustomEvent('cart-toast', { detail: { message: this.toastMessage } }));
+                    }
+                } else {
+                    alert(data.message || 'Không thể thêm sản phẩm vào giỏ.');
+                }
+            })
+            .catch(() => {
+                this.loading = false;
+                alert('Có lỗi xảy ra khi kết nối máy chủ.');
+            });
+        }
+    };
+}
+
+function productSpecsCopy() {
+    return {
+        copied: false,
+        copySpecs() {
+            const rows = Array.from(document.querySelectorAll('#specs-table [data-spec-row]'));
+            const specText = rows.map(r => {
+                const k = r.querySelector('[data-spec-key]')?.innerText.trim() || '';
+                const v = r.querySelector('[data-spec-val]')?.innerText.trim() || '';
+                return `${k}: ${v}`;
+            }).join('\n');
+
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(specText).then(() => {
+                    this.copied = true;
+                    setTimeout(() => { this.copied = false; }, 2500);
+                });
+            }
+        }
+    };
+}
+
+function productReviewForm(initialRating, initialComment) {
+    return {
+        rating: initialRating,
+        hoverRating: 0,
+        comment: initialComment,
+        previews: [],
+        submitting: false,
+        labels: {
+            1: '1 sao: Thất vọng - Rất tệ',
+            2: '2 sao: Chưa ưng ý - Cần cải thiện',
+            3: '3 sao: Bình thường - Đủ dùng',
+            4: '4 sao: Hài lòng - Chất lượng tốt',
+            5: '5 sao: Tuyệt vời - Rất đáng tiền'
+        },
+        handleFileChange(event) {
+            const files = Array.from(event.target.files).slice(0, 3);
+            this.previews = files.map(function(file) { return URL.createObjectURL(file); });
+        },
+        removePreview(index) {
+            this.previews.splice(index, 1);
+            const input = document.getElementById('review-photos-input');
+            if (input) input.value = '';
+        }
+    };
+}
+</script>
+
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-24">
 
     <!-- 1. BREADCRUMBS (Matching Figma) -->
@@ -151,53 +250,10 @@
             <hr class="border-gray-100">
 
             <!-- BỘ CHỌN SỐ LƯỢNG & NÚT CTA (Alpine.js kết nối Cart Backend) -->
-            <div class="space-y-5 pt-2" x-data="{ 
-                qty: 1, 
-                maxStock: {{ $product['stock_quantity'] > 0 ? $product['stock_quantity'] : 1 }},
-                addedToast: false,
-                toastMessage: '',
-                loading: false,
-                addToCart(isBuyNow = false) {
-                    this.loading = true;
-                    fetch('{{ route('cart.add') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            product_id: {{ $product['id'] }},
-                            quantity: this.qty,
-                            buy_now: isBuyNow ? 1 : 0
-                        })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        this.loading = false;
-                        if (data.success) {
-                            const badge = document.querySelector('a[href*="cart"] span.bg-primary');
-                            if (badge && data.cartCount !== undefined) {
-                                badge.innerText = data.cartCount;
-                            }
-                            if (isBuyNow) {
-                                window.location.href = data.redirect_url || '{{ route('checkout.index') }}';
-                            } else {
-                                this.toastMessage = data.message || 'Đã thêm vào giỏ hàng!';
-                                this.addedToast = true;
-                                setTimeout(() => this.addedToast = false, 3500);
-                                window.dispatchEvent(new CustomEvent('cart-toast', { detail: { message: this.toastMessage } }));
-                            }
-                        } else {
-                            alert(data.message || 'Không thể thêm sản phẩm vào giỏ.');
-                        }
-                    })
-                    .catch(() => {
-                        this.loading = false;
-                        alert('Có lỗi xảy ra khi kết nối máy chủ.');
-                    });
-                }
-            }">
+            <div 
+                class="space-y-5 pt-2" 
+                x-data="productDetailOrder({{ $product['id'] }}, {{ $product['stock_quantity'] > 0 ? $product['stock_quantity'] : 1 }}, '{{ route('cart.add') }}', '{{ route('checkout.index') }}', '{{ csrf_token() }}')"
+            >
                 
                 <!-- Bộ chọn số lượng (+ / -) -->
                 @if ($product['stock_quantity'] > 0)
@@ -509,24 +565,7 @@
         </div>
 
         <!-- Tab 1: Specifications (JSON Specs Table) -->
-        <div x-show="activeTab === 'specs'" class="pt-8" x-data="{ 
-            copied: false,
-            copySpecs() {
-                const rows = Array.from(document.querySelectorAll('#specs-table [data-spec-row]'));
-                const specText = rows.map(r => {
-                    const k = r.querySelector('[data-spec-key]')?.innerText.trim() || '';
-                    const v = r.querySelector('[data-spec-val]')?.innerText.trim() || '';
-                    return `${k}: ${v}`;
-                }).join('\n');
-
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(specText).then(() => {
-                        this.copied = true;
-                        setTimeout(() => this.copied = false, 2500);
-                    });
-                }
-            }
-        }">
+        <div x-show="activeTab === 'specs'" class="pt-8" x-data="productSpecsCopy()">
             @php
                 $rawSpecs = $product['specs'] ?? [];
                 $parsedSpecs = is_array($rawSpecs) ? $rawSpecs : (json_decode($rawSpecs, true) ?? []);
@@ -926,29 +965,7 @@
                         action="{{ route('shop.reviews.store', $product['slug']) }}" 
                         method="POST" 
                         enctype="multipart/form-data"
-                        x-data="{
-                            rating: {{ (int) old('rating', $currentUserReview->rating ?? 5) }},
-                            hoverRating: 0,
-                            comment: '{{ addslashes(old('comment', $currentUserReview->comment ?? '')) }}',
-                            previews: [],
-                            submitting: false,
-                            labels: {
-                                1: '1 sao: Thất vọng - Rất tệ',
-                                2: '2 sao: Chưa ưng ý - Cần cải thiện',
-                                3: '3 sao: Bình thường - Đủ dùng',
-                                4: '4 sao: Hài lòng - Chất lượng tốt',
-                                5: '5 sao: Tuyệt vời - Rất đáng tiền'
-                            },
-                            handleFileChange(event) {
-                                const files = Array.from(event.target.files).slice(0, 3);
-                                this.previews = files.map(file => URL.createObjectURL(file));
-                            },
-                            removePreview(index) {
-                                this.previews.splice(index, 1);
-                                const input = document.getElementById('review-photos-input');
-                                if (input) input.value = '';
-                            }
-                        }"
+                        x-data="productReviewForm({{ (int) old('rating', $currentUserReview->rating ?? 5) }}, @js(old('comment', $currentUserReview->comment ?? '')))"
                         @submit="submitting = true"
                         class="space-y-6"
                     >

@@ -2,9 +2,10 @@
     $initialCompareItems = array_values(session('compare_items', []));
 @endphp
 
-<div 
-    x-data="{
-        items: {{ Js::from($initialCompareItems) }},
+<script>
+function stickyCompareBarComponent(initialItems, csrfToken, toggleUrlBase, removeUrlBase, clearUrl) {
+    return {
+        items: initialItems,
         collapsed: false,
         maxItems: 4,
         loading: false,
@@ -24,7 +25,6 @@
                 this.clear();
             });
 
-            // Gửi event để các product card đồng bộ trạng thái active
             this.broadcastActiveIds();
         },
 
@@ -36,18 +36,18 @@
         notify(msg) {
             this.toastMessage = msg;
             this.showToast = true;
-            setTimeout(() => this.showToast = false, 3500);
+            setTimeout(() => { this.showToast = false; }, 3500);
         },
 
         toggle(id) {
             if (this.loading) return;
             this.loading = true;
 
-            fetch('{{ url('/compare/toggle') }}/' + id, {
+            fetch(toggleUrlBase + '/' + id, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                 }
             })
@@ -73,11 +73,11 @@
             if (this.loading) return;
             this.loading = true;
 
-            fetch('{{ url('/compare/remove') }}/' + id, {
+            fetch(removeUrlBase + '/' + id, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                 }
             })
@@ -99,11 +99,11 @@
             if (this.loading || this.items.length === 0) return;
             this.loading = true;
 
-            fetch('{{ route('compare.clear') }}', {
+            fetch(clearUrl, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                 }
             })
@@ -120,7 +120,12 @@
                 this.loading = false;
             });
         }
-    }"
+    };
+}
+</script>
+
+<div 
+    x-data="stickyCompareBarComponent({{ Js::from($initialCompareItems) }}, '{{ csrf_token() }}', '{{ url('/compare/toggle') }}', '{{ url('/compare/remove') }}', '{{ route('compare.clear') }}')"
     class="relative"
 >
     <!-- Floating Toast Feedback riêng cho So sánh -->
