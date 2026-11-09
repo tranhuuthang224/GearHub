@@ -210,8 +210,26 @@
                 <div class="space-y-3 text-xs">
                     <div class="flex items-center justify-between">
                         <span class="text-gray-500">Hình thức:</span>
-                        <span class="font-bold text-gray-900">COD (Thanh toán khi nhận)</span>
+                        <span class="font-bold text-gray-900">{{ $order->payment_method_label }}</span>
                     </div>
+
+                    @if ($order->payment_method === 'bank_transfer' && $order->status === 'pending')
+                        <div class="p-3 bg-blue-50/70 rounded-2xl border border-blue-200 text-xs space-y-2 mt-2">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-blue-900">Quét mã VietQR để thanh toán:</span>
+                                <span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Chờ chuyển khoản</span>
+                            </div>
+                            <div class="flex items-center justify-center pt-1">
+                                <img src="{{ asset('images/bank-transfer-qr.jpg') }}" alt="Mã QR thanh toán VietinBank" class="w-36 h-auto rounded-xl border border-gray-200 shadow-sm">
+                            </div>
+                            <div class="space-y-1 text-[11px] text-gray-600 pt-1">
+                                <div>Ngân hàng: <span class="font-bold text-gray-900">VietinBank (CN An Giang)</span></div>
+                                <div>Số TK: <span class="font-mono font-bold text-blue-700">103882436377</span></div>
+                                <div>Chủ TK: <span class="font-bold text-gray-900">TRAN HUU THANG</span></div>
+                                <div>Nội dung CK: <span class="font-mono font-bold text-primary">GEARHUB {{ $order->code }}</span></div>
+                            </div>
+                        </div>
+                    @endif
 
                     <div class="flex items-center justify-between">
                         <span class="text-gray-500">Tạm tính tiền hàng:</span>

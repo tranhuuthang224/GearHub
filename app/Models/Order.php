@@ -32,6 +32,30 @@ class Order extends Model
         self::STATUS_CANCELLED => [],
     ];
 
+    public const PAYMENT_METHOD_COD           = 'cod';
+    public const PAYMENT_METHOD_BANK_TRANSFER = 'bank_transfer';
+
+    public const PAYMENT_METHOD_LABELS = [
+        self::PAYMENT_METHOD_COD           => 'Thanh toán khi nhận hàng (COD)',
+        self::PAYMENT_METHOD_BANK_TRANSFER => 'Chuyển khoản ngân hàng (VietQR)',
+    ];
+
+    /**
+     * Kiểm tra đơn hàng có thanh toán bằng chuyển khoản hay không.
+     */
+    public function isBankTransfer(): bool
+    {
+        return $this->payment_method === self::PAYMENT_METHOD_BANK_TRANSFER;
+    }
+
+    /**
+     * Lấy nhãn phương thức thanh toán thân thiện.
+     */
+    public function getPaymentMethodLabelAttribute(): string
+    {
+        return self::PAYMENT_METHOD_LABELS[$this->payment_method] ?? strtoupper((string) $this->payment_method);
+    }
+
     protected $fillable = [
         'code',
         'user_id',

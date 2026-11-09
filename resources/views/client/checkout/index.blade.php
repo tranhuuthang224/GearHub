@@ -264,7 +264,7 @@
                     </div>
                 </div>
 
-                <!-- 2. PHƯƠNG THỨC THANH TOÁN (MẶC ĐỊNH COD) -->
+                <!-- 2. PHƯƠNG THỨC THANH TOÁN (COD & CHUYỂN KHOẢN VIETQR) -->
                 <div class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-sm space-y-5">
                     <div class="flex items-center gap-3 pb-4 border-b border-gray-100">
                         <div class="w-9 h-9 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black text-sm">
@@ -274,18 +274,21 @@
                             <h2 class="text-base sm:text-lg font-black text-gray-900 tracking-tight">
                                 Phương thức thanh toán
                             </h2>
-                            <p class="text-xs text-gray-500">Mặc định áp dụng thanh toán tiền mặt khi nhận hàng (COD)</p>
+                            <p class="text-xs text-gray-500">Hỗ trợ nhận hàng thanh toán (COD) hoặc Chuyển khoản QR 24/7</p>
                         </div>
                     </div>
 
                     <div class="space-y-3 pt-1">
-                        <!-- Option 1: COD (Active, Selected by default) -->
-                        <label class="flex items-start gap-4 p-4 sm:p-5 rounded-2xl border-2 border-primary bg-primary/[0.03] cursor-pointer transition relative group shadow-sm">
+                        <!-- Option 1: COD (Thanh toán khi nhận hàng) -->
+                        <label 
+                            class="flex items-start gap-4 p-4 sm:p-5 rounded-2xl border-2 cursor-pointer transition relative group shadow-sm"
+                            :class="paymentMethod === 'cod' ? 'border-primary bg-primary/[0.03]' : 'border-gray-200 hover:border-gray-300 bg-white'"
+                        >
                             <input 
                                 type="radio" 
                                 name="payment_method" 
                                 value="cod" 
-                                checked 
+                                x-model="paymentMethod"
                                 class="mt-1 w-4 h-4 text-primary focus:ring-primary border-gray-300"
                             >
                             <div class="space-y-1.5 flex-1">
@@ -299,7 +302,7 @@
                                         Thanh toán khi nhận hàng (COD)
                                     </span>
                                     <span class="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                                        Khuyên dùng
+                                        Phổ biến
                                     </span>
                                 </div>
                                 <p class="text-xs text-gray-600 leading-relaxed pl-9">
@@ -308,24 +311,58 @@
                             </div>
                         </label>
 
-                        <!-- Option 2: VNPay / Chuyển khoản QR (Disabled / Preview) -->
-                        <div class="flex items-start gap-4 p-4 rounded-2xl border border-gray-200 bg-gray-50/70 opacity-60 cursor-not-allowed select-none">
-                            <input type="radio" disabled class="mt-1 text-gray-300 border-gray-200">
-                            <div class="space-y-1 flex-1">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-lg bg-gray-200 text-gray-500 flex items-center justify-center shrink-0">
+                        <!-- Option 2: Chuyển khoản ngân hàng qua mã QR (VietQR) -->
+                        <label 
+                            class="flex items-start gap-4 p-4 sm:p-5 rounded-2xl border-2 cursor-pointer transition relative group shadow-sm"
+                            :class="paymentMethod === 'bank_transfer' ? 'border-primary bg-primary/[0.03]' : 'border-gray-200 hover:border-gray-300 bg-white'"
+                        >
+                            <input 
+                                type="radio" 
+                                name="payment_method" 
+                                value="bank_transfer" 
+                                x-model="paymentMethod"
+                                class="mt-1 w-4 h-4 text-primary focus:ring-primary border-gray-300"
+                            >
+                            <div class="space-y-1.5 flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
                                         </svg>
                                     </div>
-                                    <span class="font-bold text-sm text-gray-700">Chuyển khoản QR Code (VNPay / MoMo)</span>
-                                    <span class="text-[10px] font-bold text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">Sắp hỗ trợ</span>
+                                    <span class="font-black text-sm sm:text-base text-gray-900">
+                                        Chuyển khoản ngân hàng qua mã QR (VietQR 24/7)
+                                    </span>
+                                    <span class="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                                        Xác nhận nhanh
+                                    </span>
                                 </div>
-                                <p class="text-xs text-gray-500 pl-9">
-                                    Thanh toán quét mã QR qua ngân hàng hoặc ví điện tử (sẽ ra mắt trong bản cập nhật kế tiếp).
+                                <p class="text-xs text-gray-600 leading-relaxed pl-9">
+                                    Quét mã QR bằng ứng dụng ngân hàng hoặc ví điện tử bất kỳ. Mã QR tự động điền sẵn số tiền và mã đơn hàng sẽ được hiển thị ngay sau khi bấm đặt hàng.
                                 </p>
+
+                                <!-- Khối tóm tắt thông tin tài khoản ngân hàng -->
+                                <div x-show="paymentMethod === 'bank_transfer'" class="mt-4 pt-3 border-t border-gray-100 pl-0 sm:pl-9 space-y-2">
+                                    <div class="p-3.5 bg-blue-50/60 rounded-2xl border border-blue-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                        <div class="space-y-1 text-xs">
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-bold text-gray-900">Ngân hàng VietinBank</span>
+                                                <span class="text-[10px] text-gray-500">• CN An Giang - PGD Long Xuyên</span>
+                                            </div>
+                                            <div class="text-gray-700">
+                                                Số tài khoản: <span class="font-mono font-bold text-blue-700 text-sm select-all">103882436377</span>
+                                            </div>
+                                            <div class="text-gray-700">
+                                                Chủ tài khoản: <span class="font-bold text-gray-900">TRAN HUU THANG</span>
+                                            </div>
+                                        </div>
+                                        <div class="shrink-0 flex items-center gap-2">
+                                            <img src="{{ asset('images/bank-transfer-qr.jpg') }}" alt="Mã QR VietinBank" class="w-16 h-16 object-cover rounded-xl border border-blue-300 shadow-xs">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        </label>
                     </div>
                 </div>
 
@@ -544,11 +581,15 @@
                             <span>-<span x-text="discountAmount.toLocaleString('vi-VN')"></span>đ</span>
                         </div>
 
-                        <!-- TỔNG THANH TOÁN LỚN (COD) -->
+                        <!-- TỔNG THANH TOÁN LỚN -->
                         <div class="pt-4 border-t border-gray-200 flex items-baseline justify-between text-base">
                             <div>
-                                <span class="font-black text-gray-900 text-base sm:text-lg block">Tổng thanh toán COD:</span>
-                                <span class="text-[11px] text-gray-400">Đã bao gồm VAT & Miễn phí thu hộ</span>
+                                <span class="font-black text-gray-900 text-base sm:text-lg block" x-text="paymentMethod === 'bank_transfer' ? 'Tổng chuyển khoản VietQR:' : 'Tổng thanh toán COD:'">
+                                    Tổng thanh toán:
+                                </span>
+                                <span class="text-[11px] text-gray-400" x-text="paymentMethod === 'bank_transfer' ? 'Đã bao gồm VAT & Miễn phí vận chuyển' : 'Đã bao gồm VAT & Miễn phí thu hộ'">
+                                    Đã bao gồm VAT & Miễn phí thu hộ
+                                </span>
                             </div>
                             <div class="text-right">
                                 <span 
@@ -575,7 +616,9 @@
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                             </svg>
-                            <span x-text="submitting ? 'Đang xử lý đơn hàng...' : 'Xác nhận đặt hàng (COD)'">Xác nhận đặt hàng (COD)</span>
+                            <span x-text="submitting ? 'Đang xử lý đơn hàng...' : (paymentMethod === 'bank_transfer' ? 'Xác nhận đặt hàng & Lấy mã QR' : 'Xác nhận đặt hàng (COD)')">
+                                Xác nhận đặt hàng
+                            </span>
                         </button>
                     </div>
 
@@ -617,6 +660,7 @@ function checkoutPage() {
         couponSuccessMessage: '',
         checkingCoupon: false,
         submitting: false,
+        paymentMethod: @js(old('payment_method', 'cod')),
 
         // Form Fields (Hỗ trợ nạp nhanh từ địa chỉ đã lưu)
         receiverName: @js(old('receiver_name', $defaultAddress?->receiver_name ?? $user->name ?? '')),

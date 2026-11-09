@@ -151,6 +151,47 @@ class CheckoutTest extends TestCase
         $successResponse->assertSee('Đặt hàng thành công');
     }
 
+    public function test_checkout_store_with_bank_transfer_creates_order_and_renders_vietqr_info(): void
+    {
+        $this->actingAs($this->customer);
+
+        session([
+            'cart' => [
+                $this->productOver500k->id => [
+                    'id'            => $this->productOver500k->id,
+                    'name'          => $this->productOver500k->name,
+                    'price'         => 600000,
+                    'quantity'      => 1,
+                    'thumbnail'     => $this->productOver500k->thumbnail,
+                    'max_quantity'  => 15,
+                ],
+            ],
+        ]);
+
+        $response = $this->post(route('checkout.store'), [
+            'receiver_name'    => 'Nguyễn Văn Chuyển Khoản',
+            'phone'            => '0987654321',
+            'shipping_address' => '123 Đường Điện Biên Phủ, Phường 25, Quận Bình Thạnh, TP.HCM',
+            'payment_method'   => 'bank_transfer',
+            'note'             => 'Chuyển khoản VietQR',
+        ]);
+
+        $order = Order::where('phone', '0987654321')->first();
+        $this->assertNotNull($order);
+        $this->assertEquals('bank_transfer', $order->payment_method);
+        $this->assertTrue($order->isBankTransfer());
+        $this->assertEquals(Order::STATUS_PENDING, $order->status);
+
+        $response->assertRedirect(route('checkout.success', $order->code));
+
+        $successResponse = $this->actingAs($this->customer)->get(route('checkout.success', $order->code));
+        $successResponse->assertOk();
+        $successResponse->assertSee('VietinBank');
+        $successResponse->assertSee('103882436377');
+        $successResponse->assertSee('TRAN HUU THANG');
+        $successResponse->assertSee('VietQR');
+    }
+
     public function test_checkout_store_validates_required_fields(): void
     {
         $this->actingAs($this->customer)->post(route('cart.add'), [

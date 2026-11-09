@@ -103,7 +103,7 @@
                         <dd>− {{ $money($order->discount) }}</dd>
                     </div>
                     <div class="flex justify-between border-t border-gray-100 pt-2 text-base font-bold text-gray-900">
-                        <dt>Tổng thanh toán (COD)</dt>
+                        <dt>Tổng thanh toán ({{ $order->payment_method === 'bank_transfer' ? 'Chuyển khoản QR' : 'COD' }})</dt>
                         <dd>{{ $money($order->total) }}</dd>
                     </div>
                 </dl>
@@ -158,7 +158,7 @@
                 <dl class="space-y-2 text-sm">
                     <div><dt class="text-xs text-gray-400">Tên</dt><dd class="text-gray-900">{{ $order->user?->name ?? 'Không còn' }}</dd></div>
                     <div><dt class="text-xs text-gray-400">Email</dt><dd class="text-gray-900">{{ $order->user?->email ?? '—' }}</dd></div>
-                    <div><dt class="text-xs text-gray-400">Thanh toán</dt><dd class="text-gray-900">Thanh toán khi nhận hàng (COD)</dd></div>
+                    <div><dt class="text-xs text-gray-400">Thanh toán</dt><dd class="text-gray-900 font-semibold">{{ $order->payment_method_label }}</dd></div>
                 </dl>
             </div>
         </div>

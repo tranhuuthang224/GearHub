@@ -125,7 +125,7 @@ class OrderService
                 'phone'            => trim($shippingData['phone']),
                 'shipping_address' => trim($shippingData['shipping_address']),
                 'note'             => filled($shippingData['note'] ?? null) ? trim($shippingData['note']) : null,
-                'payment_method'   => 'cod',
+                'payment_method'   => $shippingData['payment_method'] ?? Order::PAYMENT_METHOD_COD,
                 'status'           => Order::STATUS_PENDING,
                 'subtotal'         => $subtotal,
                 'discount'         => $discount,

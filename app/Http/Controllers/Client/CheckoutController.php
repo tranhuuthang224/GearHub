@@ -51,6 +51,7 @@ class CheckoutController extends Controller
             'receiver_name'    => ['required', 'string', 'min:2', 'max:100'],
             'phone'            => ['required', 'string', 'regex:/^(0|\+84)[35789][0-9]{8}$/'],
             'shipping_address' => ['required', 'string', 'min:10', 'max:255'],
+            'payment_method'   => ['nullable', 'string', 'in:cod,bank_transfer'],
             'note'             => ['nullable', 'string', 'max:500'],
             'coupon_code'      => ['nullable', 'string', 'max:50'],
         ], [
@@ -60,6 +61,7 @@ class CheckoutController extends Controller
             'phone.regex'               => 'Số điện thoại không đúng định dạng Việt Nam (gồm 10 số, bắt đầu bằng 03, 05, 07, 08, 09 hoặc +84).',
             'shipping_address.required' => 'Vui lòng nhập địa chỉ giao hàng.',
             'shipping_address.min'      => 'Vui lòng nhập địa chỉ giao hàng cụ thể (tối thiểu 10 ký tự bao gồm số nhà, tên đường, phường/xã, quận/huyện).',
+            'payment_method.in'         => 'Phương thức thanh toán đã chọn không hợp lệ.',
         ]);
 
         $cart = $cartService->getCart();
@@ -81,6 +83,7 @@ class CheckoutController extends Controller
                     'phone'            => $validated['phone'],
                     'shipping_address' => $validated['shipping_address'],
                     'note'             => $validated['note'] ?? null,
+                    'payment_method'   => $validated['payment_method'] ?? 'cod',
                 ],
                 $validated['coupon_code'] ?? null
             );
