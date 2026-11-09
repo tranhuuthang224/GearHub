@@ -69,21 +69,21 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::post('/', [CommunityController::class, 'store'])->middleware('auth')->name('store');
     Route::get('/search-products', [CommunityController::class, 'searchProducts'])->name('search-products');
     Route::get('/{slug}', [CommunityController::class, 'show'])->name('show');
-    Route::post('/{post}/like', [CommunityController::class, 'like'])->name('like');
-    Route::post('/{post}/comments', [CommunityController::class, 'comment'])->name('comment');
-    Route::post('/{post}/comments-alt', [CommunityController::class, 'comment'])->name('comments.store');
 
-    Route::middleware('auth')->group(function () {
-        Route::post('/{post}/like', [CommunityController::class, 'like'])
-            ->middleware('throttle:community-interactions')
-            ->name('like');
-        Route::post('/{post}/comments', [CommunityController::class, 'comment'])
-            ->middleware('throttle:community-interactions')
-            ->name('comment');
-        Route::post('/{post}/comments-alt', [CommunityController::class, 'comment'])
-            ->middleware('throttle:community-interactions')
-            ->name('comments.store');
-    });
+    // Route Like: Không dùng middleware auth để Controller tự trả về JSON 401
+    Route::post('/{post}/like', [CommunityController::class, 'like'])
+        ->middleware('throttle:community-interactions')
+        ->name('like');
+
+    // Route Comment: Yêu cầu đăng nhập + Rate Limit
+    Route::post('/{post}/comments', [CommunityController::class, 'comment'])
+        ->middleware(['auth', 'throttle:community-interactions'])
+        ->name('comment');
+        
+    // Route Comment Alternative (nếu frontend cần dùng)
+    Route::post('/{post}/comments-alt', [CommunityController::class, 'comment'])
+        ->middleware(['auth', 'throttle:community-interactions'])
+        ->name('comments.store');
 });
 
 Route::get('/dashboard', function () {

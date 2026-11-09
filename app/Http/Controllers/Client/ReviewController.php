@@ -95,6 +95,19 @@ class ReviewController extends Controller
         $comment = preg_replace('~<script\b[^>]*>.*?</script\s*>~is', '', $validated['comment']);
         $validated['comment'] = strip_tags(trim($validated['comment']));
 
+        // Kiểm tra quyền đánh giá (chỉ user đã mua và hoàn thành đơn)
+        $eligibility = $this->reviewService->canUserReview($user, $product);
+        if (!$eligibility['can_review']) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $eligibility['reason'],
+                ], 403);
+            }
+
+            return back()->with('error', $eligibility['reason']);
+        }
+
         // Tìm review cũ nếu có
         $existingReview = Review::where('user_id', $user->id)
             ->where('product_id', $product->id)
