@@ -411,22 +411,6 @@
         @endif
 
     </div>
-
-    <!-- Toast Notification for Feedback -->
-    <div 
-        x-show="toast.visible" 
-        x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 translate-y-4"
-        x-transition:enter-end="opacity-100 translate-y-0"
-        x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="opacity-100 translate-y-0"
-        x-transition:leave-end="opacity-0 translate-y-4"
-        class="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl text-sm font-semibold flex items-center gap-3 border border-gray-800"
-        style="display: none;"
-    >
-        <span x-text="toast.message"></span>
-    </div>
-
 </div>
 
 <script>
@@ -451,12 +435,7 @@ function communityPostDetail(config) {
         },
 
         showToast(message) {
-            this.toast.message = message;
-            this.toast.visible = true;
-            clearTimeout(this.toast.timeout);
-            this.toast.timeout = setTimeout(() => {
-                this.toast.visible = false;
-            }, 3000);
+            window.dispatchEvent(new CustomEvent('community-toast', { detail: { message: message } }));
         },
 
         async toggleLike() {

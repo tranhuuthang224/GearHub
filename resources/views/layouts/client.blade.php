@@ -169,12 +169,51 @@
                 </div>
             </div>
 
-            <!-- Expandable Search Bar on Click -->
-            <div x-show="searchOpen" x-transition class="py-4 border-t border-gray-100" style="display: none;">
+            <!-- Expandable Search Bar on Click with Live Skeleton & Instant Suggestions -->
+            <div 
+                x-show="searchOpen" 
+                x-transition 
+                class="py-4 border-t border-gray-100 relative" 
+                style="display: none;"
+                x-data="{
+                    query: '',
+                    results: [],
+                    loading: false,
+                    hasSearched: false,
+                    debounceTimer: null,
+                    handleInput() {
+                        clearTimeout(this.debounceTimer);
+                        const q = this.query.trim();
+                        if (q.length < 2) {
+                            this.results = [];
+                            this.loading = false;
+                            this.hasSearched = false;
+                            return;
+                        }
+                        this.loading = true;
+                        this.hasSearched = true;
+                        this.debounceTimer = setTimeout(() => {
+                            fetch('{{ route('community.search-products') }}?q=' + encodeURIComponent(q))
+                                .then(res => res.json())
+                                .then(data => {
+                                    this.results = data || [];
+                                    this.loading = false;
+                                })
+                                .catch(() => {
+                                    this.loading = false;
+                                });
+                        }, 280);
+                    }
+                }"
+                @click.away="results = []; hasSearched = false"
+            >
                 <form action="{{ url('/shop') }}" method="GET" class="relative max-w-xl mx-auto">
                     <input 
                         type="text" 
                         name="search" 
+                        x-model="query"
+                        @input="handleInput()"
+                        @keydown.escape="searchOpen = false"
                         placeholder="Tìm kiếm bàn phím cơ, chuột, tai nghe..." 
                         class="w-full rounded-2xl border border-gray-200 bg-[#F4F5F7] pl-11 pr-24 py-3 text-sm text-gray-900 focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition outline-none"
                     >
@@ -184,6 +223,81 @@
                     <button type="submit" class="absolute right-2 top-2 px-4 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-semibold shadow-sm transition">
                         Tìm
                     </button>
+
+                    <!-- Live Instant Dropdown with Skeleton State -->
+                    <div 
+                        x-show="hasSearched && query.trim().length >= 2" 
+                        x-transition
+                        class="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200/90 overflow-hidden z-50 text-left"
+                        style="display: none;"
+                    >
+                        <!-- Skeleton Loading State -->
+                        <div x-show="loading" class="p-3 space-y-2.5">
+                            <div class="px-2 py-1 text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                                <span>Đang tìm kiếm...</span>
+                                <span class="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                            </div>
+                            <div class="flex items-center gap-3 p-2 rounded-xl bg-gray-50 animate-pulse">
+                                <div class="w-10 h-10 rounded-lg bg-gray-200 shrink-0"></div>
+                                <div class="flex-1 space-y-1.5">
+                                    <div class="h-3 w-3/4 bg-gray-200 rounded"></div>
+                                    <div class="h-2.5 w-1/3 bg-gray-200 rounded"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 p-2 rounded-xl bg-gray-50 animate-pulse">
+                                <div class="w-10 h-10 rounded-lg bg-gray-200 shrink-0"></div>
+                                <div class="flex-1 space-y-1.5">
+                                    <div class="h-3 w-1/2 bg-gray-200 rounded"></div>
+                                    <div class="h-2.5 w-1/4 bg-gray-200 rounded"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Results List -->
+                        <div x-show="!loading && results.length > 0">
+                            <div class="p-2 border-b border-gray-100 bg-[#F8FAFC] flex items-center justify-between text-[11px] text-gray-500 font-bold px-3">
+                                <span>GỢI Ý SẢN PHẨM KHỚP NHẤT</span>
+                                <span x-text="results.length + ' kết quả'"></span>
+                            </div>
+                            <div class="max-h-72 overflow-y-auto divide-y divide-gray-50 p-1">
+                                <template x-for="item in results" :key="item.id">
+                                    <a 
+                                        :href="'{{ url('/shop') }}/' + item.slug" 
+                                        class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition group"
+                                    >
+                                        <img 
+                                            :src="item.thumbnail" 
+                                            :alt="item.name" 
+                                            class="w-11 h-11 rounded-lg object-contain bg-white border border-gray-100 p-0.5 shrink-0 group-hover:scale-105 transition"
+                                        >
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="text-xs font-bold text-gray-900 truncate group-hover:text-primary transition" x-text="item.name"></h4>
+                                            <p class="text-[11px] text-gray-400 font-mono" x-text="'SKU: ' + item.sku"></p>
+                                        </div>
+                                        <div class="text-right shrink-0">
+                                            <span class="text-xs font-black text-primary" x-text="item.formatted_price"></span>
+                                        </div>
+                                    </a>
+                                </template>
+                            </div>
+                            <div class="p-2 bg-gray-50 border-t border-gray-100 text-center">
+                                <button 
+                                    type="submit" 
+                                    class="text-xs font-bold text-primary hover:underline flex items-center justify-center gap-1 w-full py-1"
+                                >
+                                    <span>Xem toàn bộ kết quả trong Shop</span>
+                                    <span>→</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Empty State in Live Search -->
+                        <div x-show="!loading && results.length === 0" class="p-6 text-center space-y-2">
+                            <div class="text-2xl">🔍</div>
+                            <p class="text-xs font-bold text-gray-800">Không tìm thấy sản phẩm nào khớp với "<span x-text="query"></span>"</p>
+                            <p class="text-[11px] text-gray-400">Thử tìm kiếm với từ khóa ngắn gọn hơn như "phím", "chuột", "tai nghe"...</p>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -316,26 +430,161 @@
     <!-- Global Sticky Compare Bar (Thanh công cụ So sánh dính đáy) -->
     <x-sticky-compare-bar />
 
-    <!-- Global Cart Feedback Toast -->
+    <!-- Global Unified Toast Notification Stack -->
     <div 
-        x-data="{ show: false, message: '' }" 
-        x-on:cart-toast.window="message = $event.detail.message; show = true; setTimeout(() => show = false, 3500)"
-        x-show="show" 
-        x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 translate-y-4"
-        x-transition:enter-end="opacity-100 translate-y-0"
-        x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="opacity-100 translate-y-0"
-        x-transition:leave-end="opacity-0 translate-y-4"
-        class="fixed bottom-6 right-6 z-50 bg-[#18181B] text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-gray-800 flex items-center gap-3 text-xs"
+        x-data="globalToastSystem()" 
+        class="fixed bottom-6 right-6 z-50 flex flex-col gap-2.5 max-w-sm sm:max-w-md w-full pointer-events-none"
         style="display: none;"
+        x-show="toasts.length > 0"
     >
-        <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">✓</span>
-        <span x-text="message" class="font-medium"></span>
-        <a href="{{ route('cart.index') }}" class="font-bold underline text-primary hover:text-white ml-2">Xem giỏ hàng</a>
+        <template x-for="t in toasts" :key="t.id">
+            <div 
+                x-show="t.visible"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                x-transition:leave-end="opacity-0 translate-x-4 scale-95"
+                class="pointer-events-auto w-full p-4 rounded-2xl shadow-2xl border backdrop-blur-md flex items-start gap-3 transition-all bg-[#18181B] text-white"
+                :class="{
+                    'border-emerald-500/40 shadow-emerald-950/30': t.type === 'cart' || t.type === 'success',
+                    'border-primary/50 shadow-primary/20': t.type === 'compare',
+                    'border-rose-500/40 shadow-rose-950/30': t.type === 'community' || t.type === 'like',
+                    'border-red-600/50 shadow-red-950/30': t.type === 'error',
+                    'border-amber-500/40 shadow-amber-950/30': t.type === 'warning',
+                    'border-gray-800 shadow-black/40': !['cart', 'success', 'compare', 'community', 'like', 'error', 'warning'].includes(t.type)
+                }"
+            >
+                <!-- Icon Badge -->
+                <div class="shrink-0 mt-0.5">
+                    <template x-if="t.type === 'cart' || t.type === 'success'">
+                        <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">✓</span>
+                    </template>
+                    <template x-if="t.type === 'compare'">
+                        <span class="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs">⚖</span>
+                    </template>
+                    <template x-if="t.type === 'community' || t.type === 'like'">
+                        <span class="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-xs">❤️</span>
+                    </template>
+                    <template x-if="t.type === 'error'">
+                        <span class="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-xs">✕</span>
+                    </template>
+                    <template x-if="t.type === 'warning'">
+                        <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">⚠</span>
+                    </template>
+                    <template x-if="!['cart', 'success', 'compare', 'community', 'like', 'error', 'warning'].includes(t.type)">
+                        <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">ℹ</span>
+                    </template>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 min-w-0 space-y-1">
+                    <template x-if="t.title">
+                        <h4 class="text-xs font-bold text-gray-200 tracking-tight" x-text="t.title"></h4>
+                    </template>
+                    <p class="text-xs font-medium text-gray-300 leading-relaxed" x-text="t.message"></p>
+                    <template x-if="t.link">
+                        <div class="pt-1">
+                            <a :href="t.link" class="text-xs font-bold text-primary hover:text-red-400 underline inline-flex items-center gap-1 transition">
+                                <span x-text="t.linkText || 'Xem chi tiết'"></span>
+                                <span>→</span>
+                            </a>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Dismiss Button -->
+                <button 
+                    type="button" 
+                    @click="remove(t.id)" 
+                    class="text-gray-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10 shrink-0"
+                    title="Đóng thông báo"
+                >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </template>
     </div>
 
     <script>
+        function globalToastSystem() {
+            return {
+                toasts: [],
+                init() {
+                    window.addEventListener('toast', (e) => this.add(e.detail));
+                    window.addEventListener('cart-toast', (e) => {
+                        this.add({
+                            type: 'cart',
+                            title: 'Giỏ hàng GearHub',
+                            message: e.detail?.message || 'Đã thêm sản phẩm vào giỏ thành công!',
+                            link: '{{ route('cart.index') }}',
+                            linkText: 'Xem giỏ hàng'
+                        });
+                    });
+                    window.addEventListener('compare-toast', (e) => {
+                        this.add({
+                            type: 'compare',
+                            title: 'So sánh thông số',
+                            message: e.detail?.message || 'Đã cập nhật danh sách so sánh!',
+                            link: '{{ route('compare.index') }}',
+                            linkText: 'So sánh ngay'
+                        });
+                    });
+                    window.addEventListener('community-toast', (e) => {
+                        this.add({
+                            type: 'community',
+                            title: 'Góc máy GearHub',
+                            message: e.detail?.message || 'Đã cập nhật bài viết!'
+                        });
+                    });
+
+                    // Laravel session flash message support
+                    @if (session('success'))
+                        this.add({ type: 'success', title: 'Thành công', message: @js(session('success')) });
+                    @endif
+                    @if (session('error'))
+                        this.add({ type: 'error', title: 'Thông báo lỗi', message: @js(session('error')) });
+                    @endif
+                    @if (session('warning'))
+                        this.add({ type: 'warning', title: 'Cảnh báo', message: @js(session('warning')) });
+                    @endif
+                    @if (session('status'))
+                        this.add({ type: 'info', title: 'Thông báo', message: @js(session('status')) });
+                    @endif
+                },
+                add(item) {
+                    if (!item || !item.message) return;
+                    const id = Date.now() + Math.random().toString(36).substr(2, 4);
+                    const toast = {
+                        id: id,
+                        type: item.type || 'info',
+                        title: item.title || '',
+                        message: item.message,
+                        link: item.link || null,
+                        linkText: item.linkText || 'Xem chi tiết',
+                        visible: true
+                    };
+                    this.toasts.push(toast);
+
+                    setTimeout(() => {
+                        this.remove(id);
+                    }, 3800);
+                },
+                remove(id) {
+                    const index = this.toasts.findIndex(t => t.id === id);
+                    if (index !== -1) {
+                        this.toasts[index].visible = false;
+                        setTimeout(() => {
+                            this.toasts = this.toasts.filter(t => t.id !== id);
+                        }, 300);
+                    }
+                }
+            };
+        }
+
         window.addEventListener('add-to-cart', function(e) {
             const productId = e.detail?.id;
             if (!productId) return;

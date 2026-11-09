@@ -539,38 +539,19 @@
         </div>
     @else
         <!-- 3. KHỐI GIỎ HÀNG TRỐNG (EMPTY STATE VỚI HÌNH MINH HỌA & NÚT KHÁM PHÁ SP NGAY) -->
-        <div class="py-16 sm:py-24 max-w-2xl mx-auto text-center">
-            
-            <!-- Hình minh họa Giỏ hàng trống đẹp mắt -->
-            <div class="relative w-32 h-32 mx-auto mb-6 flex items-center justify-center">
-                <div class="absolute inset-0 rounded-full bg-red-50 animate-ping opacity-25"></div>
-                <div class="relative w-28 h-28 rounded-3xl bg-gradient-to-tr from-gray-50 to-gray-100 border border-gray-200/80 shadow-inner flex items-center justify-center text-gray-300">
-                    <svg class="w-14 h-14 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                    </svg>
-                </div>
-            </div>
-
-            <!-- Tiêu đề & Lời nhắn nhủ -->
-            <h2 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight mb-2">
-                Giỏ hàng của bạn đang trống!
-            </h2>
-            <p class="text-xs sm:text-sm text-gray-500 max-w-md mx-auto mb-8 leading-relaxed">
-                Có vẻ như bạn chưa chọn được sản phẩm ưng ý. Hãy khám phá hàng trăm phụ kiện gaming gear chính hãng đỉnh cao tại GearHub ngay hôm nay!
-            </p>
-
-            <!-- Nút CTA: Khám phá sản phẩm ngay -->
-            <a 
-                href="{{ url('/shop') }}" 
-                class="inline-flex items-center gap-2.5 py-4 px-8 rounded-2xl bg-primary hover:bg-primary-hover text-white text-sm font-bold shadow-xl shadow-primary/25 transition transform hover:-translate-y-0.5 active:translate-y-0"
-            >
-                <span>Khám phá sản phẩm ngay</span>
-                <span class="text-base">→</span>
-            </a>
+        <div class="py-8 max-w-2xl mx-auto space-y-8">
+            <x-empty-state 
+                icon="🛒"
+                title="Giỏ hàng của bạn đang trống!"
+                description="Có vẻ như bạn chưa chọn được sản phẩm ưng ý. Hãy khám phá hàng trăm phụ kiện gaming gear chính hãng đỉnh cao tại GearHub ngay hôm nay!"
+                action-text="Khám phá sản phẩm ngay"
+                action-url="{{ url('/shop') }}"
+                class="py-14"
+            />
 
             <!-- Gợi ý danh mục phụ kiện phổ biến khi giỏ hàng trống -->
-            <div class="mt-14 pt-10 border-t border-gray-100">
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-4">
+            <div class="pt-6 border-t border-gray-100">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-4 text-center">
                     Gợi ý danh mục phụ kiện được yêu thích nhất
                 </span>
                 
@@ -589,7 +570,6 @@
                     </a>
                 </div>
             </div>
-
         </div>
     @endif
 

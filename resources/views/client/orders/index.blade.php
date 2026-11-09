@@ -114,36 +114,14 @@
 
     <!-- DANH SÁCH ĐƠN HÀNG HOẶC EMPTY STATE -->
     @if ($orders->isEmpty())
-        <div class="bg-white rounded-3xl p-10 sm:p-16 border border-gray-200/80 shadow-sm text-center max-w-xl mx-auto space-y-5">
-            <div class="w-20 h-20 rounded-full bg-red-50 text-primary flex items-center justify-center mx-auto shadow-inner">
-                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                </svg>
-            </div>
-            
-            <div class="space-y-1">
-                <h3 class="text-lg font-black text-gray-900">Chưa có đơn hàng nào</h3>
-                <p class="text-xs sm:text-sm text-gray-500">
-                    @if ($status !== 'all')
-                        Không tìm thấy đơn hàng nào ở trạng thái "{{ \App\Models\Order::STATUS_LABELS[$status] ?? $status }}".
-                    @else
-                        Bạn chưa đặt mua sản phẩm nào tại GearHub. Hãy lướt xem các phụ kiện gaming và setup góc làm việc ngay nhé!
-                    @endif
-                </p>
-            </div>
-
-            <div class="pt-2">
-                <a 
-                    href="{{ route('shop.index') }}" 
-                    class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary hover:bg-primary-hover text-white text-xs sm:text-sm font-bold shadow-lg shadow-primary/25 transition transform hover:-translate-y-0.5"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                    </svg>
-                    <span>Khám phá sản phẩm ngay</span>
-                </a>
-            </div>
-        </div>
+        <x-empty-state 
+            icon="📦"
+            title="Chưa có đơn hàng nào"
+            description="{{ $status !== 'all' ? 'Không tìm thấy đơn hàng nào ở trạng thái ' . (\App\Models\Order::STATUS_LABELS[$status] ?? $status) . '.' : 'Bạn chưa đặt mua sản phẩm nào tại GearHub. Hãy lướt xem các phụ kiện gaming và setup góc làm việc ngay nhé!' }}"
+            action-text="Khám phá sản phẩm ngay"
+            action-url="{{ route('shop.index') }}"
+            class="my-8 py-14"
+        />
     @else
         <div class="space-y-6">
             @foreach ($orders as $order)

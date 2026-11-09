@@ -615,22 +615,14 @@
                     </div>
                 @else
                     <!-- Empty State khi chưa có địa chỉ -->
-                    <div class="text-center py-12 px-4 rounded-3xl bg-[#F8FAFC] border border-dashed border-gray-200 space-y-3">
-                        <div class="text-4xl">📍</div>
-                        <h3 class="text-base font-bold text-gray-900">Bạn chưa lưu địa chỉ nhận hàng nào</h3>
-                        <p class="text-xs text-gray-500 max-w-md mx-auto">
-                            Lưu trước địa chỉ nhận hàng giúp bạn đặt hàng nhanh chóng chỉ với 1 cú click ở bước Checkout.
-                        </p>
-                        <div class="pt-2">
-                            <button 
-                                type="button" 
-                                @click="openAddAddress()"
-                                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary hover:bg-primary-hover text-white text-xs font-bold shadow-md shadow-primary/20 transition"
-                            >
-                                <span>+ Thêm địa chỉ đầu tiên</span>
-                            </button>
-                        </div>
-                    </div>
+                    <x-empty-state 
+                        icon="📍"
+                        title="Bạn chưa lưu địa chỉ nhận hàng nào"
+                        description="Lưu trước địa chỉ nhận hàng giúp bạn đặt hàng nhanh chóng chỉ với 1 cú click ở bước Checkout."
+                        action-text="+ Thêm địa chỉ đầu tiên"
+                        action-click="openAddAddress()"
+                        class="my-4 py-10 bg-[#F8FAFC]"
+                    />
                 @endif
 
             </div>
@@ -773,21 +765,14 @@
                     </div>
                 @else
                     <!-- Empty State khi chưa có bài viết góc máy -->
-                    <div class="text-center py-12 px-4 rounded-3xl bg-[#F8FAFC] border border-dashed border-gray-200 space-y-3">
-                        <div class="text-5xl">🖥️</div>
-                        <h3 class="text-base font-bold text-gray-900">Bạn chưa đăng bài viết khoe góc máy nào</h3>
-                        <p class="text-xs text-gray-500 max-w-md mx-auto">
-                            Hãy chia sẻ không gian setup chiến game hoặc làm việc của bạn để nhận tương tác và gợi ý gear từ cộng đồng GearHub!
-                        </p>
-                        <div class="pt-2">
-                            <a 
-                                href="{{ route('community.create') }}" 
-                                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary hover:bg-primary-hover text-white text-xs font-bold shadow-md shadow-primary/20 transition"
-                            >
-                                <span>+ Đăng góc máy đầu tiên</span>
-                            </a>
-                        </div>
-                    </div>
+                    <x-empty-state 
+                        icon="🖥️"
+                        title="Bạn chưa đăng bài viết khoe góc máy nào"
+                        description="Hãy chia sẻ không gian setup chiến game hoặc làm việc của bạn để nhận tương tác và gợi ý gear từ cộng đồng GearHub!"
+                        action-text="+ Đăng góc máy đầu tiên"
+                        action-url="{{ route('community.create') }}"
+                        class="my-4 py-10 bg-[#F8FAFC]"
+                    />
                 @endif
 
             </div>

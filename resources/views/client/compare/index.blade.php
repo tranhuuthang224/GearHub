@@ -162,25 +162,14 @@ function comparePage() {
 
         @if ($products->isEmpty())
             <!-- 3. EMPTY STATE: Khi chưa chọn sản phẩm nào -->
-            <div class="bg-white rounded-3xl border border-gray-200 p-8 sm:p-14 text-center max-w-lg mx-auto shadow-sm my-8">
-                <div class="w-20 h-20 mx-auto rounded-3xl bg-primary/10 text-primary flex items-center justify-center text-3xl mb-5 shadow-inner">
-                    ⚖
-                </div>
-                <h2 class="text-xl font-black text-gray-900 tracking-tight mb-2">
-                    Chưa có sản phẩm nào trong danh sách so sánh
-                </h2>
-                <p class="text-sm text-gray-500 mb-6 leading-relaxed">
-                    Hãy duyệt qua cửa hàng GearHub và bấm vào biểu tượng <span class="font-bold text-gray-800">⚖</span> trên thẻ sản phẩm hoặc trang chi tiết để thêm tối đa 4 sản phẩm cùng loại vào bảng so sánh.
-                </p>
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-                    <a 
-                        href="{{ route('shop.index') }}" 
-                        class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-primary hover:bg-primary-hover text-white text-sm font-bold shadow-lg shadow-primary/25 transition transform hover:-translate-y-0.5"
-                    >
-                        Khám phá sản phẩm ngay
-                    </a>
-                </div>
-            </div>
+            <x-empty-state 
+                icon="⚖️"
+                title="Chưa có sản phẩm nào trong danh sách so sánh"
+                description="Hãy duyệt qua cửa hàng GearHub và bấm vào biểu tượng ⚖ trên thẻ sản phẩm hoặc trang chi tiết để thêm tối đa 4 sản phẩm cùng loại vào bảng so sánh đối chiếu thông số."
+                action-text="Khám phá sản phẩm ngay"
+                action-url="{{ route('shop.index') }}"
+                class="my-8 py-14"
+            />
         @else
             <!-- Thông báo chế độ lọc dòng khác nhau -->
             <div 

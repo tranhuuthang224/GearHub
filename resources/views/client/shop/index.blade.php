@@ -1,7 +1,7 @@
 @extends('layouts.client')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16" x-data="{ mobileFilterOpen: false }">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16" x-data="{ mobileFilterOpen: false, isFiltering: false, triggerFilter() { this.isFiltering = true; document.getElementById('filter-form').submit(); } }">
 
     <!-- Breadcrumb (Figma Page 4) -->
     <nav class="flex items-center gap-2 text-xs text-gray-400 mb-6">
@@ -100,7 +100,7 @@
                     </a>
                 </div>
 
-                <form id="filter-form" action="{{ url('/shop') }}" method="GET" class="space-y-7">
+                <form id="filter-form" action="{{ url('/shop') }}" method="GET" @submit="isFiltering = true" class="space-y-7">
                     
                     <!-- Giữ lại search và sort nếu có -->
                     @if ($search)
@@ -127,7 +127,7 @@
                                             name="categories[]" 
                                             value="{{ $cat['name'] }}"
                                             {{ in_array($cat['name'], $selectedCategories) || in_array($cat['slug'], $selectedCategories) ? 'checked' : '' }}
-                                            onchange="document.getElementById('filter-form').submit()"
+                                            onchange="triggerFilter()"
                                             class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20 transition cursor-pointer"
                                         >
                                         <span class="group-hover:translate-x-0.5 transition-transform">{{ $cat['name'] }}</span>
@@ -155,7 +155,7 @@
                                             name="brands[]" 
                                             value="{{ $brand['name'] }}"
                                             {{ in_array($brand['name'], $selectedBrands) || in_array($brand['slug'], $selectedBrands) ? 'checked' : '' }}
-                                            onchange="document.getElementById('filter-form').submit()"
+                                            onchange="triggerFilter()"
                                             class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20 transition cursor-pointer"
                                         >
                                         <span class="group-hover:translate-x-0.5 transition-transform">{{ $brand['name'] }}</span>
@@ -267,7 +267,7 @@
                                     name="stock_status" 
                                     value="" 
                                     {{ empty($stockStatus) ? 'checked' : '' }}
-                                    onchange="document.getElementById('filter-form').submit()"
+                                    onchange="triggerFilter()"
                                     class="w-4 h-4 border-gray-300 text-primary focus:ring-primary/20 transition cursor-pointer"
                                 >
                                 <span class="group-hover:translate-x-0.5 transition-transform">Tất cả sản phẩm</span>
@@ -278,7 +278,7 @@
                                     name="stock_status" 
                                     value="in_stock" 
                                     {{ $stockStatus === 'in_stock' ? 'checked' : '' }}
-                                    onchange="document.getElementById('filter-form').submit()"
+                                    onchange="triggerFilter()"
                                     class="w-4 h-4 border-gray-300 text-primary focus:ring-primary/20 transition cursor-pointer"
                                 >
                                 <span class="group-hover:translate-x-0.5 transition-transform flex items-center gap-1.5 font-medium">
@@ -333,7 +333,7 @@
                         <select 
                             name="sort" 
                             form="filter-form"
-                            onchange="document.getElementById('filter-form').submit()"
+                            onchange="triggerFilter()"
                             class="text-sm font-semibold text-gray-700 bg-[#F4F5F7] border-0 rounded-xl px-3 py-2 focus:ring-1 focus:ring-primary cursor-pointer transition"
                         >
                             <option value="newest" {{ $sort === 'newest' ? 'selected' : '' }}>Mới nhất</option>
@@ -405,27 +405,37 @@
                 </div>
             @endif
 
+            <!-- Skeleton Loading Grid when isFiltering is active -->
+            <div 
+                x-show="isFiltering" 
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7"
+                style="display: none;"
+            >
+                <x-skeleton-product-card :count="6" />
+            </div>
+
             <!-- Products Grid (3 columns on desktop matching Figma Page 4) -->
-            @if ($products->count() > 0)
-                <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
-                    @foreach ($products as $item)
-                        <x-product-card :product="$item" />
-                    @endforeach
-                </div>
-            @else
-                <div class="text-center py-16 bg-white rounded-3xl border border-gray-100 p-8 space-y-4">
-                    <div class="w-16 h-16 mx-auto rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+            <div x-show="!isFiltering" class="transition-opacity duration-200">
+                @if ($products->count() > 0)
+                    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
+                        @foreach ($products as $item)
+                            <x-product-card :product="$item" />
+                        @endforeach
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900">Không tìm thấy sản phẩm nào</h3>
-                    <p class="text-sm text-gray-500 max-w-sm mx-auto">Vui lòng thử bỏ bớt bộ lọc hoặc tìm kiếm với từ khóa khác.</p>
-                    <a href="{{ url('/shop') }}" class="inline-flex px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold shadow-sm hover:bg-primary-hover transition">
-                        Xem tất cả sản phẩm
-                    </a>
-                </div>
-            @endif
+                @else
+                    <x-empty-state 
+                        icon="🔍"
+                        title="Không tìm thấy sản phẩm nào"
+                        description="Vui lòng thử bỏ bớt bộ lọc hoặc tìm kiếm với từ khóa khác để tìm sản phẩm mong muốn."
+                        action-text="Xem tất cả sản phẩm"
+                        action-url="{{ url('/shop') }}"
+                        class="my-4 py-12"
+                    />
+                @endif
+            </div>
 
             <!-- Numbered Pagination (1 2 3 4 5 matching Figma Page 4) -->
             @if ($products->hasPages())

@@ -34,9 +34,7 @@ function stickyCompareBarComponent(initialItems, csrfToken, toggleUrlBase, remov
         },
 
         notify(msg) {
-            this.toastMessage = msg;
-            this.showToast = true;
-            setTimeout(() => { this.showToast = false; }, 3500);
+            window.dispatchEvent(new CustomEvent('compare-toast', { detail: { message: msg } }));
         },
 
         toggle(id) {
@@ -128,22 +126,6 @@ function stickyCompareBarComponent(initialItems, csrfToken, toggleUrlBase, remov
     x-data="stickyCompareBarComponent({{ Js::from($initialCompareItems) }}, '{{ csrf_token() }}', '{{ url('/compare/toggle') }}', '{{ url('/compare/remove') }}', '{{ route('compare.clear') }}')"
     class="relative"
 >
-    <!-- Floating Toast Feedback riêng cho So sánh -->
-    <div 
-        x-show="showToast" 
-        x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 translate-y-4"
-        x-transition:enter-end="opacity-100 translate-y-0"
-        x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="opacity-100 translate-y-0"
-        x-transition:leave-end="opacity-0 translate-y-4"
-        class="fixed bottom-28 right-6 z-50 bg-[#18181B] text-white px-4 py-3 rounded-2xl shadow-2xl border border-gray-800 flex items-center gap-2.5 text-xs font-medium max-w-sm"
-        style="display: none;"
-    >
-        <span class="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs shrink-0">⚖</span>
-        <span x-text="toastMessage" class="flex-1"></span>
-    </div>
-
     <!-- Nút mở lại thanh So sánh khi bị thu gọn (Collapsed floating pill) -->
     <div 
         x-show="items.length > 0 && collapsed" 

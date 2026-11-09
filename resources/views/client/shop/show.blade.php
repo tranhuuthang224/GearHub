@@ -1315,22 +1315,14 @@ function productReviewForm(initialRating, initialComment) {
                     </div>
                 @else
                     <!-- Trạng thái trống (Empty Reviews) -->
-                    <div class="p-10 text-center bg-gray-50/70 rounded-3xl border border-dashed border-gray-200 space-y-3">
-                        <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center border border-amber-200 text-xl">
-                            ★
-                        </div>
-                        <h4 class="text-sm font-bold text-gray-900">Chưa có đánh giá nào cho sản phẩm này</h4>
-                        <p class="text-xs text-gray-500 max-w-sm mx-auto">
-                            Hãy là khách hàng đầu tiên chia sẻ cảm nhận và hình ảnh thực tế để giúp cộng đồng GearHub lựa chọn dễ dàng hơn!
-                        </p>
-                        <button 
-                            type="button" 
-                            @click="showReviewForm = true; $nextTick(() => document.getElementById('review-form-anchor')?.scrollIntoView({ behavior: 'smooth' }))"
-                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-gray-200 hover:border-primary text-xs font-bold text-gray-700 hover:text-primary transition shadow-xs"
-                        >
-                            <span>✍️ Viết đánh giá đầu tiên</span>
-                        </button>
-                    </div>
+                    <x-empty-state 
+                        icon="★"
+                        title="Chưa có đánh giá nào cho sản phẩm này"
+                        description="Hãy là khách hàng đầu tiên chia sẻ cảm nhận và hình ảnh thực tế để giúp cộng đồng GearHub lựa chọn dễ dàng hơn!"
+                        action-text="✍️ Viết đánh giá đầu tiên"
+                        action-click="showReviewForm = true; $nextTick(() => document.getElementById('review-form-anchor')?.scrollIntoView({ behavior: 'smooth' }))"
+                        class="py-10 bg-gray-50/70 border-dashed"
+                    />
                 @endif
 
             </div>

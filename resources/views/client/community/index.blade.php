@@ -162,21 +162,14 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         @if($posts->isEmpty())
-            <!-- Empty State -->
-            <div class="text-center py-20 bg-white rounded-3xl border border-gray-200/80 p-8 shadow-xs max-w-xl mx-auto">
-                <div class="w-20 h-20 mx-auto rounded-3xl bg-blue-50 text-primary flex items-center justify-center text-4xl mb-4 shadow-inner">
-                    📷
-                </div>
-                <h3 class="text-xl font-bold text-gray-900">Không tìm thấy góc máy nào</h3>
-                <p class="text-sm text-gray-500 mt-2 max-w-sm mx-auto">
-                    Hiện chưa có góc máy nào thuộc bộ lọc này. Hãy thử chọn phong cách khác hoặc xóa từ khóa tìm kiếm nhé!
-                </p>
-                <div class="mt-6">
-                    <a href="{{ route('community.index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition">
-                        <span>Xóa tất cả bộ lọc</span>
-                    </a>
-                </div>
-            </div>
+            <x-empty-state 
+                icon="🖥️"
+                title="Chưa có góc máy nào phù hợp"
+                description="Hiện chưa có bài viết góc máy nào thuộc phong cách này hoặc từ khóa bạn tìm. Hãy thử đổi bộ lọc hoặc trở thành người đầu tiên chia sẻ không gian setup của bạn!"
+                action-text="+ Đăng bài khoe góc máy ngay"
+                action-url="{{ route('community.create') }}"
+                class="my-8 py-14"
+            />
         @else
             <!-- Masonry Grid with Tailwind CSS Columns -->
             <div class="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 [column-fill:_balance]">
@@ -542,22 +535,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Toast Notification for Add to Cart / Copy / Actions -->
-    <div 
-        x-show="toast.visible" 
-        x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 translate-y-4"
-        x-transition:enter-end="opacity-100 translate-y-0"
-        x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="opacity-100 translate-y-0"
-        x-transition:leave-end="opacity-0 translate-y-4"
-        class="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl text-sm font-semibold flex items-center gap-3 border border-gray-800"
-        style="display: none;"
-    >
-        <span x-text="toast.message"></span>
-    </div>
-
 </div>
 
 <script>
@@ -603,12 +580,7 @@ function communityShowcase(config) {
         },
 
         showToast(message) {
-            this.toast.message = message;
-            this.toast.visible = true;
-            clearTimeout(this.toast.timeout);
-            this.toast.timeout = setTimeout(() => {
-                this.toast.visible = false;
-            }, 3000);
+            window.dispatchEvent(new CustomEvent('community-toast', { detail: { message: message } }));
         },
 
         async openModal(postId) {
