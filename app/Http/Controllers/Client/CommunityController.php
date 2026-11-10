@@ -194,6 +194,11 @@ class CommunityController extends Controller
             'product_ids.*.exists' => 'Sản phẩm được gắn thẻ không tồn tại trong hệ thống.',
         ]);
 
+        $validated['title'] = strip_tags(trim($validated['title']));
+        if (!empty($validated['content'])) {
+            $validated['content'] = strip_tags(trim($validated['content']));
+        }
+
         $imagePath = $request->file('image')->store('community', 'public');
 
         $slugBase = Str::slug($validated['title']);
@@ -398,6 +403,9 @@ class CommunityController extends Controller
             'content.min'      => 'Bình luận tối thiểu 2 ký tự.',
             'content.max'      => 'Bình luận không quá 1000 ký tự.',
         ]);
+
+        $content = preg_replace('~<script\b[^>]*>.*?</script\s*>~is', '', $validated['content']);
+        $validated['content'] = trim(strip_tags($content));
 
         $communityPost = $this->resolvePost($post);
 

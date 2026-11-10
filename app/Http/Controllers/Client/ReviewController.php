@@ -72,6 +72,7 @@ class ReviewController extends Controller
         $product = $this->resolveProduct($slug);
         $user = $request->user();
 
+
         $validated = $request->validate([
             'rating'     => ['required', 'integer', 'between:1,5'],
             'comment'    => ['required', 'string', 'min:5', 'max:2000'],
@@ -90,6 +91,22 @@ class ReviewController extends Controller
             'photos.*.mimes'   => 'Chỉ chấp nhận ảnh định dạng jpeg, jpg, png, webp.',
             'photos.*.max'     => 'Kích thước mỗi ảnh không được vượt quá 5MB.',
         ]);
+
+        $comment = preg_replace('~<script\b[^>]*>.*?</script\s*>~is', '', $validated['comment']);
+        $validated['comment'] = strip_tags(trim($validated['comment']));
+
+        // Kiểm tra quyền đánh giá (chỉ user đã mua và hoàn thành đơn)
+        $eligibility = $this->reviewService->canUserReview($user, $product);
+        if (!$eligibility['can_review']) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $eligibility['reason'],
+                ], 403);
+            }
+
+            return back()->with('error', $eligibility['reason']);
+        }
 
         // Tìm review cũ nếu có
         $existingReview = Review::where('user_id', $user->id)

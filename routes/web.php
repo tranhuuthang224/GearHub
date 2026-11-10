@@ -19,6 +19,8 @@ use App\Http\Controllers\Client\ReviewController;
 use App\Http\Controllers\Client\ShopController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UserController;
 
 // Storefront Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -29,7 +31,9 @@ Route::delete('/shop/{slug}/reviews', [ReviewController::class, 'destroy'])->mid
 
 // Product Reviews API Routes (Hỗ trợ cả route /products/{product}/reviews)
 Route::get('/products/{product}/reviews', [ReviewController::class, 'index'])->name('products.reviews.index');
-Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->middleware('auth')->name('products.reviews.store');
+Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])
+    ->middleware(['auth', 'throttle:reviews-submit'])
+    ->name('products.reviews.store');
 
 // Cart Routes (Session-based)
 Route::prefix('cart')->name('cart.')->group(function () {
@@ -53,7 +57,9 @@ Route::prefix('compare')->name('compare.')->group(function () {
 // Smart Gear Finder Quiz Routes
 Route::prefix('quiz')->name('quiz.')->group(function () {
     Route::get('/', [QuizController::class, 'index'])->name('index');
-    Route::post('/submit', [QuizController::class, 'submit'])->name('submit');
+    Route::post('/submit', [QuizController::class, 'submit'])
+        ->middleware('throttle:quiz-submit')
+        ->name('submit');
 });
 
 // Community Showcase Routes (Diễn đàn khoe góc máy)
@@ -63,9 +69,21 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::post('/', [CommunityController::class, 'store'])->middleware('auth')->name('store');
     Route::get('/search-products', [CommunityController::class, 'searchProducts'])->name('search-products');
     Route::get('/{slug}', [CommunityController::class, 'show'])->name('show');
-    Route::post('/{post}/like', [CommunityController::class, 'like'])->name('like');
-    Route::post('/{post}/comments', [CommunityController::class, 'comment'])->name('comment');
-    Route::post('/{post}/comments-alt', [CommunityController::class, 'comment'])->name('comments.store');
+
+    // Route Like: Không dùng middleware auth để Controller tự trả về JSON 401
+    Route::post('/{post}/like', [CommunityController::class, 'like'])
+        ->middleware('throttle:community-interactions')
+        ->name('like');
+
+    // Route Comment: Yêu cầu đăng nhập + Rate Limit
+    Route::post('/{post}/comments', [CommunityController::class, 'comment'])
+        ->middleware(['auth', 'throttle:community-interactions'])
+        ->name('comment');
+        
+    // Route Comment Alternative (nếu frontend cần dùng)
+    Route::post('/{post}/comments-alt', [CommunityController::class, 'comment'])
+        ->middleware(['auth', 'throttle:community-interactions'])
+        ->name('comments.store');
 });
 
 Route::get('/dashboard', function () {
@@ -94,8 +112,7 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
         Route::redirect('/', '/admin/dashboard');
 
-        // Tạm thời, Dashboard thật làm ở tuần 7 (khi đó đổi sang controller)
-        Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::resource('categories', CategoryController::class)->except(['show']);
         Route::resource('brands', BrandController::class)->except(['show']);
@@ -116,12 +133,19 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('community', [CommunityModerationController::class, 'index'])->name('community.index');
         Route::patch('community/{post}/status', [CommunityModerationController::class, 'updateStatus'])->name('community.status');
         Route::delete('community/{post}', [CommunityModerationController::class, 'destroy'])->name('community.destroy');
+
+        // Quản lý khách hàng
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
+        Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
     });
 
 // Checkout & Order Routes (Requires Auth)
 Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::post('/checkout', [CheckoutController::class, 'store'])
+        ->middleware('throttle:checkout-order')
+        ->name('checkout.store');
     Route::get('/checkout/success/{code}', [CheckoutController::class, 'success'])->name('checkout.success');
 
     // Đơn hàng của tôi (Client Orders)
@@ -129,6 +153,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{code}', [ClientOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{code}/cancel', [ClientOrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/orders/{code}/reorder', [ClientOrderController::class, 'reorder'])->name('orders.reorder');
+
 });
 
 // Xem trước mã giảm giá ở Checkout (B). Giới hạn 20 lượt/phút để chống dò mã.
