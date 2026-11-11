@@ -170,10 +170,135 @@ function comparePage() {
                 icon="⚖️"
                 title="Chưa có sản phẩm nào trong danh sách so sánh"
                 description="Hãy duyệt qua cửa hàng GearHub và bấm vào biểu tượng ⚖ trên thẻ sản phẩm hoặc trang chi tiết để thêm tối đa 4 sản phẩm cùng loại vào bảng so sánh đối chiếu thông số."
-                action-text="Khám phá sản phẩm ngay"
+                action-text="Khám phá toàn bộ sản phẩm"
                 action-url="{{ route('shop.index') }}"
-                class="my-8 py-14"
+                class="my-8 py-12"
             />
+
+            <!-- GỢI Ý SO SÁNH NHANH THEO NGÀNH HÀNG (Màn hình, Bàn phím cơ, Chuột gaming) -->
+            <div class="mt-8 mb-12">
+                <div class="text-center max-w-xl mx-auto mb-8">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider mb-2">
+                        ⚡ Quick Compare Presets
+                    </span>
+                    <h2 class="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
+                        Gợi ý so sánh nhanh theo ngành hàng
+                    </h2>
+                    <p class="text-xs sm:text-sm text-gray-500 mt-1">
+                        Bấm vào ngành hàng bên dưới để tự động tải 2 sản phẩm tiêu biểu và trải nghiệm ngay bảng đối chiếu thông số trực quan:
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Card 1: Màn hình Gaming & Đồ họa -->
+                    <div class="bg-white rounded-3xl p-6 border-2 border-primary/20 hover:border-primary shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl shadow-xs group-hover:scale-110 transition-transform">
+                                    🖥️
+                                </span>
+                                <span class="px-2.5 py-1 rounded-full bg-blue-100/70 text-blue-800 text-[11px] font-black uppercase">
+                                    Màn hình
+                                </span>
+                            </div>
+                            <h3 class="font-black text-base text-gray-900 group-hover:text-primary transition">
+                                Màn hình Gaming & Đồ họa
+                            </h3>
+                            <p class="text-xs text-gray-500 leading-relaxed">
+                                Đối chiếu chi tiết <strong>Độ phân giải (4K vs 2K)</strong>, <strong>Tần số quét (240Hz vs 180Hz)</strong>, <strong>Tấm nền (OLED vs Fast IPS)</strong> và độ phủ màu.
+                            </p>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-gray-100 flex flex-col gap-2">
+                            <a 
+                                href="{{ route('compare.index', ['preset' => 'monitors']) }}" 
+                                class="w-full py-2.5 px-4 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold text-center shadow-md shadow-primary/20 transition active:scale-95 flex items-center justify-center gap-1.5"
+                            >
+                                <span>⚖ So sánh ngay 2 màn hình</span>
+                            </a>
+                            <a 
+                                href="{{ route('shop.index', ['category' => 'Màn hình']) }}" 
+                                class="w-full py-2 px-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-semibold text-center transition flex items-center justify-center gap-1"
+                            >
+                                <span>Xem 33+ mẫu màn hình</span>
+                                <span>&rarr;</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Bàn phím cơ -->
+                    <div class="bg-white rounded-3xl p-6 border border-gray-200 hover:border-primary/50 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl shadow-xs group-hover:scale-110 transition-transform">
+                                    ⌨️
+                                </span>
+                                <span class="px-2.5 py-1 rounded-full bg-amber-100/70 text-amber-800 text-[11px] font-black uppercase">
+                                    Bàn phím cơ
+                                </span>
+                            </div>
+                            <h3 class="font-black text-base text-gray-900 group-hover:text-primary transition">
+                                Bàn phím cơ Custom
+                            </h3>
+                            <p class="text-xs text-gray-500 leading-relaxed">
+                                So sánh <strong>Switch (Linear vs Tactile)</strong>, <strong>Layout (75% vs 98 phím)</strong>, cấu trúc Gasket Mount và kết nối 3 Mode không dây.
+                            </p>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-gray-100 flex flex-col gap-2">
+                            <a 
+                                href="{{ route('compare.index', ['preset' => 'keyboards']) }}" 
+                                class="w-full py-2.5 px-4 rounded-xl bg-gray-900 hover:bg-black text-white text-xs font-bold text-center shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5"
+                            >
+                                <span>⚖ So sánh ngay 2 bàn phím</span>
+                            </a>
+                            <a 
+                                href="{{ route('shop.index', ['category' => 'Bàn phím cơ']) }}" 
+                                class="w-full py-2 px-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-semibold text-center transition flex items-center justify-center gap-1"
+                            >
+                                <span>Xem danh mục bàn phím</span>
+                                <span>&rarr;</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Chuột gaming -->
+                    <div class="bg-white rounded-3xl p-6 border border-gray-200 hover:border-primary/50 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl shadow-xs group-hover:scale-110 transition-transform">
+                                    🖱️
+                                </span>
+                                <span class="px-2.5 py-1 rounded-full bg-emerald-100/70 text-emerald-800 text-[11px] font-black uppercase">
+                                    Chuột gaming
+                                </span>
+                            </div>
+                            <h3 class="font-black text-base text-gray-900 group-hover:text-primary transition">
+                                Chuột siêu nhẹ & Wireless
+                            </h3>
+                            <p class="text-xs text-gray-500 leading-relaxed">
+                                Đối chiếu <strong>Trọng lượng siêu nhẹ (&lt;50g)</strong>, <strong>Mắt đọc cảm biến DPI</strong>, tần số Polling Rate 4K/8K và thời lượng pin.
+                            </p>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-gray-100 flex flex-col gap-2">
+                            <a 
+                                href="{{ route('compare.index', ['preset' => 'mice']) }}" 
+                                class="w-full py-2.5 px-4 rounded-xl bg-gray-900 hover:bg-black text-white text-xs font-bold text-center shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5"
+                            >
+                                <span>⚖ So sánh ngay 2 chuột</span>
+                            </a>
+                            <a 
+                                href="{{ route('shop.index', ['category' => 'Chuột gaming']) }}" 
+                                class="w-full py-2 px-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-semibold text-center transition flex items-center justify-center gap-1"
+                            >
+                                <span>Xem danh mục chuột</span>
+                                <span>&rarr;</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         @else
             <!-- Thông báo chế độ lọc dòng khác nhau -->
             <div 

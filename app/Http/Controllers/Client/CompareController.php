@@ -25,9 +25,52 @@ class CompareController extends Controller
     /**
      * Hiển thị trang Bảng so sánh thông số kỹ thuật đa cột.
      */
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request): View|JsonResponse|\Illuminate\Http\RedirectResponse
     {
         $compareSession = session('compare_items', []);
+
+        // Hỗ trợ Preset so sánh nhanh theo ngành hàng (Màn hình, Bàn phím cơ, Chuột gaming)
+        if ($request->has('preset') && empty($compareSession)) {
+            $preset = $request->input('preset');
+            $catSlug = match ($preset) {
+                'monitors', 'man-hinh'   => 'man-hinh',
+                'keyboards', 'ban-phim'  => 'ban-phim',
+                'mice', 'chuot'          => 'chuot',
+                default                  => null,
+            };
+
+            if ($catSlug) {
+                $sampleProducts = Product::query()
+                    ->active()
+                    ->with(['category.parent', 'brand'])
+                    ->whereHas('category', function ($q) use ($catSlug) {
+                        $q->where('slug', 'like', "%{$catSlug}%")
+                          ->orWhereHas('parent', fn ($pq) => $pq->where('slug', 'like', "%{$catSlug}%"));
+                    })
+                    ->latest('id')
+                    ->take(2)
+                    ->get();
+
+                if ($sampleProducts->count() >= 2) {
+                    $newCompare = [];
+                    foreach ($sampleProducts as $sp) {
+                        $newCompare[$sp->id] = [
+                            'id'              => $sp->id,
+                            'name'            => $sp->name,
+                            'slug'            => $sp->slug,
+                            'price'           => $sp->price,
+                            'sale_price'      => $sp->sale_price,
+                            'effective_price' => $sp->effective_price,
+                            'thumbnail'       => $sp->thumbnail ? asset($sp->thumbnail) : 'https://placehold.co/100x100/png?text=GearHub',
+                            'brand'           => $sp->brand?->name,
+                            'category'        => $sp->category?->name,
+                        ];
+                    }
+                    session(['compare_items' => $newCompare]);
+                    return redirect()->route('compare.index')->with('success', 'Đã tải 2 sản phẩm mẫu vào bảng so sánh đối chiếu thông số!');
+                }
+            }
+        }
         
         // Hỗ trợ cả mảng ID [1, 2] và mảng associative [1 => [...]]
         if (array_is_list($compareSession)) {

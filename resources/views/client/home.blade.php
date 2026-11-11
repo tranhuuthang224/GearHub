@@ -15,11 +15,13 @@
         @mouseleave="startTimer()"
         @touchstart="touchStart($event)"
         @touchend="touchEnd($event)"
-        class="relative block w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 bg-gray-950 group select-none"
+        class="relative block w-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group select-none"
+        :class="currentSlide === 0 ? 'bg-[#E6E6E6]' : 'bg-gray-950'"
     >
-        <!-- Slide Container: tỷ lệ chuẩn 1920/520 khớp 100% kích thước ảnh, không bị cắt xén bất kỳ chi tiết nào -->
+        <!-- Slide Container: tỷ lệ chuẩn 1920/520 khớp kích thước ảnh, nền đồng bộ cho từng slide -->
         <div 
-            class="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl bg-gray-950 flex items-center justify-center"
+            class="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl flex items-center justify-center transition-colors duration-500 min-h-[160px] sm:min-h-[220px] md:min-h-[280px] lg:min-h-[340px]"
+            :class="currentSlide === 0 ? 'bg-[#E6E6E6]' : 'bg-gray-950'"
             style="aspect-ratio: 1920 / 520;"
         >
             @foreach ($heroSlides as $index => $slide)

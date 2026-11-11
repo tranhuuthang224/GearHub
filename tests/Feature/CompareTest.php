@@ -107,4 +107,155 @@ class CompareTest extends TestCase
 
         $this->assertEmpty(session('compare_items'));
     }
+
+    public function test_can_compare_monitors_across_subcategories_and_render_specs_matrix(): void
+    {
+        $rootMonitor = Category::create([
+            'name'      => 'Màn hình',
+            'slug'      => 'man-hinh',
+            'parent_id' => null,
+        ]);
+
+        $gamingMonitorCat = Category::create([
+            'name'      => 'Màn hình gaming',
+            'slug'      => 'man-hinh-gaming',
+            'parent_id' => $rootMonitor->id,
+        ]);
+
+        $graphicMonitorCat = Category::create([
+            'name'      => 'Màn hình đồ họa',
+            'slug'      => 'man-hinh-do-hoa',
+            'parent_id' => $rootMonitor->id,
+        ]);
+
+        $brand = Brand::firstOrCreate(['slug' => 'samsung'], ['name' => 'Samsung']);
+
+        $monitor1 = Product::create([
+            'category_id'    => $gamingMonitorCat->id,
+            'brand_id'       => $brand->id,
+            'name'           => 'Màn hình Gaming LG UltraGear 32 inch 240Hz',
+            'slug'           => 'man-hinh-gaming-lg-ultragear-32-inch-240hz',
+            'sku'            => 'MH-LG-240HZ',
+            'price'          => 25000000,
+            'stock_quantity' => 5,
+            'specs'          => [
+                'Kích thước'   => '32 inch',
+                'Độ phân giải' => '4K UHD',
+                'Tần số quét'  => '240Hz',
+                'Tấm nền'      => 'OLED',
+            ],
+            'is_active'      => true,
+        ]);
+
+        $monitor2 = Product::create([
+            'category_id'    => $graphicMonitorCat->id,
+            'brand_id'       => $brand->id,
+            'name'           => 'Màn hình Đồ Họa Dell UltraSharp 27 inch',
+            'slug'           => 'man-hinh-do-hoa-dell-ultrasharp-27-inch',
+            'sku'            => 'MH-DELL-U27',
+            'price'          => 15000000,
+            'stock_quantity' => 8,
+            'specs'          => [
+                'Kích thước'   => '27 inch',
+                'Độ phân giải' => '2K QHD',
+                'Tần số quét'  => '100Hz',
+                'Tấm nền'      => 'IPS',
+            ],
+            'is_active'      => true,
+        ]);
+
+        // Thêm màn hình 1
+        $res1 = $this->postJson(route('compare.add', $monitor1->id));
+        $res1->assertOk()->assertJson(['success' => true, 'count' => 1]);
+
+        // Thêm màn hình 2 (thuộc subcategory khác nhưng cùng root Màn hình)
+        $res2 = $this->postJson(route('compare.add', $monitor2->id));
+        $res2->assertOk()->assertJson(['success' => true, 'count' => 2]);
+
+        // Xem bảng so sánh
+        $viewRes = $this->get(route('compare.index'));
+        $viewRes->assertOk();
+        $viewRes->assertSee('Màn hình Gaming LG UltraGear 32 inch 240Hz');
+        $viewRes->assertSee('Màn hình Đồ Họa Dell UltraSharp 27 inch');
+        $viewRes->assertSee('240Hz');
+        $viewRes->assertSee('100Hz');
+        $viewRes->assertSee('OLED');
+        $viewRes->assertSee('IPS');
+        $viewRes->assertSee('Đặc tả thông số kỹ thuật (Specs Matrix)');
+    }
+
+    public function test_compare_preset_loads_monitors_automatically(): void
+    {
+        $rootMonitor = Category::create([
+            'name'      => 'Màn hình',
+            'slug'      => 'man-hinh',
+            'parent_id' => null,
+        ]);
+
+        $brand = Brand::firstOrCreate(['slug' => 'lg'], ['name' => 'LG']);
+
+        for ($i = 1; $i <= 2; $i++) {
+            Product::create([
+                'category_id'    => $rootMonitor->id,
+                'brand_id'       => $brand->id,
+                'name'           => "Màn hình Test {$i}",
+                'slug'           => "man-hinh-test-{$i}",
+                'sku'            => "MH-TEST-{$i}",
+                'price'          => 5000000 * $i,
+                'stock_quantity' => 10,
+                'specs'          => ['Tần số quét' => ($i * 100) . 'Hz'],
+                'is_active'      => true,
+            ]);
+        }
+
+        $res = $this->get(route('compare.index', ['preset' => 'monitors']));
+        $res->assertRedirect(route('compare.index'));
+        $this->assertCount(2, session('compare_items', []));
+    }
+
+    public function test_cannot_compare_monitor_with_keyboard(): void
+    {
+        $rootMonitor = Category::create([
+            'name'      => 'Màn hình',
+            'slug'      => 'man-hinh',
+            'parent_id' => null,
+        ]);
+
+        $rootKeyboard = Category::create([
+            'name'      => 'Bàn phím cơ',
+            'slug'      => 'ban-phim-co',
+            'parent_id' => null,
+        ]);
+
+        $brand = Brand::firstOrCreate(['slug' => 'asus'], ['name' => 'Asus']);
+
+        $monitor = Product::create([
+            'category_id'    => $rootMonitor->id,
+            'brand_id'       => $brand->id,
+            'name'           => 'Màn hình Asus',
+            'slug'           => 'man-hinh-asus',
+            'sku'            => 'MH-ASUS',
+            'price'          => 5000000,
+            'stock_quantity' => 10,
+            'specs'          => ['Tần số quét' => '144Hz'],
+            'is_active'      => true,
+        ]);
+
+        $keyboard = Product::create([
+            'category_id'    => $rootKeyboard->id,
+            'brand_id'       => $brand->id,
+            'name'           => 'Bàn phím cơ Asus',
+            'slug'           => 'ban-phim-co-asus',
+            'sku'            => 'KB-ASUS',
+            'price'          => 2000000,
+            'stock_quantity' => 10,
+            'specs'          => ['Switch' => 'ROG RX'],
+            'is_active'      => true,
+        ]);
+
+        $this->postJson(route('compare.add', $monitor->id))->assertOk();
+        $failRes = $this->postJson(route('compare.add', $keyboard->id));
+        $failRes->assertStatus(422);
+        $this->assertStringContainsString('Chỉ có thể so sánh các sản phẩm cùng nhóm', $failRes->json('message'));
+    }
 }
