@@ -45,6 +45,7 @@ Thumbs.db
 *.xls
 *.pptx
 *.ppt
+GEARHUB_PROJECT_DOCUMENTATION_AND_DEFENSE_GUIDE.md
 
 # Local source image folder (assets are copied to public/images/)
 /Images
