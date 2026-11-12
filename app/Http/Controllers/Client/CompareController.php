@@ -42,7 +42,7 @@ class CompareController extends Controller
             if ($catSlug) {
                 $sampleProducts = Product::query()
                     ->active()
-                    ->with(['category.parent', 'brand'])
+                    ->with(['category.parent', 'brand', 'reviews'])
                     ->whereHas('category', function ($q) use ($catSlug) {
                         $q->where('slug', 'like', "%{$catSlug}%")
                           ->orWhereHas('parent', fn ($pq) => $pq->where('slug', 'like', "%{$catSlug}%"));
@@ -88,7 +88,7 @@ class CompareController extends Controller
         if (!empty($productIds)) {
             $dbProducts = Product::query()
                 ->active()
-                ->with(['category.parent', 'brand', 'images'])
+                ->with(['category.parent', 'brand', 'images', 'reviews'])
                 ->whereIn('id', $productIds)
                 ->get();
 

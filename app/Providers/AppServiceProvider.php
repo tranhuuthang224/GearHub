@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -16,6 +17,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Bật phát hiện lỗi N+1 truy vấn ở môi trường local/testing
+        Model::preventLazyLoading(! $this->app->isProduction());
+
         // 1. Giới hạn đặt hàng: Tối đa 5 lượt đặt hàng / phút / IP để chống spam đơn ảo
         RateLimiter::for('checkout-order', function (Request $request) {
             return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip())->response(function () {

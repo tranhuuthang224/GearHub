@@ -75,7 +75,7 @@
                             Ảnh chụp góc máy <span class="text-red-500">*</span>
                         </label>
                         <p class="text-xs text-gray-500 mb-4">
-                            Ảnh ngang hoặc dọc rõ nét, ánh sáng đẹp mắt (tối đa 10MB).
+                            Ảnh ngang hoặc dọc rõ nét, ánh sáng đẹp mắt (tối đa 2MB).
                         </p>
 
                         <!-- Drag & Drop Zone -->
@@ -130,7 +130,7 @@
                                     </div>
                                     <span class="text-sm font-bold text-gray-800">Nhấp để tải ảnh lên</span>
                                     <span class="text-xs text-gray-400 mt-1">hoặc kéo và thả tệp vào đây</span>
-                                    <span class="text-[11px] text-gray-400 mt-2">Hỗ trợ JPG, PNG, WEBP lên đến 10MB</span>
+                                    <span class="text-[11px] text-gray-400 mt-2">Hỗ trợ JPG, PNG, WEBP lên đến 2MB</span>
                                 </div>
                             </template>
                         </div>

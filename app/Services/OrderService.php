@@ -165,17 +165,17 @@ class OrderService
      * @throws AuthorizationException           Khách hủy đơn của người khác
      * @throws InvalidOrderTransitionException  Đơn không ở trạng thái được phép hủy
      */
-    public function cancelOrder(Order $order, User $actor): Order
+    public function cancelOrder(Order $order, ?User $actor = null): Order
     {
         return DB::transaction(function () use ($order, $actor) {
             // Đọc lại và khóa dòng đơn: hai yêu cầu hủy đồng thời thì chỉ yêu cầu đầu tiên hoàn kho
             $locked = Order::whereKey($order->getKey())->lockForUpdate()->firstOrFail();
 
-            if (! $actor->isAdmin() && (int) $locked->user_id !== (int) $actor->id) {
+            if ($actor !== null && ! $actor->isAdmin() && (int) $locked->user_id !== (int) $actor->id) {
                 throw new AuthorizationException('Bạn không có quyền hủy đơn hàng này.');
             }
 
-            $allowed = $actor->isAdmin()
+            $allowed = ($actor === null || $actor->isAdmin())
                 ? $locked->canTransitionTo(Order::STATUS_CANCELLED)
                 : $locked->status === Order::STATUS_PENDING;
 

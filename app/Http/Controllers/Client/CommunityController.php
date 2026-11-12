@@ -178,7 +178,7 @@ class CommunityController extends Controller
         $validated = $request->validate([
             'title'         => ['required', 'string', 'min:5', 'max:200'],
             'style'         => ['required', 'string'],
-            'image'         => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:10240'],
+            'image'         => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
             'description'   => ['nullable', 'string', 'max:3000'],
             'content'       => ['nullable', 'string', 'max:3000'],
             'product_ids'   => ['nullable', 'array', 'max:10'],
@@ -191,7 +191,7 @@ class CommunityController extends Controller
             'image.required'       => 'Vui lòng tải lên ảnh chụp góc máy của bạn.',
             'image.image'          => 'Tệp tải lên phải là định dạng hình ảnh.',
             'image.mimes'          => 'Chỉ chấp nhận các định dạng ảnh: JPEG, JPG, PNG, WEBP.',
-            'image.max'            => 'Dung lượng ảnh tối đa là 10MB.',
+            'image.max'            => 'Dung lượng ảnh tối đa là 2MB để phù hợp với giới hạn cấu hình máy chủ PHP.',
             'product_ids.*.exists' => 'Sản phẩm được gắn thẻ không tồn tại trong hệ thống.',
         ]);
 
