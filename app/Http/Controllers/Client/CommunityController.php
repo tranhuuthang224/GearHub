@@ -45,6 +45,7 @@ class CommunityController extends Controller
         $search = $request->query('search');
 
         $query = CommunityPost::query()
+            ->where('status', CommunityPost::STATUS_PUBLISHED)
             ->with(['user', 'products'])
             ->withCount(['products', 'comments']);
 
@@ -72,12 +73,12 @@ class CommunityController extends Controller
 
         $posts = $query->paginate(12)->withQueryString();
 
-        // Đếm số lượng bài theo từng phong cách
+        // Đếm số lượng bài đã duyệt theo từng phong cách
         $styleCounts = [
-            'all' => CommunityPost::count(),
+            'all' => CommunityPost::where('status', CommunityPost::STATUS_PUBLISHED)->count(),
         ];
         foreach (array_keys(CommunityPost::STYLES) as $s) {
-            $styleCounts[$s] = CommunityPost::where('style', $s)->count();
+            $styleCounts[$s] = CommunityPost::where('status', CommunityPost::STATUS_PUBLISHED)->where('style', $s)->count();
         }
 
         // Danh sách ID các bài mà user hiện tại đã like
@@ -239,6 +240,14 @@ class CommunityController extends Controller
     public function show(Request $request, string $slug)
     {
         $post = $this->resolvePost($slug);
+
+        if ($post->status !== CommunityPost::STATUS_PUBLISHED) {
+            $viewer = $request->user();
+            $canView = $viewer && ($viewer->isAdmin() || $viewer->id === $post->user_id);
+            if (! $canView) {
+                abort(404, 'Bài viết này đang chờ duyệt hoặc không khả dụng.');
+            }
+        }
 
         $post->load([
             'user',

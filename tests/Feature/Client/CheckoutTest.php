@@ -186,9 +186,9 @@ class CheckoutTest extends TestCase
 
         $successResponse = $this->actingAs($this->customer)->get(route('checkout.success', $order->code));
         $successResponse->assertOk();
-        $successResponse->assertSee('VietinBank');
-        $successResponse->assertSee('103882436377');
-        $successResponse->assertSee('TRAN HUU THANG');
+        $successResponse->assertSee(config('bank.bank_short_name'));
+        $successResponse->assertSee(config('bank.account_number'));
+        $successResponse->assertSee(config('bank.account_name'));
         $successResponse->assertSee('VietQR');
     }
 
@@ -384,5 +384,48 @@ class CheckoutTest extends TestCase
         // Vì giỏ rỗng sau khi loại bỏ sản phẩm không hợp lệ, redirect về cart.index
         $response->assertRedirect(route('cart.index'));
         $this->assertEmpty(session('cart'));
+    }
+
+    public function test_checkout_token_remains_usable_after_error_so_user_is_not_stuck(): void
+    {
+        $this->actingAs($this->customer)->post(route('cart.add'), [
+            'product_id' => $this->productUnder500k->id,
+            'quantity'   => 1,
+        ]);
+
+        $this->actingAs($this->customer)->get(route('checkout.index'));
+        $checkoutToken = session('checkout_token');
+        $this->assertNotEmpty($checkoutToken);
+
+        // 1. Submit thiếu thông tin -> Bị validation error
+        $failedSubmit = $this->actingAs($this->customer)->post(route('checkout.store'), [
+            'receiver_name'    => '', // thiếu tên
+            'phone'            => '0987654321',
+            'shipping_address' => 'Khu phố 6, Linh Trung, TP. Thủ Đức, TP. Hồ Chí Minh',
+            'payment_method'   => 'cod',
+            'checkout_token'   => $checkoutToken,
+        ]);
+
+        $failedSubmit->assertSessionHasErrors(['receiver_name']);
+        $this->assertEquals(0, Order::count());
+
+        // Token trong session vẫn còn nguyên giá trị
+        $this->assertEquals($checkoutToken, session('checkout_token'));
+
+        // 2. Người dùng sửa lại form và gửi lại với token cũ -> Thành công, không bị kẹt!
+        $retrySubmit = $this->actingAs($this->customer)->post(route('checkout.store'), [
+            'receiver_name'    => 'Trần Hữu Thắng',
+            'phone'            => '0987654321',
+            'shipping_address' => 'Khu phố 6, Linh Trung, TP. Thủ Đức, TP. Hồ Chí Minh',
+            'payment_method'   => 'cod',
+            'checkout_token'   => $checkoutToken,
+        ]);
+
+        $this->assertEquals(1, Order::count());
+        $order = Order::first();
+        $retrySubmit->assertRedirect(route('checkout.success', $order->code));
+
+        // Sau khi thành công thì token mới bị tiêu thụ
+        $this->assertNull(session('checkout_token'));
     }
 }

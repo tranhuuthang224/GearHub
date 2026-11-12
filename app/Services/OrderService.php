@@ -12,6 +12,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -116,21 +117,38 @@ class OrderService
                 $this->coupons->redeem($coupon);
             }
 
-            // 5. Tạo đơn, các dòng đơn và dòng nhật ký đầu tiên
-            $order = Order::create([
-                'code'             => $this->generateCode(),
-                'user_id'          => $user->id,
-                'coupon_id'        => $coupon?->id,
-                'receiver_name'    => trim($shippingData['receiver_name']),
-                'phone'            => trim($shippingData['phone']),
-                'shipping_address' => trim($shippingData['shipping_address']),
-                'note'             => filled($shippingData['note'] ?? null) ? trim($shippingData['note']) : null,
-                'payment_method'   => $shippingData['payment_method'] ?? Order::PAYMENT_METHOD_COD,
-                'status'           => Order::STATUS_PENDING,
-                'subtotal'         => $subtotal,
-                'discount'         => $discount,
-                'total'            => $subtotal - $discount,
-            ]);
+            // 5. Tạo đơn với cơ chế bắt lỗi trùng mã đơn (Unique Key Constraint) và sinh lại mã
+            $order = null;
+            $insertAttempts = 0;
+
+            while ($order === null) {
+                try {
+                    $order = Order::create([
+                        'code'             => $this->generateCode(),
+                        'user_id'          => $user->id,
+                        'coupon_id'        => $coupon?->id,
+                        'receiver_name'    => trim($shippingData['receiver_name']),
+                        'phone'            => trim($shippingData['phone']),
+                        'shipping_address' => trim($shippingData['shipping_address']),
+                        'note'             => filled($shippingData['note'] ?? null) ? trim($shippingData['note']) : null,
+                        'payment_method'   => $shippingData['payment_method'] ?? Order::PAYMENT_METHOD_COD,
+                        'status'           => Order::STATUS_PENDING,
+                        'subtotal'         => $subtotal,
+                        'discount'         => $discount,
+                        'total'            => $subtotal - $discount,
+                    ]);
+                } catch (QueryException $e) {
+                    $isDuplicateCode = str_contains($e->getMessage(), 'orders_code_unique')
+                        || str_contains($e->getMessage(), 'orders.code')
+                        || (int) ($e->errorInfo[1] ?? 0) === 1062;
+
+                    if ($isDuplicateCode && ++$insertAttempts < 5) {
+                        continue;
+                    }
+
+                    throw $e;
+                }
+            }
 
             $order->items()->createMany($items);
 

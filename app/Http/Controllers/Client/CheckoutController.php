@@ -58,9 +58,9 @@ class CheckoutController extends Controller
         // 1. Kiểm tra Idempotency Token (chống double-click/replay từ form)
         $checkoutToken = $request->input('checkout_token');
         if (!empty($checkoutToken)) {
-            $savedToken = session()->pull('checkout_token');
+            $savedToken = session('checkout_token');
             if ($savedToken !== $checkoutToken) {
-                // Token đã bị tiêu thụ bởi request trước
+                // Token đã bị tiêu thụ bởi đơn hàng thành công trước đó
                 $recentOrder = $request->user()?->orders()->latest('id')->first();
                 if ($recentOrder && $recentOrder->created_at->diffInSeconds(now()) < 30) {
                     return redirect()->route('checkout.success', $recentOrder->code)
@@ -75,11 +75,16 @@ class CheckoutController extends Controller
         }
 
         // 2. Chống race condition: khóa thao tác checkout theo user/session trong 10 giây
-        $lockKey = 'checkout_lock_user_' . ($request->user()?->id ?? session()->getId());
-        $lock = Cache::lock($lockKey, 10);
+        $lock = null;
+        try {
+            $lockKey = 'checkout_lock_user_' . ($request->user()?->id ?? session()->getId());
+            $lock = Cache::lock($lockKey, 10);
 
-        if (! $lock->get()) {
-            return back()->with('error', 'Đơn hàng đang được hệ thống xử lý, vui lòng không thao tác lặp lại.');
+            if (! $lock->get()) {
+                return back()->with('error', 'Đơn hàng đang được hệ thống xử lý, vui lòng không thao tác lặp lại.');
+            }
+        } catch (\Throwable) {
+            // Nếu cache driver không hỗ trợ lock (ví dụ driver lạ), fallback an toàn dựa vào idempotency token
         }
 
         try {
@@ -129,7 +134,8 @@ class CheckoutController extends Controller
                 $validated['coupon_code'] ?? null
             );
 
-            // Xóa sạch giỏ hàng sau khi đặt thành công
+            // Đặt hàng thành công: tiêu thụ token và xóa sạch giỏ hàng
+            session()->forget('checkout_token');
             $cartService->clear();
 
             return redirect()->route('checkout.success', $order->code)
@@ -139,7 +145,11 @@ class CheckoutController extends Controller
         } catch (\Throwable $e) {
             return back()->withInput()->with('error', $e->getMessage());
         } finally {
-            optional($lock)->release();
+            try {
+                optional($lock)->release();
+            } catch (\Throwable) {
+                // An toàn khi cache store không hỗ trợ release
+            }
         }
     }
 

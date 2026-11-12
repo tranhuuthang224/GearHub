@@ -264,4 +264,30 @@ class CommunityTest extends TestCase
         $response->assertSee('Mua ngay');
         $response->assertSee('Thảo luận');
     }
+
+    public function test_pending_post_is_hidden_from_index_and_direct_url_for_strangers(): void
+    {
+        $pendingPost = CommunityPost::create([
+            'user_id'     => $this->user->id,
+            'title'       => 'Bài viết đang chờ ban quản trị duyệt',
+            'slug'        => 'bai-viet-dang-cho-duyet',
+            'style'       => CommunityPost::STYLE_MINIMALIST,
+            'image'       => 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd',
+            'status'      => CommunityPost::STATUS_PENDING,
+        ]);
+
+        // 1. Không xuất hiện trên trang chủ diễn đàn
+        $indexRes = $this->get(route('community.index'));
+        $indexRes->assertOk();
+        $indexRes->assertDontSee('Bài viết đang chờ ban quản trị duyệt');
+
+        // 2. Khách vãng lai truy cập trực tiếp bằng URL bị 404
+        $directRes = $this->get(route('community.show', $pendingPost->slug));
+        $directRes->assertNotFound();
+
+        // 3. Chính tác giả bài viết đăng nhập thì xem trước được
+        $authorRes = $this->actingAs($this->user)->get(route('community.show', $pendingPost->slug));
+        $authorRes->assertOk();
+        $authorRes->assertSee('Bài viết đang chờ ban quản trị duyệt');
+    }
 }
