@@ -3,8 +3,8 @@
 > Đồ án môn học Phát triển Ứng dụng Web - Trường Đại học Công nghệ Thông tin (UIT)
 
 ## 👥 Thành viên nhóm
-- **Thành viên A (Nhóm trưởng):** Lead Frontend & Luồng khách hàng (Storefront, Breeze, Giỏ hàng, Checkout)
-- **Thành viên B:** Lead Backend, Database & Quản trị (Migrations, Models, Seeders, Admin CRUD, OrderService)
+- **Trần Hữu Thắng (Nhóm trưởng):** Lead Frontend & Luồng khách hàng (Storefront, Breeze, Giỏ hàng, Checkout)
+- **Ngô Hồng Ân** Lead Backend, Database & Quản trị (Migrations, Models, Seeders, Admin CRUD, OrderService)
 
 ## 🛠 Công nghệ sử dụng
 - **Backend:** Laravel 11/12 (PHP 8.2+)
