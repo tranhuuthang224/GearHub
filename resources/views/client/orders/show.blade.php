@@ -223,9 +223,9 @@
                                 <img src="{{ asset('images/bank-transfer-qr.jpg') }}" alt="Mã QR thanh toán VietinBank" class="w-36 h-auto rounded-xl border border-gray-200 shadow-sm">
                             </div>
                             <div class="space-y-1 text-[11px] text-gray-600 pt-1">
-                                <div>Ngân hàng: <span class="font-bold text-gray-900">VietinBank (CN An Giang)</span></div>
-                                <div>Số TK: <span class="font-mono font-bold text-blue-700">103882436377</span></div>
-                                <div>Chủ TK: <span class="font-bold text-gray-900">TRAN HUU THANG</span></div>
+                                <div>Ngân hàng: <span class="font-bold text-gray-900">{{ config('bank.bank_short_name') }} ({{ config('bank.bank_branch') }})</span></div>
+                                <div>Số TK: <span class="font-mono font-bold text-blue-700">{{ config('bank.account_number') }}</span></div>
+                                <div>Chủ TK: <span class="font-bold text-gray-900">{{ config('bank.account_name') }}</span></div>
                                 <div>Nội dung CK: <span class="font-mono font-bold text-primary">GEARHUB {{ $order->code }}</span></div>
                             </div>
                         </div>

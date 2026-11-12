@@ -79,6 +79,9 @@
     <!-- FORM ĐẶT HÀNG CHÍNH: 2 CỘT (7 COLS FORM GIAO HÀNG - 5 COLS ORDER SUMMARY) -->
     <form action="{{ route('checkout.store') }}" method="POST" id="checkout-form" @submit="submitting = true">
         @csrf
+        @if(!empty($checkoutToken))
+            <input type="hidden" name="checkout_token" value="{{ $checkoutToken }}">
+        @endif
         <input type="hidden" name="coupon_code" :value="appliedCouponCode">
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
@@ -346,14 +349,14 @@
                                     <div class="p-3.5 bg-blue-50/60 rounded-2xl border border-blue-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                         <div class="space-y-1 text-xs">
                                             <div class="flex items-center gap-2">
-                                                <span class="font-bold text-gray-900">Ngân hàng VietinBank</span>
-                                                <span class="text-[10px] text-gray-500">• CN An Giang - PGD Long Xuyên</span>
+                                                <span class="font-bold text-gray-900">Ngân hàng {{ config('bank.bank_short_name') }}</span>
+                                                <span class="text-[10px] text-gray-500">• {{ config('bank.bank_branch') }}</span>
                                             </div>
                                             <div class="text-gray-700">
-                                                Số tài khoản: <span class="font-mono font-bold text-blue-700 text-sm select-all">103882436377</span>
+                                                Số tài khoản: <span class="font-mono font-bold text-blue-700 text-sm select-all">{{ config('bank.account_number') }}</span>
                                             </div>
                                             <div class="text-gray-700">
-                                                Chủ tài khoản: <span class="font-bold text-gray-900">TRAN HUU THANG</span>
+                                                Chủ tài khoản: <span class="font-bold text-gray-900">{{ config('bank.account_name') }}</span>
                                             </div>
                                         </div>
                                         <div class="shrink-0 flex items-center gap-2">

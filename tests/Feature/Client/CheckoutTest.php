@@ -332,4 +332,57 @@ class CheckoutTest extends TestCase
         $successResponse->assertSee('289.000đ');
         $successResponse->assertSee('2.601.000đ');
     }
+
+    public function test_checkout_double_submit_token_prevents_duplicate_orders(): void
+    {
+        // 1. Thêm hàng vào giỏ và truy cập trang checkout để nhận token
+        $this->actingAs($this->customer)->post(route('cart.add'), [
+            'product_id' => $this->productUnder500k->id,
+            'quantity'   => 1,
+        ]);
+
+        $checkoutPageRes = $this->actingAs($this->customer)->get(route('checkout.index'));
+        $checkoutPageRes->assertOk();
+        $checkoutToken = session('checkout_token');
+        $this->assertNotEmpty($checkoutToken);
+
+        $payload = [
+            'receiver_name'    => 'Trần Hữu Thắng',
+            'phone'            => '0987654321',
+            'shipping_address' => 'Khu phố 6, Linh Trung, TP. Thủ Đức, TP. Hồ Chí Minh',
+            'payment_method'   => 'cod',
+            'checkout_token'   => $checkoutToken,
+        ];
+
+        // Lần submit đầu tiên thành công
+        $firstSubmit = $this->actingAs($this->customer)->post(route('checkout.store'), $payload);
+        $this->assertEquals(1, Order::count());
+        $order = Order::first();
+        $firstSubmit->assertRedirect(route('checkout.success', $order->code));
+
+        // Lần submit thứ 2 (double-submit / replay cùng token) bị chặn và chuyển hướng về trang đơn hàng
+        $secondSubmit = $this->actingAs($this->customer)->post(route('checkout.store'), $payload);
+        $this->assertEquals(1, Order::count()); // Không tạo thêm đơn thứ 2
+        $secondSubmit->assertRedirect(route('checkout.success', $order->code));
+    }
+
+    public function test_checkout_page_automatically_removes_inactive_or_deleted_product_from_cart(): void
+    {
+        $this->actingAs($this->customer)->post(route('cart.add'), [
+            'product_id' => $this->productUnder500k->id,
+            'quantity'   => 1,
+        ]);
+
+        $this->assertNotEmpty(session('cart'));
+
+        // Giả lập admin vô hiệu hóa sản phẩm hoặc xóa mềm
+        $this->productUnder500k->update(['is_active' => false]);
+
+        // Người dùng truy cập trang checkout -> sản phẩm tự động bị loại bỏ khỏi giỏ
+        $response = $this->actingAs($this->customer)->get(route('checkout.index'));
+
+        // Vì giỏ rỗng sau khi loại bỏ sản phẩm không hợp lệ, redirect về cart.index
+        $response->assertRedirect(route('cart.index'));
+        $this->assertEmpty(session('cart'));
+    }
 }

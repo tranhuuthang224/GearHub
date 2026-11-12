@@ -57,8 +57,8 @@
                     <div class="relative group">
                         <!-- VietQR tự động sinh số tiền và nội dung chuyển khoản -->
                         <img 
-                            src="https://img.vietqr.io/image/970415-103882436377-compact2.png?amount={{ (int) $order->total }}&addInfo=GEARHUB%20{{ $order->code }}&accountName=TRAN%20HUU%20THANG" 
-                            alt="VietQR thanh toán VietinBank" 
+                            src="https://img.vietqr.io/image/{{ config('bank.bank_bin') }}-{{ config('bank.account_number') }}-compact2.png?amount={{ (int) $order->total }}&addInfo=GEARHUB%20{{ $order->code }}&accountName={{ urlencode(config('bank.account_name')) }}" 
+                            alt="VietQR thanh toán {{ config('bank.bank_short_name') }}" 
                             class="w-56 h-auto rounded-xl shadow-xs border border-gray-100"
                         >
                     </div>
@@ -74,26 +74,26 @@
                     <div class="p-3 bg-white rounded-xl border border-blue-100 shadow-2xs space-y-0.5">
                         <span class="text-[11px] text-gray-400 font-semibold block">Ngân hàng thụ hưởng:</span>
                         <div class="font-bold text-gray-900 text-sm flex items-center justify-between">
-                            <span>VietinBank (Ngân hàng TMCP Công Thương Việt Nam)</span>
+                            <span>{{ config('bank.bank_name') }}</span>
                         </div>
-                        <span class="text-[11px] text-gray-500 block">Chi nhánh: CN AN GIANG - PGD LONG XUYEN</span>
+                        <span class="text-[11px] text-gray-500 block">Chi nhánh: {{ config('bank.bank_branch') }}</span>
                     </div>
 
                     <!-- Chủ tài khoản -->
                     <div class="p-3 bg-white rounded-xl border border-blue-100 shadow-2xs space-y-0.5">
                         <span class="text-[11px] text-gray-400 font-semibold block">Tên chủ tài khoản:</span>
-                        <span class="font-bold text-gray-900 text-sm uppercase">TRAN HUU THANG</span>
+                        <span class="font-bold text-gray-900 text-sm uppercase">{{ config('bank.account_name') }}</span>
                     </div>
 
                     <!-- Số tài khoản có nút copy -->
                     <div class="p-3 bg-white rounded-xl border border-blue-100 shadow-2xs flex items-center justify-between gap-3">
                         <div>
                             <span class="text-[11px] text-gray-400 font-semibold block">Số tài khoản:</span>
-                            <span class="font-mono font-black text-base text-blue-700 tracking-wider">103882436377</span>
+                            <span class="font-mono font-black text-base text-blue-700 tracking-wider">{{ config('bank.account_number') }}</span>
                         </div>
                         <button 
                             type="button" 
-                            @click="copyText('103882436377', 'stk')"
+                            @click="copyText('{{ config('bank.account_number') }}', 'stk')"
                             class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs transition border border-blue-200 shrink-0 flex items-center gap-1 cursor-pointer"
                         >
                             <span x-text="copiedField === 'stk' ? '✓ Đã chép' : '📋 Sao chép'">📋 Sao chép</span>

@@ -160,6 +160,58 @@ class CartService
     }
 
     /**
+     * Tự động đồng bộ giỏ hàng với CSDL:
+     * - Loại bỏ sản phẩm bị xóa mềm, tắt kích hoạt (is_active = false) hoặc hết tồn kho.
+     * - Cập nhật giá mới nhất và giới hạn số lượng theo tồn kho thực tế.
+     *
+     * @return array<string> Danh sách tên sản phẩm bị gỡ bỏ (nếu có)
+     */
+    public function syncCart(): array
+    {
+        $cart = $this->getCart();
+        if (empty($cart)) {
+            return [];
+        }
+
+        $changed = false;
+        $removedItems = [];
+
+        foreach ($cart as $id => $item) {
+            try {
+                $product = Product::find($item['id']);
+                if (! $product || ! $product->is_active) {
+                    unset($cart[$id]);
+                    $changed = true;
+                    $removedItems[] = $item['name'];
+                } elseif ($product->stock_quantity <= 0) {
+                    unset($cart[$id]);
+                    $changed = true;
+                    $removedItems[] = $item['name'];
+                } else {
+                    $newPrice = (int) $product->effective_price;
+                    if ((int) $cart[$id]['price'] !== $newPrice) {
+                        $cart[$id]['price'] = $newPrice;
+                        $changed = true;
+                    }
+                    $cart[$id]['max_stock'] = (int) $product->stock_quantity;
+                    if ((int) $cart[$id]['quantity'] > $product->stock_quantity) {
+                        $cart[$id]['quantity'] = (int) $product->stock_quantity;
+                        $changed = true;
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Nếu DB không truy cập được (mock mode), giữ nguyên
+            }
+        }
+
+        if ($changed) {
+            session()->put('cart', $cart);
+        }
+
+        return $removedItems;
+    }
+
+    /**
      * Đếm tổng số lượng sản phẩm (Total quantity).
      */
     public function getCount(): int
@@ -208,7 +260,7 @@ class CartService
     {
         try {
             $dbProduct = Product::with('category')->find($productId);
-            if ($dbProduct) {
+            if ($dbProduct && $dbProduct->is_active) {
                 $thumb = $dbProduct->thumbnail 
                     ? (str_starts_with($dbProduct->thumbnail, 'http') ? $dbProduct->thumbnail : asset('storage/' . $dbProduct->thumbnail))
                     : asset('images/png-transparent-playstation-4-headphones-hyperx-cloud-audio-video-game-headphones-electronics-video-game-playstation-4.png');

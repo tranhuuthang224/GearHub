@@ -8,6 +8,7 @@ use App\Models\CommunityPost;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -96,16 +97,18 @@ class ProfileController extends Controller
         $user = $request->user();
         $isDefault = $request->boolean('is_default') || $user->addresses()->count() === 0;
 
-        if ($isDefault) {
-            $user->addresses()->update(['is_default' => false]);
-        }
+        DB::transaction(function () use ($user, $validated, $isDefault) {
+            if ($isDefault) {
+                $user->addresses()->update(['is_default' => false]);
+            }
 
-        $user->addresses()->create([
-            'receiver_name' => $validated['receiver_name'],
-            'phone'         => $validated['phone'],
-            'address_line'  => $validated['address_line'],
-            'is_default'    => $isDefault,
-        ]);
+            $user->addresses()->create([
+                'receiver_name' => $validated['receiver_name'],
+                'phone'         => $validated['phone'],
+                'address_line'  => $validated['address_line'],
+                'is_default'    => $isDefault,
+            ]);
+        });
 
         return Redirect::route('profile.edit', ['tab' => 'addresses'])
             ->with('active_tab', 'addresses')
@@ -136,16 +139,18 @@ class ProfileController extends Controller
 
         $isDefault = $request->boolean('is_default');
 
-        if ($isDefault) {
-            $request->user()->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
-        }
+        DB::transaction(function () use ($request, $address, $validated, $isDefault) {
+            if ($isDefault) {
+                $request->user()->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
+            }
 
-        $address->update([
-            'receiver_name' => $validated['receiver_name'],
-            'phone'         => $validated['phone'],
-            'address_line'  => $validated['address_line'],
-            'is_default'    => $isDefault || $address->is_default,
-        ]);
+            $address->update([
+                'receiver_name' => $validated['receiver_name'],
+                'phone'         => $validated['phone'],
+                'address_line'  => $validated['address_line'],
+                'is_default'    => $isDefault || $address->is_default,
+            ]);
+        });
 
         return Redirect::route('profile.edit', ['tab' => 'addresses'])
             ->with('active_tab', 'addresses')
@@ -161,12 +166,14 @@ class ProfileController extends Controller
             abort(403, 'Bạn không có quyền xóa địa chỉ này.');
         }
 
-        $wasDefault = $address->is_default;
-        $address->delete();
+        DB::transaction(function () use ($request, $address) {
+            $wasDefault = $address->is_default;
+            $address->delete();
 
-        if ($wasDefault) {
-            $request->user()->addresses()->first()?->update(['is_default' => true]);
-        }
+            if ($wasDefault) {
+                $request->user()->addresses()->first()?->update(['is_default' => true]);
+            }
+        });
 
         return Redirect::route('profile.edit', ['tab' => 'addresses'])
             ->with('active_tab', 'addresses')
@@ -182,8 +189,10 @@ class ProfileController extends Controller
             abort(403, 'Bạn không có quyền thao tác trên địa chỉ này.');
         }
 
-        $request->user()->addresses()->update(['is_default' => false]);
-        $address->update(['is_default' => true]);
+        DB::transaction(function () use ($request, $address) {
+            $request->user()->addresses()->update(['is_default' => false]);
+            $address->update(['is_default' => true]);
+        });
 
         return Redirect::route('profile.edit', ['tab' => 'addresses'])
             ->with('active_tab', 'addresses')

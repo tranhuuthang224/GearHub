@@ -20,6 +20,12 @@ class CartController extends Controller
      */
     public function index(Request $request): View|JsonResponse
     {
+        // Tự động kiểm tra và đồng bộ giỏ hàng với CSDL
+        $removedItems = $this->cartService->syncCart();
+        if (!empty($removedItems) && ! $request->wantsJson()) {
+            session()->flash('warning', 'Một số sản phẩm không còn khả dụng hoặc đã hết hàng và được tự động gỡ khỏi giỏ: ' . implode(', ', $removedItems));
+        }
+
         $cart = $this->cartService->getCart();
         $subtotal = $this->cartService->getSubtotal();
         $shipping = $this->cartService->getShippingFee();

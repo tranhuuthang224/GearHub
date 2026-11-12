@@ -137,7 +137,7 @@ class OrderService
             $this->recordStatus($order, null, Order::STATUS_PENDING, $user);
 
             return $order->load('items');
-        });
+        }, 3);
     }
 
     /**
@@ -186,7 +186,7 @@ class OrderService
             $this->recordStatus($locked, $from, Order::STATUS_CANCELLED, $actor);
 
             return $locked;
-        });
+        }, 3);
     }
 
     /**
@@ -217,7 +217,7 @@ class OrderService
             $this->recordStatus($locked, $from, $newStatus, $actor);
 
             return $locked;
-        });
+        }, 3);
     }
 
     /** Ghi một dòng nhật ký. Luôn gọi bên trong transaction đổi trạng thái. */
