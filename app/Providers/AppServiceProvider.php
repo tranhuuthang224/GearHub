@@ -22,10 +22,14 @@ class AppServiceProvider extends ServiceProvider
 
         // 1. Giới hạn đặt hàng: Tối đa 5 lượt đặt hàng / phút / IP để chống spam đơn ảo
         RateLimiter::for('checkout-order', function (Request $request) {
-            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip())->response(function () {
-                return response()->json([
-                    'message' => 'Bạn thao tác đặt hàng quá nhanh. Vui lòng chờ 1 phút.',
-                ], 429);
+            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip())->response(function (Request $request) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Bạn thao tác đặt hàng quá nhanh. Vui lòng chờ 1 phút.',
+                    ], 429);
+                }
+
+                return back()->withInput()->with('error', 'Bạn thao tác đặt hàng quá nhanh. Vui lòng chờ 1 phút.');
             });
         });
 

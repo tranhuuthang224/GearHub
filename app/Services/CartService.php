@@ -248,7 +248,7 @@ class CartService
     }
 
     /**
-     * Tính phí vận chuyển (Miễn phí từ 500.000đ, dưới 500.000đ là 30.000đ).
+     * Tính phí vận chuyển (Cấu hình tập trung tại config/shop.php).
      */
     public function getShippingFee(): int
     {
@@ -256,7 +256,11 @@ class CartService
         if ($subtotal === 0) {
             return 0;
         }
-        return $subtotal >= 500000 ? 0 : 30000;
+
+        $threshold = (int) config('shop.free_shipping_threshold', 500000);
+        $standardFee = (int) config('shop.shipping_fee', 30000);
+
+        return $subtotal >= $threshold ? 0 : $standardFee;
     }
 
     /**

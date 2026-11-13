@@ -117,8 +117,10 @@ class OrderService
                 $this->coupons->redeem($coupon);
             }
 
-            // 5. Tính phí vận chuyển và tạo đơn với cơ chế bắt lỗi trùng mã đơn (Unique Key Constraint)
-            $shippingFee = ($subtotal >= 500000 || $subtotal === 0) ? 0 : 30000;
+            // 5. Tính phí vận chuyển (cấu hình tập trung tại config/shop.php) và tạo đơn với cơ chế bắt lỗi trùng mã đơn
+            $threshold   = (int) config('shop.free_shipping_threshold', 500000);
+            $standardFee = (int) config('shop.shipping_fee', 30000);
+            $shippingFee = ($subtotal >= $threshold || $subtotal === 0) ? 0 : $standardFee;
             $total       = max(0, $subtotal + $shippingFee - $discount);
 
             $order = null;
