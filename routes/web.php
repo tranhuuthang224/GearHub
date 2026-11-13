@@ -145,7 +145,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])
         ->middleware('throttle:checkout-order')
-        ->name('checkout.store');
+        ->name('checkout.store')
+        ->block($lockSeconds = 10, $waitSeconds = 10);
     Route::get('/checkout/success/{code}', [CheckoutController::class, 'success'])->name('checkout.success');
 
     // Đơn hàng của tôi (Client Orders)

@@ -555,4 +555,20 @@ class OrderServiceTest extends TestCase
 
         $this->assertSame(0, OrderStatusHistory::count());
     }
+
+    public function test_order_under_500k_includes_30k_shipping_fee_and_order_over_500k_is_free_shipping(): void
+    {
+        // 1. Đơn dưới 500k (chuột 400.000đ): Phí ship = 30.000đ, Total = 430.000đ
+        $orderUnder500k = $this->place([$this->line($this->mouse, 1)]);
+        $this->assertSame(400000, $orderUnder500k->subtotal);
+        $this->assertSame(30000, $orderUnder500k->shipping_fee);
+        $this->assertSame(0, $orderUnder500k->discount);
+        $this->assertSame(430000, $orderUnder500k->total);
+
+        // 2. Đơn trên 500k (bàn phím 1.000.000đ): Miễn phí ship (0đ), Total = 1.000.000đ
+        $orderOver500k = $this->place([$this->line($this->keyboard, 1)]);
+        $this->assertSame(1000000, $orderOver500k->subtotal);
+        $this->assertSame(0, $orderOver500k->shipping_fee);
+        $this->assertSame(1000000, $orderOver500k->total);
+    }
 }

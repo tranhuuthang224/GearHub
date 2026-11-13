@@ -68,6 +68,7 @@ class Order extends Model
         'payment_method',
         'status',
         'subtotal',
+        'shipping_fee',
         'discount',
         'total',
     ];
@@ -75,9 +76,10 @@ class Order extends Model
     protected function casts(): array
     {
         return [
-            'subtotal' => 'integer',
-            'discount' => 'integer',
-            'total'    => 'integer',
+            'subtotal'     => 'integer',
+            'shipping_fee' => 'integer',
+            'discount'     => 'integer',
+            'total'        => 'integer',
         ];
     }
 

@@ -99,6 +99,10 @@
                         <dd>{{ $money($order->subtotal) }}</dd>
                     </div>
                     <div class="flex justify-between text-gray-600">
+                        <dt>Phí vận chuyển</dt>
+                        <dd>{{ ($order->shipping_fee ?? 0) > 0 ? $money($order->shipping_fee) : '0đ (Free ship)' }}</dd>
+                    </div>
+                    <div class="flex justify-between text-gray-600">
                         <dt>Giảm giá @if ($order->coupon) <span class="text-xs text-gray-400">({{ $order->coupon->code }})</span> @endif</dt>
                         <dd>− {{ $money($order->discount) }}</dd>
                     </div>

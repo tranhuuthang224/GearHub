@@ -117,7 +117,10 @@ class OrderService
                 $this->coupons->redeem($coupon);
             }
 
-            // 5. Tạo đơn với cơ chế bắt lỗi trùng mã đơn (Unique Key Constraint) và sinh lại mã
+            // 5. Tính phí vận chuyển và tạo đơn với cơ chế bắt lỗi trùng mã đơn (Unique Key Constraint)
+            $shippingFee = ($subtotal >= 500000 || $subtotal === 0) ? 0 : 30000;
+            $total       = max(0, $subtotal + $shippingFee - $discount);
+
             $order = null;
             $insertAttempts = 0;
 
@@ -135,12 +138,15 @@ class OrderService
                         'payment_method'   => $shippingData['payment_method'] ?? Order::PAYMENT_METHOD_COD,
                         'status'           => Order::STATUS_PENDING,
                         'subtotal'         => $subtotal,
+                        'shipping_fee'     => $shippingFee,
                         'discount'         => $discount,
-                        'total'            => $subtotal - $discount,
+                        'total'            => $total,
                     ]);
                 } catch (QueryException $e) {
-                    $isDuplicateCode = str_contains($e->getMessage(), 'orders_code_unique')
-                        || str_contains($e->getMessage(), 'orders.code');
+                    $errorMsg = (string) ($e->errorInfo[2] ?? $e->getMessage());
+                    $isDuplicateCode = str_contains($errorMsg, 'orders_code_unique')
+                        || str_contains($errorMsg, 'orders.code')
+                        || str_contains($errorMsg, 'code_unique');
 
                     if ($isDuplicateCode && ++$insertAttempts < 5) {
                         continue;

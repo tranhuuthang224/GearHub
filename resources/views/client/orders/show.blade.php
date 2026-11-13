@@ -236,6 +236,17 @@
                         <span class="font-bold text-gray-900">{{ number_format($order->subtotal, 0, ',', '.') }}đ</span>
                     </div>
 
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500">Phí giao hàng:</span>
+                        @if (($order->shipping_fee ?? 0) > 0)
+                            <span class="font-bold text-gray-900">{{ number_format($order->shipping_fee, 0, ',', '.') }}đ</span>
+                        @else
+                            <span class="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 text-xs">
+                                Miễn phí (Free ship)
+                            </span>
+                        @endif
+                    </div>
+
                     @if ($order->discount > 0)
                         <div class="flex items-center justify-between text-emerald-700 font-bold">
                             <span>Voucher ({{ $order->coupon?->code ?? '' }}):</span>
