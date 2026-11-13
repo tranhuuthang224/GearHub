@@ -65,13 +65,20 @@ class ProductTrashController extends Controller
         try {
             DB::transaction(fn () => $product->forceDelete());
         } catch (QueryException $e) {
-            // Khóa ngoại chặn lại (vd. một đơn vừa chứa sản phẩm này giữa lúc kiểm tra và xóa)
-            report($e);
+            $errorCode = (int) ($e->errorInfo[1] ?? 0);
+            $errorMessage = $e->getMessage();
 
-            return back()->with(
-                'error',
-                "Không thể xóa vĩnh viễn «{$product->name}»: dữ liệu đang được sử dụng ở nơi khác."
-            );
+            // 1451: Cannot delete or update a parent row: a foreign key constraint fails
+            if ($errorCode === 1451 || str_contains($errorMessage, '1451') || str_contains($errorMessage, 'foreign key constraint fails')) {
+                report($e);
+
+                return back()->with(
+                    'error',
+                    "Không thể xóa vĩnh viễn «{$product->name}»: dữ liệu đang được sử dụng ở nơi khác (đơn hàng)."
+                );
+            }
+
+            throw $e;
         }
 
         $this->deleteFiles($paths);

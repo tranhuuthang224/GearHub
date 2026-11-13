@@ -69,10 +69,10 @@
     </div>
 
     <!-- THÔNG BÁO LỖI HỆ THỐNG NẾU CÓ -->
-    @if (session('error'))
+    @if (session('error') || request()->has('busy'))
         <div class="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-3 text-xs sm:text-sm text-rose-800 font-medium shadow-sm">
             <div class="w-7 h-7 rounded-full bg-rose-500/20 text-rose-700 flex items-center justify-center font-bold shrink-0">!</div>
-            <span>{{ session('error') }}</span>
+            <span>{{ session('error') ?? 'Hệ thống đang xử lý đơn hàng của bạn. Nếu bạn vừa bấm đặt hàng, vui lòng kiểm tra mục Đơn hàng hoặc thử lại sau.' }}</span>
         </div>
     @endif
 

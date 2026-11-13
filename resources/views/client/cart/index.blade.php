@@ -122,11 +122,11 @@
         </div>
     @endif
 
-    @if (session('error'))
+    @if (session('error') || request()->has('busy'))
         <div class="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between text-xs text-rose-800 font-medium shadow-sm">
             <div class="flex items-center gap-3">
                 <div class="w-6 h-6 rounded-full bg-rose-500/20 text-rose-700 flex items-center justify-center font-bold shrink-0">!</div>
-                <span>{{ session('error') }}</span>
+                <span>{{ session('error') ?? 'Hệ thống đang xử lý đơn hàng của bạn. Nếu bạn vừa bấm đặt hàng, vui lòng kiểm tra mục Đơn hàng của tôi.' }}</span>
             </div>
             <button type="button" onclick="this.parentElement.remove()" class="text-rose-600 hover:text-rose-900 font-bold ml-4">✕</button>
         </div>

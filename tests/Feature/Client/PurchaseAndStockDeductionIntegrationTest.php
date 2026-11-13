@@ -188,4 +188,42 @@ class PurchaseAndStockDeductionIntegrationTest extends TestCase
         $this->assertEquals(10, $this->product->fresh()->stock_quantity);
         $this->assertEquals(0, Order::count());
     }
+
+    public function test_double_submit_with_same_idempotency_token_creates_only_one_order(): void
+    {
+        // 1. Thêm sản phẩm vào giỏ
+        $this->actingAs($this->customer)->post(route('cart.add'), [
+            'product_id' => $this->product->id,
+            'quantity'   => 2,
+        ]);
+
+        $token = (string) \Illuminate\Support\Str::uuid();
+        session(['checkout_token' => $token]);
+
+        $payload = [
+            'checkout_token'   => $token,
+            'receiver_name'    => 'Khách Hàng Mua Sắm',
+            'phone'            => '0912345678',
+            'shipping_address' => 'Số 123 Đường Linh Trung, Phường Linh Trung, TP. Thủ Đức',
+            'payment_method'   => 'cod',
+        ];
+
+        // 2. Request 1 submit tạo đơn
+        $res1 = $this->actingAs($this->customer)->post(route('checkout.store'), $payload);
+        $res1->assertRedirect();
+
+        $this->assertEquals(1, Order::count());
+        $order = Order::first();
+        $this->assertEquals(8, $this->product->fresh()->stock_quantity);
+        $this->assertEquals($token, $order->idempotency_key);
+        $res1->assertRedirect(route('checkout.success', $order->code));
+
+        // 3. Request 2 submit cùng token (mô phỏng double click lọt qua)
+        $res2 = $this->actingAs($this->customer)->post(route('checkout.store'), $payload);
+
+        // Request 2 phải chuyển hướng tới trang thành công của đơn đã tạo, KHÔNG tạo đơn thứ 2
+        $res2->assertRedirect(route('checkout.success', $order->code));
+        $this->assertEquals(1, Order::count());
+        $this->assertEquals(8, $this->product->fresh()->stock_quantity); // Không bị trừ kho lần 2
+    }
 }

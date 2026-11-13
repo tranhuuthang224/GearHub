@@ -20,9 +20,9 @@ class AppServiceProvider extends ServiceProvider
         // Bật phát hiện lỗi N+1 truy vấn ở môi trường local/testing
         Model::preventLazyLoading(! $this->app->isProduction());
 
-        // 1. Giới hạn đặt hàng: Tối đa 5 lượt đặt hàng / phút / IP để chống spam đơn ảo
+        // 1. Giới hạn đặt hàng: Tối đa 10 lượt submit / phút / IP để vừa chống spam đơn ảo vừa không chặn nhầm khách sửa lỗi nhập liệu
         RateLimiter::for('checkout-order', function (Request $request) {
-            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip())->response(function (Request $request) {
+            return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip())->response(function (Request $request) {
                 if ($request->expectsJson()) {
                     return response()->json([
                         'message' => 'Bạn thao tác đặt hàng quá nhanh. Vui lòng chờ 1 phút.',

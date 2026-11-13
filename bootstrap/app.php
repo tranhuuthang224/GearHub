@@ -28,7 +28,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (LockTimeoutException $e, Request $request) {
             if ($request->is('checkout*')) {
-                return back()->withInput()->with('error', 'Hệ thống đang xử lý đơn hàng của bạn, vui lòng đợi trong giây lát và thử lại.');
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Hệ thống đang xử lý đơn hàng của bạn, vui lòng đợi trong giây lát.',
+                    ], 429);
+                }
+
+                return redirect()->route('cart.index', ['busy' => 1]);
             }
         });
     })->create();
