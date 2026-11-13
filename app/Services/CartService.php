@@ -19,7 +19,7 @@ class CartService
      */
     public function add(int|string $productId, int $quantity = 1): array
     {
-        $quantity = max(1, (int) $quantity);
+        $quantity = min(50, max(1, (int) $quantity));
         $cart = $this->getCart();
 
         // 1. Tìm sản phẩm từ Database hoặc Mock Fallback
@@ -28,11 +28,18 @@ class CartService
         if (!$product) {
             return [
                 'success' => false,
-                'message' => 'Không tìm thấy thông tin sản phẩm.',
+                'message' => 'Sản phẩm này hiện ngưng kinh doanh hoặc không tồn tại.',
             ];
         }
 
-        $stock = (int) ($product['stock_quantity'] ?? 10);
+        if (!array_key_exists('stock_quantity', $product) || $product['stock_quantity'] === null) {
+            return [
+                'success' => false,
+                'message' => 'Không thể xác định tồn kho của sản phẩm.',
+            ];
+        }
+
+        $stock = (int) $product['stock_quantity'];
         if ($stock <= 0) {
             return [
                 'success' => false,
@@ -42,11 +49,18 @@ class CartService
 
         // 2. Tính toán số lượng mới
         $currentQty = isset($cart[$productId]) ? (int) $cart[$productId]['quantity'] : 0;
+        if ($currentQty >= $stock) {
+            return [
+                'success' => false,
+                'message' => "Bạn đã có số lượng tối đa sẵn có ({$stock} sản phẩm) trong giỏ hàng.",
+            ];
+        }
+
         $newQty = $currentQty + $quantity;
 
         if ($newQty > $stock) {
             $newQty = $stock;
-            $message = "Số lượng trong giỏ đã đạt tối đa tồn kho ({$stock} sản phẩm).";
+            $message = "Đã điều chỉnh về số lượng tối đa sẵn có ({$stock} sản phẩm).";
         } else {
             $message = "Đã thêm {$quantity} sản phẩm '{$product['name']}' vào giỏ hàng thành công!";
         }
@@ -259,8 +273,13 @@ class CartService
     private function findProduct(int|string $productId): ?array
     {
         try {
-            $dbProduct = Product::with('category')->find($productId);
-            if ($dbProduct && $dbProduct->is_active) {
+            $dbProduct = Product::withTrashed()->with('category')->find($productId);
+            if ($dbProduct) {
+                // Chặn tuyệt đối nếu sản phẩm đã bị xóa mềm hoặc ngưng kinh doanh
+                if ($dbProduct->trashed() || ! $dbProduct->is_active) {
+                    return null;
+                }
+
                 $thumb = $dbProduct->thumbnail 
                     ? (str_starts_with($dbProduct->thumbnail, 'http') ? $dbProduct->thumbnail : asset('storage/' . $dbProduct->thumbnail))
                     : asset('images/png-transparent-playstation-4-headphones-hyperx-cloud-audio-video-game-headphones-electronics-video-game-playstation-4.png');

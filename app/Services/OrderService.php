@@ -125,6 +125,7 @@ class OrderService
                 try {
                     $order = Order::create([
                         'code'             => $this->generateCode(),
+                        'idempotency_key'  => $shippingData['idempotency_key'] ?? null,
                         'user_id'          => $user->id,
                         'coupon_id'        => $coupon?->id,
                         'receiver_name'    => trim($shippingData['receiver_name']),
@@ -138,6 +139,13 @@ class OrderService
                         'total'            => $subtotal - $discount,
                     ]);
                 } catch (QueryException $e) {
+                    $isDuplicateIdempotency = str_contains($e->getMessage(), 'orders_idempotency_key_unique')
+                        || str_contains($e->getMessage(), 'orders.idempotency_key');
+
+                    if ($isDuplicateIdempotency) {
+                        throw new \DomainException('Đơn hàng với mã giao dịch này đã được tiếp nhận trước đó.');
+                    }
+
                     $isDuplicateCode = str_contains($e->getMessage(), 'orders_code_unique')
                         || str_contains($e->getMessage(), 'orders.code')
                         || (int) ($e->errorInfo[1] ?? 0) === 1062;

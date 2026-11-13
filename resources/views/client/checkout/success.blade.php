@@ -132,11 +132,19 @@
                 </div>
             </div>
 
-            <div class="p-3 rounded-xl bg-blue-100/60 border border-blue-200 text-xs text-blue-900 flex items-start gap-2.5">
-                <span class="text-blue-700 text-sm">💡</span>
-                <span class="leading-relaxed">
-                    Sau khi quý khách hoàn tất chuyển khoản, đơn hàng sẽ được bộ phận vận hành xác nhận và tiến hành đóng gói trong vòng <strong>15 - 30 phút</strong>.
-                </span>
+            <div class="space-y-2">
+                <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
+                    <span class="text-amber-600 text-sm">⏰</span>
+                    <span class="leading-relaxed">
+                        <strong>Thời hạn thanh toán:</strong> Quý khách vui lòng hoàn tất chuyển khoản trong vòng <strong>24 giờ</strong>. Quá thời hạn này, hệ thống sẽ tự động hủy đơn và hoàn trả sản phẩm về kho để phục vụ khách hàng khác.
+                    </span>
+                </div>
+                <div class="p-3 rounded-xl bg-blue-100/60 border border-blue-200 text-xs text-blue-900 flex items-start gap-2.5">
+                    <span class="text-blue-700 text-sm">💡</span>
+                    <span class="leading-relaxed">
+                        Sau khi quý khách hoàn tất chuyển khoản, đơn hàng sẽ được bộ phận vận hành xác nhận và tiến hành đóng gói trong vòng <strong>15 - 30 phút</strong>.
+                    </span>
+                </div>
             </div>
         </div>
     @endif

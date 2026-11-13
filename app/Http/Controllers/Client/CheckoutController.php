@@ -58,6 +58,13 @@ class CheckoutController extends Controller
         // 1. Kiểm tra Idempotency Token (chống double-click/replay từ form)
         $checkoutToken = $request->input('checkout_token');
         if (!empty($checkoutToken)) {
+            // Chốt chặn CSDL: kiểm tra xem đơn hàng đã từng được tạo với token này chưa
+            $existingOrder = Order::where('idempotency_key', $checkoutToken)->first();
+            if ($existingOrder) {
+                return redirect()->route('checkout.success', $existingOrder->code)
+                    ->with('success', "Đơn hàng của bạn đã được ghi nhận. Mã đơn: {$existingOrder->code}");
+            }
+
             $savedToken = session('checkout_token');
             if ($savedToken !== $checkoutToken) {
                 // Token đã bị tiêu thụ bởi đơn hàng thành công trước đó
@@ -130,20 +137,25 @@ class CheckoutController extends Controller
                     'shipping_address' => $validated['shipping_address'],
                     'note'             => $validated['note'] ?? null,
                     'payment_method'   => $validated['payment_method'] ?? 'cod',
+                    'idempotency_key'  => $checkoutToken,
                 ],
                 $validated['coupon_code'] ?? null
             );
 
-            // Đặt hàng thành công: tiêu thụ token và xóa sạch giỏ hàng
+            // Đặt hàng thành công: tiêu thụ token, xóa sạch giỏ hàng và ép lưu session ngay trước khi nhả lock
             session()->forget('checkout_token');
             $cartService->clear();
+            $request->session()->save();
 
             return redirect()->route('checkout.success', $order->code)
                 ->with('success', "Đặt hàng thành công! Mã đơn hàng: {$order->code}");
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
-        } catch (\Throwable $e) {
+        } catch (\DomainException|\InvalidArgumentException $e) {
             return back()->withInput()->with('error', $e->getMessage());
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withInput()->with('error', 'Có lỗi hệ thống trong quá trình xử lý đơn hàng, vui lòng thử lại.');
         } finally {
             try {
                 optional($lock)->release();

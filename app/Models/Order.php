@@ -58,6 +58,7 @@ class Order extends Model
 
     protected $fillable = [
         'code',
+        'idempotency_key',
         'user_id',
         'coupon_id',
         'receiver_name',
