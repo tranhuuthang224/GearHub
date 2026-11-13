@@ -259,7 +259,11 @@ class CompleteUserJourneyTest extends TestCase
         $stockBeforeKeyboard = $this->keyboard1->stock_quantity; // 10
         $stockBeforeMouse = $this->mouseGaming->stock_quantity;   // 15
 
+        $this->actingAs($this->customer)->get(route('checkout.index'));
+        $token = session('checkout_token');
+
         $checkoutSubmitRes = $this->actingAs($this->customer)->post(route('checkout.store'), [
+            'checkout_token'   => $token,
             'receiver_name'    => 'Nguyễn Văn An',
             'phone'            => '0912345678',
             'shipping_address' => '181 Quốc lộ 1K, Phường Đông Hòa, TP. Dĩ An, Tỉnh Bình Dương',

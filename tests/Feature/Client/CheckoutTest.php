@@ -118,7 +118,11 @@ class CheckoutTest extends TestCase
             'quantity'   => 1,
         ]);
 
+        $this->actingAs($this->customer)->get(route('checkout.index'));
+        $token = session('checkout_token');
+
         $response = $this->actingAs($this->customer)->post(route('checkout.store'), [
+            'checkout_token'   => $token,
             'receiver_name'    => 'Trần Hữu Thắng',
             'phone'            => '0987654321',
             'shipping_address' => 'Khu phố 6, Linh Trung, TP. Thủ Đức, TP. Hồ Chí Minh',
@@ -128,6 +132,7 @@ class CheckoutTest extends TestCase
 
         $order = Order::latest('id')->first();
         $this->assertNotNull($order);
+        $this->assertEquals($token, $order->idempotency_key);
         $this->assertEquals('Trần Hữu Thắng', $order->receiver_name);
         $this->assertEquals('0987654321', $order->phone);
         $this->assertEquals('Khu phố 6, Linh Trung, TP. Thủ Đức, TP. Hồ Chí Minh', $order->shipping_address);
@@ -168,7 +173,11 @@ class CheckoutTest extends TestCase
             ],
         ]);
 
+        $this->actingAs($this->customer)->get(route('checkout.index'));
+        $token = session('checkout_token');
+
         $response = $this->post(route('checkout.store'), [
+            'checkout_token'   => $token,
             'receiver_name'    => 'Nguyễn Văn Chuyển Khoản',
             'phone'            => '0987654321',
             'shipping_address' => '123 Đường Điện Biên Phủ, Phường 25, Quận Bình Thạnh, TP.HCM',
@@ -178,6 +187,7 @@ class CheckoutTest extends TestCase
 
         $order = Order::where('phone', '0987654321')->first();
         $this->assertNotNull($order);
+        $this->assertEquals($token, $order->idempotency_key);
         $this->assertEquals('bank_transfer', $order->payment_method);
         $this->assertTrue($order->isBankTransfer());
         $this->assertEquals(Order::STATUS_PENDING, $order->status);
@@ -205,7 +215,7 @@ class CheckoutTest extends TestCase
             'shipping_address' => '',
         ]);
 
-        $response->assertSessionHasErrors(['receiver_name', 'phone', 'shipping_address']);
+        $response->assertSessionHasErrors(['checkout_token', 'receiver_name', 'phone', 'shipping_address']);
         $this->assertEquals(0, Order::count());
     }
 
@@ -221,6 +231,7 @@ class CheckoutTest extends TestCase
 
         foreach ($invalidPhones as $phone) {
             $response = $this->actingAs($this->customer)->post(route('checkout.store'), [
+                'checkout_token'   => \Illuminate\Support\Str::uuid()->toString(),
                 'receiver_name'    => 'Nguyễn Văn Test',
                 'phone'            => $phone,
                 'shipping_address' => 'Số 123 Đường Số 1, Phường Linh Trung, TP. Thủ Đức',
@@ -237,7 +248,11 @@ class CheckoutTest extends TestCase
             'quantity'   => 1,
         ]);
 
+        $this->actingAs($this->customer)->get(route('checkout.index'));
+        $token = session('checkout_token');
+
         $response = $this->actingAs($this->customer)->post(route('checkout.store'), [
+            'checkout_token'   => $token,
             'receiver_name'    => 'Nguyễn Văn B',
             'phone'            => '0987 654 321', // Chứa khoảng trắng
             'shipping_address' => 'Số 456 Đường Số 2, Phường Linh Tây, TP. Thủ Đức',
@@ -259,6 +274,7 @@ class CheckoutTest extends TestCase
 
         // Địa chỉ quá ngắn (dưới 10 ký tự)
         $response = $this->actingAs($this->customer)->post(route('checkout.store'), [
+            'checkout_token'   => \Illuminate\Support\Str::uuid()->toString(),
             'receiver_name'    => 'Nguyễn Văn C',
             'phone'            => '0912345678',
             'shipping_address' => 'HCM', // Quá ngắn
@@ -300,8 +316,12 @@ class CheckoutTest extends TestCase
             'total'    => 2601000,
         ]);
 
+        $this->actingAs($this->customer)->get(route('checkout.index'));
+        $token = session('checkout_token');
+
         // 2. Gửi request đặt hàng kèm Coupon
         $response = $this->actingAs($this->customer)->post(route('checkout.store'), [
+            'checkout_token'   => $token,
             'receiver_name'    => 'Trần Hữu Thắng',
             'phone'            => '0987654321',
             'shipping_address' => 'Khu phố 6, Linh Trung, TP. Thủ Đức, TP. Hồ Chí Minh',
@@ -358,12 +378,53 @@ class CheckoutTest extends TestCase
         $firstSubmit = $this->actingAs($this->customer)->post(route('checkout.store'), $payload);
         $this->assertEquals(1, Order::count());
         $order = Order::first();
+        $this->assertNotNull($order->idempotency_key);
+        $this->assertEquals($checkoutToken, $order->idempotency_key);
         $firstSubmit->assertRedirect(route('checkout.success', $order->code));
 
         // Lần submit thứ 2 (double-submit / replay cùng token) bị chặn và chuyển hướng về trang đơn hàng
         $secondSubmit = $this->actingAs($this->customer)->post(route('checkout.store'), $payload);
         $this->assertEquals(1, Order::count()); // Không tạo thêm đơn thứ 2
         $secondSubmit->assertRedirect(route('checkout.success', $order->code));
+    }
+
+    public function test_concurrent_request_hitting_database_unique_idempotency_key_redirects_to_existing_order(): void
+    {
+        $this->actingAs($this->customer)->post(route('cart.add'), [
+            'product_id' => $this->productUnder500k->id,
+            'quantity'   => 1,
+        ]);
+
+        $checkoutToken = (string) \Illuminate\Support\Str::uuid();
+        session(['checkout_token' => $checkoutToken]);
+
+        // Giả lập đơn hàng đã được chốt trước đó với idempotency_key này trong CSDL
+        $existingOrder = Order::create([
+            'code'             => 'GH-EXISTING-01',
+            'idempotency_key'  => $checkoutToken,
+            'user_id'          => $this->customer->id,
+            'receiver_name'    => 'Trần Hữu Thắng',
+            'phone'            => '0987654321',
+            'shipping_address' => 'Khu phố 6, Linh Trung, TP. Thủ Đức',
+            'payment_method'   => 'cod',
+            'status'           => Order::STATUS_PENDING,
+            'subtotal'         => 350000,
+            'discount'         => 0,
+            'total'            => 350000,
+        ]);
+
+        $payload = [
+            'receiver_name'    => 'Trần Hữu Thắng',
+            'phone'            => '0987654321',
+            'shipping_address' => 'Khu phố 6, Linh Trung, TP. Thủ Đức',
+            'payment_method'   => 'cod',
+            'checkout_token'   => $checkoutToken,
+        ];
+
+        // Request thứ 2 gửi cùng token sẽ được chuyển thẳng về trang xác nhận đơn cũ
+        $response = $this->actingAs($this->customer)->post(route('checkout.store'), $payload);
+        $this->assertEquals(1, Order::count());
+        $response->assertRedirect(route('checkout.success', $existingOrder->code));
     }
 
     public function test_checkout_page_automatically_removes_inactive_or_deleted_product_from_cart(): void

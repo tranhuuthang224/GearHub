@@ -55,33 +55,36 @@ class CheckoutController extends Controller
      */
     public function store(Request $request, CartService $cartService, OrderService $orderService): RedirectResponse
     {
-        // 1. Kiểm tra Idempotency Token (chống double-click/replay từ form)
-        $checkoutToken = $request->input('checkout_token');
-        if (!empty($checkoutToken)) {
-            // Chốt chặn CSDL: kiểm tra xem đơn hàng đã từng được tạo với token này chưa
-            $existingOrder = Order::where('idempotency_key', $checkoutToken)->first();
-            if ($existingOrder) {
-                return redirect()->route('checkout.success', $existingOrder->code)
-                    ->with('success', "Đơn hàng của bạn đã được ghi nhận. Mã đơn: {$existingOrder->code}");
-            }
-
-            $savedToken = session('checkout_token');
-            if ($savedToken !== $checkoutToken) {
-                // Token đã bị tiêu thụ bởi đơn hàng thành công trước đó
-                $recentOrder = $request->user()?->orders()->latest('id')->first();
-                if ($recentOrder && $recentOrder->created_at->diffInSeconds(now()) < 30) {
-                    return redirect()->route('checkout.success', $recentOrder->code)
-                        ->with('success', "Đơn hàng của bạn đã được ghi nhận. Mã đơn: {$recentOrder->code}");
-                }
-
-                return redirect()->route('cart.index')->with(
-                    'error',
-                    'Yêu cầu đặt hàng của bạn đã được tiếp nhận hoặc không hợp lệ. Vui lòng kiểm tra lại đơn hàng.'
-                );
-            }
+        // 1. Chuẩn hóa số điện thoại trước khi xác thực
+        if ($request->has('phone')) {
+            $normalizedPhone = preg_replace('/[\s.-]/', '', (string) $request->input('phone'));
+            $request->merge(['phone' => $normalizedPhone]);
         }
 
-        // 2. Chống race condition: khóa thao tác checkout theo user/session trong 10 giây
+        // 2. Xác thực dữ liệu đầu vào (bắt buộc checkout_token là UUID)
+        $validated = $request->validate([
+            'checkout_token'   => ['required', 'uuid'],
+            'receiver_name'    => ['required', 'string', 'min:2', 'max:100'],
+            'phone'            => ['required', 'string', 'regex:/^(0|\+84)[35789][0-9]{8}$/'],
+            'shipping_address' => ['required', 'string', 'min:10', 'max:255'],
+            'payment_method'   => ['nullable', 'string', 'in:cod,bank_transfer'],
+            'note'             => ['nullable', 'string', 'max:500'],
+            'coupon_code'      => ['nullable', 'string', 'max:50'],
+        ], [
+            'checkout_token.required'   => 'Phiên đặt hàng không hợp lệ, vui lòng tải lại trang.',
+            'checkout_token.uuid'       => 'Mã phiên đặt hàng không đúng định dạng.',
+            'receiver_name.required'    => 'Vui lòng nhập họ và tên người nhận hàng.',
+            'receiver_name.min'         => 'Họ và tên người nhận phải có ít nhất 2 ký tự.',
+            'phone.required'            => 'Vui lòng nhập số điện thoại người nhận.',
+            'phone.regex'               => 'Số điện thoại không đúng định dạng Việt Nam (gồm 10 số, bắt đầu bằng 03, 05, 07, 08, 09 hoặc +84).',
+            'shipping_address.required' => 'Vui lòng nhập địa chỉ giao hàng.',
+            'shipping_address.min'      => 'Vui lòng nhập địa chỉ giao hàng cụ thể (tối thiểu 10 ký tự bao gồm số nhà, tên đường, phường/xã, quận/huyện).',
+            'payment_method.in'         => 'Phương thức thanh toán đã chọn không hợp lệ.',
+        ]);
+
+        $checkoutToken = $validated['checkout_token'];
+
+        // 3. Chống race condition: khóa thao tác checkout theo user/session trong 10 giây (dùng non-blocking ->get())
         $lock = null;
         try {
             $lockKey = 'checkout_lock_user_' . ($request->user()?->id ?? session()->getId());
@@ -91,32 +94,28 @@ class CheckoutController extends Controller
                 return back()->with('error', 'Đơn hàng đang được hệ thống xử lý, vui lòng không thao tác lặp lại.');
             }
         } catch (\Throwable) {
-            // Nếu cache driver không hỗ trợ lock (ví dụ driver lạ), fallback an toàn dựa vào idempotency token
+            // Nếu cache driver không hỗ trợ lock, fallback an toàn dựa vào idempotency_key trong CSDL
         }
 
         try {
-            // Chuẩn hóa số điện thoại: loại bỏ dấu cách, dấu chấm, dấu gạch ngang
-            if ($request->has('phone')) {
-                $normalizedPhone = preg_replace('/[\s.-]/', '', (string) $request->input('phone'));
-                $request->merge(['phone' => $normalizedPhone]);
+            // Đặt sau khi lấy được khóa: kiểm tra xem request trước đã tạo đơn với token này chưa
+            $existingOrder = $request->user()?->orders()
+                ->where('idempotency_key', $checkoutToken)
+                ->first();
+
+            if ($existingOrder) {
+                return redirect()->route('checkout.success', $existingOrder->code)
+                    ->with('success', "Đơn hàng của bạn đã được ghi nhận. Mã đơn: {$existingOrder->code}");
             }
 
-            $validated = $request->validate([
-                'receiver_name'    => ['required', 'string', 'min:2', 'max:100'],
-                'phone'            => ['required', 'string', 'regex:/^(0|\+84)[35789][0-9]{8}$/'],
-                'shipping_address' => ['required', 'string', 'min:10', 'max:255'],
-                'payment_method'   => ['nullable', 'string', 'in:cod,bank_transfer'],
-                'note'             => ['nullable', 'string', 'max:500'],
-                'coupon_code'      => ['nullable', 'string', 'max:50'],
-            ], [
-                'receiver_name.required'    => 'Vui lòng nhập họ và tên người nhận hàng.',
-                'receiver_name.min'         => 'Họ và tên người nhận phải có ít nhất 2 ký tự.',
-                'phone.required'            => 'Vui lòng nhập số điện thoại người nhận.',
-                'phone.regex'               => 'Số điện thoại không đúng định dạng Việt Nam (gồm 10 số, bắt đầu bằng 03, 05, 07, 08, 09 hoặc +84).',
-                'shipping_address.required' => 'Vui lòng nhập địa chỉ giao hàng.',
-                'shipping_address.min'      => 'Vui lòng nhập địa chỉ giao hàng cụ thể (tối thiểu 10 ký tự bao gồm số nhà, tên đường, phường/xã, quận/huyện).',
-                'payment_method.in'         => 'Phương thức thanh toán đã chọn không hợp lệ.',
-            ]);
+            // Kiểm tra token trong session (chống gửi token cũ hoặc token đã tiêu thụ)
+            $savedToken = session('checkout_token');
+            if ($savedToken !== $checkoutToken) {
+                return redirect()->route('cart.index')->with(
+                    'error',
+                    'Phiên đặt hàng đã kết thúc hoặc không hợp lệ. Vui lòng kiểm tra lại đơn hàng.'
+                );
+            }
 
             $cart = $cartService->getCart();
             if (empty($cart)) {
@@ -151,7 +150,15 @@ class CheckoutController extends Controller
                 ->with('success', "Đặt hàng thành công! Mã đơn hàng: {$order->code}");
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
-        } catch (\DomainException|\InvalidArgumentException $e) {
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            $existing = $request->user()?->orders()->where('idempotency_key', $checkoutToken)->first();
+            if ($existing) {
+                return redirect()->route('checkout.success', $existing->code)
+                    ->with('success', "Đơn hàng của bạn đã được ghi nhận. Mã đơn: {$existing->code}");
+            }
+            report($e);
+            return back()->withInput()->with('error', 'Có lỗi hệ thống trong quá trình xử lý đơn hàng, vui lòng thử lại.');
+        } catch (\DomainException $e) {
             return back()->withInput()->with('error', $e->getMessage());
         } catch (\Throwable $e) {
             report($e);

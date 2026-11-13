@@ -78,7 +78,11 @@ class PurchaseAndStockDeductionIntegrationTest extends TestCase
         $this->assertEquals(3, session('cart')[$this->product->id]['quantity']);
 
         // 2. Khách hàng tiến hành checkout với mã giảm giá GEAR10
+        $this->actingAs($this->customer)->get(route('checkout.index'));
+        $token1 = session('checkout_token');
+
         $checkoutRes = $this->actingAs($this->customer)->post(route('checkout.store'), [
+            'checkout_token'   => $token1,
             'receiver_name'    => 'Khách Hàng Mua Sắm',
             'phone'            => '0912345678',
             'shipping_address' => 'Số 123 Đường Linh Trung, Phường Linh Trung, TP. Thủ Đức',
@@ -116,7 +120,11 @@ class PurchaseAndStockDeductionIntegrationTest extends TestCase
             'quantity'   => 4,
         ]);
 
+        $this->actingAs($this->customer)->get(route('checkout.index'));
+        $token2 = session('checkout_token');
+
         $this->actingAs($this->customer)->post(route('checkout.store'), [
+            'checkout_token'   => $token2,
             'receiver_name'    => 'Khách Hàng Mua Sắm',
             'phone'            => '0912345678',
             'shipping_address' => 'Số 123 Đường Linh Trung, Phường Linh Trung, TP. Thủ Đức',
@@ -152,6 +160,9 @@ class PurchaseAndStockDeductionIntegrationTest extends TestCase
             'quantity'   => 10,
         ]);
 
+        $token3 = (string) \Illuminate\Support\Str::uuid();
+        session(['checkout_token' => $token3]);
+
         // Cập nhật session cart giả định vượt kho (11 cái)
         session()->put('cart', [
             $this->product->id => [
@@ -163,6 +174,7 @@ class PurchaseAndStockDeductionIntegrationTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->customer)->post(route('checkout.store'), [
+            'checkout_token'   => $token3,
             'receiver_name'    => 'Khách Hàng Mua Sắm',
             'phone'            => '0912345678',
             'shipping_address' => 'Số 123 Đường Linh Trung, Phường Linh Trung, TP. Thủ Đức',
