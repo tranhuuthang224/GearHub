@@ -1,0 +1,13 @@
+# Nixpacks configuration for GearHub Laravel 11 on Railway
+[phases.setup]
+nixPkgs = ["php83", "php83Packages.composer", "nodejs_20"]
+
+[phases.build]
+cmds = [
+    "composer install --no-dev --optimize-autoloader",
+    "npm ci || npm install",
+    "npm run build"
+]
+
+[start]
+cmd = "php artisan storage:link && php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=$PORT"
