@@ -1,0 +1,386 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "GearHub Public RESTful API Specification",
+    "description": "Tài liệu API chính thức của Nền tảng Thương mại Điện tử Gaming Gear & Diễn đàn Setup GearHub.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "GearHub Engineering Team",
+      "email": "support@gearhub.vn"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local Development Server (Port 8000)"
+    },
+    {
+      "url": "http://gearhub.test",
+      "description": "Laragon Virtual Host Server"
+    }
+  ],
+  "paths": {
+    "/quiz/submit": {
+      "post": {
+        "tags": [
+          "Smart Gear Finder Quiz"
+        ],
+        "summary": "Gửi câu trả lời trắc nghiệm & Nhận Top 3 gear phù hợp nhất",
+        "description": "Thuật toán GearMatchEngine chấm điểm trọng số (+40 danh mục, +30 ngân sách, +10 tiêu chí) và lưu vết vào quiz_logs.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "purpose": {
+                    "type": "string",
+                    "example": "gaming"
+                  },
+                  "budget": {
+                    "type": "string",
+                    "example": "1m_to_3m"
+                  },
+                  "device_type": {
+                    "type": "string",
+                    "example": "ban-phim-co"
+                  },
+                  "features": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "wireless",
+                      "rgb"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Chấm điểm thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "matches": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/compare": {
+      "get": {
+        "tags": [
+          "Comparison Engine"
+        ],
+        "summary": "Lấy dữ liệu ma trận so sánh (Specs Matrix)",
+        "responses": {
+          "200": {
+            "description": "Dữ liệu so sánh đa cột và highlight khác biệt"
+          }
+        }
+      }
+    },
+    "/compare/add/{id}": {
+      "post": {
+        "tags": [
+          "Comparison Engine"
+        ],
+        "summary": "Thêm sản phẩm vào so sánh trong Session",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID sản phẩm cần so sánh",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thêm thành công"
+          },
+          "422": {
+            "description": "Vượt quá 4 sản phẩm hoặc khác danh mục cha (Root Category)"
+          }
+        }
+      }
+    },
+    "/community": {
+      "get": {
+        "tags": [
+          "Community Showcase"
+        ],
+        "summary": "Lấy danh sách góc máy setup (Lưới Masonry)",
+        "parameters": [
+          {
+            "name": "style",
+            "in": "query",
+            "description": "Lọc theo phong cách (minimalist, rgb, white_aesthetic, dark_mode, vintage)",
+            "schema": {
+              "type": "string",
+              "example": "rgb"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh sách bài viết phân trang"
+          }
+        }
+      }
+    },
+    "/community/{id}/like": {
+      "post": {
+        "tags": [
+          "Community Showcase"
+        ],
+        "summary": "Thả tim / Bỏ thả tim bài viết góc máy (Atomic Lock)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Toggle thành công kèm số lượt tim mới"
+          },
+          "401": {
+            "description": "Chưa đăng nhập"
+          }
+        }
+      }
+    },
+    "/products/{product}/reviews": {
+      "get": {
+        "tags": [
+          "Product Reviews"
+        ],
+        "summary": "Lấy điểm sao trung bình, biểu đồ tỷ lệ sao & danh sách reviews",
+        "parameters": [
+          {
+            "name": "product",
+            "in": "path",
+            "required": true,
+            "description": "Slug hoặc ID của sản phẩm",
+            "schema": {
+              "type": "string",
+              "example": "ban-phim-co-aula-f75"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thống kê sao và danh sách review"
+          }
+        }
+      }
+    },
+    "/shop": {
+      "get": {
+        "tags": [
+          "Shop & Catalog"
+        ],
+        "summary": "Lấy danh sách sản phẩm & bộ lọc đa tiêu chí (Faceted Search)",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Slug danh mục",
+            "schema": {
+              "type": "string",
+              "example": "ban-phim-co"
+            }
+          },
+          {
+            "name": "brand",
+            "in": "query",
+            "description": "Slug thương hiệu",
+            "schema": {
+              "type": "string",
+              "example": "aula"
+            }
+          },
+          {
+            "name": "min_price",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "example": 500000
+            }
+          },
+          {
+            "name": "max_price",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "example": 2000000
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "price_asc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh sách sản phẩm phân trang"
+          }
+        }
+      }
+    },
+    "/cart/add": {
+      "post": {
+        "tags": [
+          "Shopping Cart"
+        ],
+        "summary": "Thêm sản phẩm vào giỏ hàng Session",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "product_id",
+                  "quantity"
+                ],
+                "properties": {
+                  "product_id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Thêm vào giỏ thành công"
+          },
+          "422": {
+            "description": "Sản phẩm hết hàng hoặc số lượng vượt quá tồn kho"
+          }
+        }
+      }
+    },
+    "/checkout/coupon": {
+      "post": {
+        "tags": [
+          "Checkout & Orders"
+        ],
+        "summary": "Xem trước mã giảm giá (Rate Limit: 20 req/min)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "GEARHUB50K"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Mã hợp lệ, trả về số tiền được giảm"
+          },
+          "422": {
+            "description": "Mã hết hạn, chưa kích hoạt hoặc không đủ điều kiện đơn tối thiểu"
+          }
+        }
+      }
+    },
+    "/community/{id}/comments": {
+      "post": {
+        "tags": [
+          "Community Showcase"
+        ],
+        "summary": "Đăng bình luận vào bài viết góc máy (Yêu cầu đăng nhập)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "content"
+                ],
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "example": "Góc setup nhìn chill và gọn gàng quá bạn ơi!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Đăng bình luận thành công"
+          },
+          "401": {
+            "description": "Chưa đăng nhập"
+          }
+        }
+      }
+    }
+  }
+}
