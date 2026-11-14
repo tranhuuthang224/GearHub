@@ -117,6 +117,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('categories', CategoryController::class)->except(['show']);
         Route::resource('brands', BrandController::class)->except(['show']);
         Route::resource('products', ProductController::class)->except(['show']);
+        Route::redirect('inventory', '/admin/products');
 
         // Thùng rác sản phẩm: URL /admin/trash khớp mục Trash của sidebar
         Route::get('trash', [ProductTrashController::class, 'index'])->name('trash.index');
