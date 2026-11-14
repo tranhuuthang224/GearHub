@@ -226,6 +226,88 @@ class ProductSeeder extends Seeder
                 ['Cảm biến' => 'Focus Pro 35K Gen-2', 'Switch' => 'Gen-3 Optical 90M click', 'Trọng lượng' => '55g công thái học đỉnh cao'],
                 'images/Mouse/Chuột không dây Razer DeathAdder V4 Pro.webp'
             ],
+            // ----- CHUỘT PHỔ THÔNG & VĂN PHÒNG -----
+            [
+                'Chuột văn phòng', 'Fuhlen', 'Chuột có dây Fuhlen L102 Black', 'MS-FUHLEN-L102', 150000, 120000, 80,
+                ['Cảm biến' => 'Optical 1000 DPI', 'Kết nối' => 'USB 2.0 dây dài 1.5m', 'Thiết kế' => 'Đối xứng nhỏ gọn, công thái học văn phòng', 'Độ bền' => '5 triệu lượt click'],
+                'images/Mouse/fuhlen_l102.webp'
+            ],
+            [
+                'Chuột gaming', 'DareU', 'Chuột chơi game DareU LM103 Black RGB', 'MS-DAREU-LM103', 180000, 149000, 50,
+                ['DPI' => '1000 - 1600 DPI', 'Led' => 'RGB 7 màu tự đổi', 'Kết nối' => 'USB có dây bọc dù', 'Thiết kế' => 'Đối xứng chống trơn trượt'],
+                'images/Mouse/54067_chuot_choi_game_dareu_lm103_black_usb_rgb_den.webp'
+            ],
+            [
+                'Chuột văn phòng', 'DareU', 'Chuột máy tính DareU LM130S Đen', 'MS-DAREU-LM130S', 190000, 159000, 45,
+                ['DPI' => '800 - 1600 DPI', 'Kết nối' => 'USB có dây', 'Trọng lượng' => '85g', 'Màu sắc' => 'Đen nhám chống bám vân tay'],
+                'images/Mouse/63917_chuot_dareu_lm130s_den_usb_0001_2.webp'
+            ],
+            [
+                'Chuột gaming', 'E-Dra', 'Chuột Gaming có dây E-Dra EM6102 Pro Đen', 'MS-EDRA-EM6102P', 290000, 230000, 40,
+                ['Cảm biến' => 'SPCP6653', 'DPI' => 'Tối đa 6400 DPI', 'Led' => 'RGB nhiều chế độ', 'Switch' => 'Huano 10 triệu click'],
+                'images/Mouse/71752_chuot_gaming_co_day_edra_em6102_pro_mau_den_0001_2.webp'
+            ],
+            [
+                'Chuột gaming', 'Razer', 'Chuột Razer DeathAdder Essential Ergonomic Trắng', 'MS-RZ-DAESS-W', 590000, 450000, 35,
+                ['Cảm biến' => 'Optical 6400 DPI', 'Form' => 'Công thái học tay phải huyền thoại', 'Led' => 'Single White LED thanh lịch', 'Nút bấm' => '5 nút Hyperesponse lập trình'],
+                'images/Mouse/64001_chuot_razer_deathadder_essential_ergonomic_trang_usb_led_white_1.webp'
+            ],
+            // ----- CHUỘT GAMING TẦM TRUNG & CAO CẤP MỚI BỔ SUNG -----
+            [
+                'Chuột gaming', 'Logitech', 'Chuột không dây Logitech G502 X Plus Lightspeed RGB Trắng', 'MS-LOGI-G502XP-W', 3590000, 3190000, 15,
+                ['Cảm biến' => 'HERO 25K', 'Switch' => 'Lightforce Hybrid Quang - Cơ', 'Led' => 'LIGHTSYNC RGB 8 vùng', 'Thời lượng pin' => '120 giờ'],
+                'images/Mouse/69519_chuot_game_khong_day_logitech_g502x_rgb_plus_lightspeed_trang_910_006148_usb_0004_5.webp'
+            ],
+            [
+                'Chuột gaming', 'Asus', 'Chuột Gaming Asus ROG Gladius IV Ace Black', 'MS-ASUS-GLAD4', 2890000, 2490000, 18,
+                ['Cảm biến' => 'ROG AimPoint Pro 42K DPI', 'Kết nối' => 'SpeedNova Wireless / BT / Type-C', 'Switch' => 'ROG Optical 100M click', 'Trọng lượng' => '54g siêu nhẹ'],
+                'images/Mouse/chuot-asus-rog-gladius-iv-ace-mau-den-90mp04r0-bmua00-1.webp'
+            ],
+            [
+                'Chuột gaming', 'Asus', 'Chuột Asus ROG Harpe II Ace Màu Đỏ Gaming', 'MS-ASUS-HARPE2-R', 3490000, 3090000, 12,
+                ['Cảm biến' => 'AimPoint Pro 42,000 DPI', 'Polling Rate' => 'True 8000Hz không dây', 'Trọng lượng' => '54g Bio-based Nylon', 'Màu sắc' => 'Đỏ thể thao nổi bật'],
+                'images/Mouse/chuot-asus-rog-harpe-ii-ace-mau-do-90mp0490-bmua20-1.webp'
+            ],
+            [
+                'Chuột gaming', 'ATK', 'Chuột Gaming ATK Ghost Extreme Wireless Black', 'MS-ATK-GHOST-B', 1790000, 1490000, 25,
+                ['Cảm biến' => 'PAW3950 Ultra', 'Trọng lượng' => '42g Magnesium Alloy', 'MCU' => 'Nordic 52840', 'Polling Rate' => 'Hỗ trợ 8KHz'],
+                'images/Mouse/chuot-gaming-atk-ghost-extreme-wireless-black.webp'
+            ],
+            [
+                'Chuột gaming', 'ATK', 'Chuột Gaming ATK Ghost Extreme Wireless Purple', 'MS-ATK-GHOST-P', 1850000, 1550000, 20,
+                ['Cảm biến' => 'PAW3950 Ultra', 'Trọng lượng' => '42g siêu nhẹ', 'Màu sắc' => 'Tím nhám Metallic', 'Switch' => 'Omron Optical'],
+                'images/Mouse/chuot-gaming-atk-ghost-extreme-wireless-purple.webp'
+            ],
+            [
+                'Chuột gaming', 'Dell', 'Chuột không dây Dell Alienware Pro Wireless Dark Side of the Moon', 'MS-DELL-AWPRO', 3290000, 2890000, 15,
+                ['Cảm biến' => '26000 DPI / 650 IPS', 'Polling Rate' => '4000Hz Wireless / 8000Hz Wired', 'Thiết kế' => 'Chuẩn Esports tuyển thủ', 'Trọng lượng' => '<60g'],
+                'images/Mouse/chuot-gaming-khong-day-dell-alienware-pro-dark-side-of-the-moon-1.webp'
+            ],
+            [
+                'Chuột gaming', 'Zowie', 'Chuột gaming không dây ZOWIE EC3-DW Wireless', 'MS-ZOWIE-EC3DW', 3690000, 3390000, 16,
+                ['Cảm biến' => '3395 Sensor', 'DPI' => '400 / 800 / 1600 / 3200', 'Đầu thu' => 'Enhanced Wireless Receiver', 'Form' => 'Công thái học EC huyền thoại'],
+                'images/Mouse/chuot-gaming-khong-day-zowie-ec3-dw-mezo0043-5.webp'
+            ],
+            [
+                'Chuột gaming', 'ATK', 'Chuột không dây ATK Blazing Sky Duckbill Màu Tím', 'MS-ATK-BLZSKY-P', 1390000, 1190000, 30,
+                ['Cảm biến' => 'PAW3395', 'Kiểu dáng' => 'Duckbill mỏ vịt công thái học', 'Màu sắc' => 'Tím Pastel nổi bật', 'Kết nối' => 'Wireless 2.4G / Bluetooth / Type-C'],
+                'images/Mouse/chuot-khong-day-atk-blazing-sky-duckbill-mau-tim.webp'
+            ],
+            [
+                'Chuột gaming', 'Corsair', 'Chuột không dây Corsair Sabre v2 Pro Carbon Fiber', 'MS-CS-SABREV2-CF', 2790000, 2390000, 15,
+                ['Cảm biến' => 'CORSAIR MARKSMAN 26K DPI', 'Vỏ' => 'Vân Carbon siêu cứng cáp', 'Công nghệ' => 'SLIPSTREAM WIRELESS <1ms', 'Trọng lượng' => '69g'],
+                'images/Mouse/chuot-khong-day-corsair-sabre-v2-pro-cf-carbon-1.webp'
+            ],
+            [
+                'Chuột gaming', 'Corsair', 'Chuột không dây Corsair Sabre v2 Pro Magnesium White', 'MS-CS-SABREV2-W', 2890000, 2490000, 18,
+                ['Cảm biến' => 'MARKSMAN 26,000 DPI', 'Chất liệu' => 'Magnesium Alloy Trắng Ngọc Trai', 'Switch' => 'CORSAIR QUICKSTRIKE nút bấm siêu tốc'],
+                'images/Mouse/chuot-khong-day-corsair-sabre-v2-pro-mg-white-1.webp'
+            ],
+            [
+                'Chuột gaming', 'Glorious', 'Chuột không dây Glorious Model O 3 Black', 'MS-GLOR-MODO3-B', 2190000, 1890000, 22,
+                ['Cảm biến' => 'BAMF 2.0 26K Sensor', 'Thiết kế' => 'Lưng tổ ong thoáng khí thoát mồ hôi', 'Trọng lượng' => '58g', 'Thời lượng pin' => 'Lên tới 110 giờ'],
+                'images/Mouse/chuot-khong-day-glorious-model-o-3-black-1.webp'
+            ],
 
             // ==================== TAI NGHE ====================
             [
