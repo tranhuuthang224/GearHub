@@ -24,6 +24,8 @@ use App\Http\Controllers\Admin\UserController;
 
 // Storefront Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
+// Public API Documentation Route
+Route::view('/docs/api', 'docs.api')->name('docs.api');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
 Route::post('/shop/{slug}/reviews', [ReviewController::class, 'store'])->middleware('auth')->name('shop.reviews.store');
