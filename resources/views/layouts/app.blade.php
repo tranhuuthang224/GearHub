@@ -16,7 +16,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
+        <div class="min-h-screen bg-gray-100 flex flex-col">
             @include('layouts.navigation')
 
             <!-- Page Heading -->
@@ -29,9 +29,22 @@
             @endisset
 
             <!-- Page Content -->
-            <main>
+            <main class="flex-1">
                 @yield('content')
             </main>
+        <footer class="bg-white border-t border-gray-200 mt-auto">
+                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
+                    <div class="mb-2 md:mb-0">
+                        &copy; {{ date('Y') }} GearHub. All rights reserved.
+                    </div>
+                    <div class="flex space-x-4">
+                        <a href="{{ url('/') }}" class="hover:text-blue-600 transition">Trang chủ</a>
+                        <a href="{{ route('docs.api') }}" target="_blank" class="text-blue-600 font-semibold hover:text-blue-800 transition">
+                            📚 API Documentation
+                        </a>
+                    </div>
+                </div>
+            </footer>
         </div>
     </body>
 </html>
