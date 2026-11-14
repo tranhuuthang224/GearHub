@@ -18,9 +18,15 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Force HTTPS URL scheme behind reverse proxies (Railway, Cloudflare, etc.)
-        if ($this->app->isProduction() || str_starts_with((string) config('app.url'), 'https://')) {
-            URL::forceScheme('https');
+        // Force HTTPS URL scheme on production / live domain / reverse proxy
+        if (! $this->app->environment('testing')) {
+            if ($this->app->isProduction()
+                || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+                || (isset($_SERVER['HTTP_HOST']) && ! in_array(explode(':', $_SERVER['HTTP_HOST'])[0], ['localhost', '127.0.0.1']))
+                || (config('app.url') && str_starts_with((string) config('app.url'), 'https://'))
+            ) {
+                URL::forceScheme('https');
+            }
         }
 
         // Bật phát hiện lỗi N+1 truy vấn ở môi trường local/testing
