@@ -104,7 +104,7 @@
         <!-- Row 1: 1.png (Earphone) | 2.png (Mouse) | 3.png (Laptop) -->
         <div class="flex flex-col sm:flex-row gap-6 items-stretch">
             <a 
-                href="{{ url('/shop?category=earphone') }}" 
+                href="{{ route('shop.index') }}" 
                 class="card-flex-400 group block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
             >
                 <img 
@@ -117,7 +117,7 @@
             </a>
 
             <a 
-                href="{{ url('/shop?category=mouse') }}" 
+                href="{{ route('shop.index') }}" 
                 class="card-flex-400 group block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
             >
                 <img 
@@ -130,7 +130,7 @@
             </a>
 
             <a 
-                href="{{ url('/shop?category=laptop') }}" 
+                href="{{ route('shop.index') }}" 
                 class="card-flex-640 group block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
             >
                 <img 
@@ -146,7 +146,7 @@
         <!-- Row 2: 4.png (Console) | 5.png (Deck) | 6.png (Speaker) -->
         <div class="flex flex-col sm:flex-row gap-6 items-stretch">
             <a 
-                href="{{ url('/shop?category=console') }}" 
+                href="{{ route('shop.index') }}" 
                 class="card-flex-640 group block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
             >
                 <img 
@@ -159,7 +159,7 @@
             </a>
 
             <a 
-                href="{{ url('/shop?category=keyboard') }}" 
+                href="{{ route('shop.index') }}" 
                 class="card-flex-400 group block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
             >
                 <img 
@@ -172,7 +172,7 @@
             </a>
 
             <a 
-                href="{{ url('/shop?category=speaker') }}" 
+                href="{{ route('shop.index') }}" 
                 class="card-flex-400 group block w-full rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500 transform hover:-translate-y-1 bg-white"
             >
                 <img 
