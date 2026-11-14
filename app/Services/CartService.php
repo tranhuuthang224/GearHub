@@ -212,6 +212,13 @@ class CartService
                         $cart[$id]['quantity'] = (int) $product->stock_quantity;
                         $changed = true;
                     }
+
+                    // Tự động đồng bộ lại URL ảnh chuẩn nếu giỏ hàng đang lưu đường dẫn lỗi (/storage/images/...)
+                    $correctThumb = $product->thumbnail_url;
+                    if ($correctThumb && ($cart[$id]['thumbnail'] ?? '') !== $correctThumb) {
+                        $cart[$id]['thumbnail'] = $correctThumb;
+                        $changed = true;
+                    }
                 }
             } catch (\Throwable $e) {
                 // Nếu DB không truy cập được (mock mode), giữ nguyên
@@ -284,9 +291,7 @@ class CartService
                     return null;
                 }
 
-                $thumb = $dbProduct->thumbnail 
-                    ? (str_starts_with($dbProduct->thumbnail, 'http') ? $dbProduct->thumbnail : asset('storage/' . $dbProduct->thumbnail))
-                    : asset('images/png-transparent-playstation-4-headphones-hyperx-cloud-audio-video-game-headphones-electronics-video-game-playstation-4.png');
+                $thumb = $dbProduct->thumbnail_url ?: asset('images/png-transparent-playstation-4-headphones-hyperx-cloud-audio-video-game-headphones-electronics-video-game-playstation-4.png');
 
                 return [
                     'id' => $dbProduct->id,
