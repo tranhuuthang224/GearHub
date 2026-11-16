@@ -30,7 +30,7 @@ class AuthenticatedSessionController extends Controller
 
     $home = $request->user()->isAdmin()
         ? route('admin.dashboard', absolute: false)
-        : route('dashboard', absolute: false);   // đích của khách do A quyết định
+        : route('home', absolute: false);
 
     return redirect()->intended($home);
 }
