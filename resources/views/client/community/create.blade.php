@@ -228,6 +228,65 @@
                             Tìm và tag các gear bạn đang dùng (bàn phím, chuột, tai nghe, pad chuột...). Sản phẩm sẽ hiển thị trên góc máy để người xem có thể mua ngay!
                         </p>
 
+                        <!-- Bộ lọc danh mục nhanh (Quick Category Filter Pills) -->
+                        <div class="mb-3">
+                            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs font-semibold">
+                                <button 
+                                    type="button" 
+                                    @click="selectCategory('all')"
+                                    class="px-3 py-1.5 rounded-xl border transition shrink-0"
+                                    :class="selectedCategory === 'all' ? 'bg-primary text-white border-primary shadow-xs' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-transparent'"
+                                >
+                                    Tất cả
+                                </button>
+                                <button 
+                                    type="button" 
+                                    @click="selectCategory('chuot')"
+                                    class="px-3 py-1.5 rounded-xl border transition shrink-0 flex items-center gap-1"
+                                    :class="selectedCategory === 'chuot' ? 'bg-primary text-white border-primary shadow-xs' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-transparent'"
+                                >
+                                    <span>🖱️</span>
+                                    <span>Chuột</span>
+                                </button>
+                                <button 
+                                    type="button" 
+                                    @click="selectCategory('ban-phim')"
+                                    class="px-3 py-1.5 rounded-xl border transition shrink-0 flex items-center gap-1"
+                                    :class="selectedCategory === 'ban-phim' ? 'bg-primary text-white border-primary shadow-xs' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-transparent'"
+                                >
+                                    <span>⌨️</span>
+                                    <span>Bàn phím</span>
+                                </button>
+                                <button 
+                                    type="button" 
+                                    @click="selectCategory('tai-nghe')"
+                                    class="px-3 py-1.5 rounded-xl border transition shrink-0 flex items-center gap-1"
+                                    :class="selectedCategory === 'tai-nghe' ? 'bg-primary text-white border-primary shadow-xs' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-transparent'"
+                                >
+                                    <span>🎧</span>
+                                    <span>Tai nghe</span>
+                                </button>
+                                <button 
+                                    type="button" 
+                                    @click="selectCategory('man-hinh')"
+                                    class="px-3 py-1.5 rounded-xl border transition shrink-0 flex items-center gap-1"
+                                    :class="selectedCategory === 'man-hinh' ? 'bg-primary text-white border-primary shadow-xs' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-transparent'"
+                                >
+                                    <span>🖥️</span>
+                                    <span>Màn hình</span>
+                                </button>
+                                <button 
+                                    type="button" 
+                                    @click="selectCategory('laptop')"
+                                    class="px-3 py-1.5 rounded-xl border transition shrink-0 flex items-center gap-1"
+                                    :class="selectedCategory === 'laptop' ? 'bg-primary text-white border-primary shadow-xs' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-transparent'"
+                                >
+                                    <span>💻</span>
+                                    <span>Laptop</span>
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- Ô tìm kiếm sản phẩm real-time -->
                         <div class="relative mb-4">
                             <div class="relative">
@@ -236,7 +295,7 @@
                                     x-model="searchQuery" 
                                     @input.debounce.300ms="searchGear()"
                                     @focus="searchFocused = true"
-                                    placeholder="Gõ tên phím cơ, chuột, tai nghe GearHub (ví dụ: Aula, Logitech, Akko...)" 
+                                    placeholder="Gõ tìm gear: chuột, bàn phím, tai nghe, màn hình (ví dụ: Logitech, Aula, Akko...)" 
                                     class="w-full pl-10 pr-10 py-3 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white text-sm text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition"
                                 >
                                 <svg class="w-5 h-5 text-gray-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -382,6 +441,7 @@ function communityCreatePost(config) {
 
         // Tagged Gear state
         searchQuery: '',
+        selectedCategory: 'all',
         isSearching: false,
         searchFocused: false,
         searchResults: [],
@@ -408,17 +468,36 @@ function communityCreatePost(config) {
             this.$refs.fileInput.value = '';
         },
 
+        async selectCategory(cat) {
+            this.selectedCategory = cat;
+            if (cat === 'all' && !this.searchQuery.trim()) {
+                this.searchResults = this.suggestedProducts;
+                this.searchFocused = false;
+                return;
+            }
+            await this.searchGear();
+            this.searchFocused = true;
+        },
+
         async searchGear() {
-            if (!this.searchQuery.trim()) {
+            const q = this.searchQuery.trim();
+            if (!q && this.selectedCategory === 'all') {
                 this.searchResults = this.suggestedProducts;
                 return;
             }
 
             this.isSearching = true;
             try {
-                const response = await fetch(`${this.searchUrl}?q=${encodeURIComponent(this.searchQuery.trim())}`);
+                let url = `${this.searchUrl}?q=${encodeURIComponent(q)}`;
+                if (this.selectedCategory !== 'all') {
+                    url += `&category=${encodeURIComponent(this.selectedCategory)}`;
+                }
+                const response = await fetch(url);
                 if (response.ok) {
                     this.searchResults = await response.json();
+                    if (this.searchResults.length > 0) {
+                        this.searchFocused = true;
+                    }
                 }
             } catch (err) {
                 console.error(err);
