@@ -290,4 +290,49 @@ class CommunityTest extends TestCase
         $authorRes->assertOk();
         $authorRes->assertSee('Bài viết đang chờ ban quản trị duyệt');
     }
+
+    public function test_can_search_products_by_category_and_unaccented_keyword(): void
+    {
+        // 1. Tìm không dấu: 'chuot' khớp với 'Chuột Aula SC580'
+        $unaccentedRes = $this->getJson(route('community.search-products', ['q' => 'chuot']));
+        $unaccentedRes->assertOk();
+        $unaccentedRes->assertJsonFragment([
+            'name' => 'Chuột Aula SC580',
+        ]);
+
+        // 2. Tìm theo category filter 'ban-phim'
+        $categoryRes = $this->getJson(route('community.search-products', ['category' => 'ban-phim']));
+        $categoryRes->assertOk();
+        $categoryRes->assertJsonFragment([
+            'name' => 'Bàn phím Aula F75',
+        ]);
+    }
+
+    public function test_author_can_delete_own_community_post(): void
+    {
+        $response = $this->actingAs($this->user)->delete(route('community.destroy', $this->minimalistPost->id));
+
+        $response->assertRedirect(route('community.index'));
+        $this->assertDatabaseMissing('community_posts', ['id' => $this->minimalistPost->id]);
+    }
+
+    public function test_user_cannot_delete_other_user_community_post(): void
+    {
+        $stranger = User::factory()->create(['role' => 'customer']);
+
+        $response = $this->actingAs($stranger)->delete(route('community.destroy', $this->minimalistPost->id));
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('community_posts', ['id' => $this->minimalistPost->id]);
+    }
+
+    public function test_admin_can_delete_any_community_post(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $response = $this->actingAs($admin)->delete(route('community.destroy', $this->minimalistPost->id));
+
+        $response->assertRedirect(route('community.index'));
+        $this->assertDatabaseMissing('community_posts', ['id' => $this->minimalistPost->id]);
+    }
 }

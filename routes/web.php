@@ -70,6 +70,7 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::get('/create', [CommunityController::class, 'create'])->middleware('auth')->name('create');
     Route::post('/', [CommunityController::class, 'store'])->middleware('auth')->name('store');
     Route::get('/search-products', [CommunityController::class, 'searchProducts'])->name('search-products');
+    Route::delete('/{post}', [CommunityController::class, 'destroy'])->middleware('auth')->name('destroy');
     Route::get('/{slug}', [CommunityController::class, 'show'])->name('show');
 
     // Route Like: Không dùng middleware auth để Controller tự trả về JSON 401

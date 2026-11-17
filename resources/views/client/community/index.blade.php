@@ -209,21 +209,46 @@
                                     <span>{{ $styleInfo['name'] }}</span>
                                 </span>
 
-                                <!-- Like Button Overlay -->
-                                <button 
-                                    type="button"
-                                    @click.stop="toggleLike({{ $post->id }}, $event)"
-                                    class="p-2 rounded-full backdrop-blur-md transition shadow-md flex items-center gap-1"
-                                    :class="likedPosts[{{ $post->id }}] ? 'bg-red-500 text-white' : 'bg-black/50 text-white hover:bg-black/70 hover:scale-110'"
-                                    title="Thả tim góc máy này"
-                                >
-                                    <svg class="w-4 h-4 transition-transform active:scale-125" :fill="likedPosts[{{ $post->id }}] ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                    </svg>
-                                    <span class="text-xs font-bold leading-none pr-0.5" x-text="likesCount[{{ $post->id }}] ?? {{ $post->likes_count }}">
-                                        {{ $post->likes_count }}
-                                    </span>
-                                </button>
+                                <div class="flex items-center gap-1.5">
+                                    @if(auth()->check() && (auth()->id() === $post->user_id || auth()->user()->isAdmin()))
+                                        <!-- Author Delete Button -->
+                                        <form 
+                                            action="{{ route('community.destroy', $post->id) }}" 
+                                            method="POST" 
+                                            onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết góc máy này không? Toàn bộ hình ảnh và bình luận sẽ bị xóa vĩnh viễn.');"
+                                            @click.stop
+                                            class="inline-block"
+                                        >
+                                            @csrf
+                                            @method('DELETE')
+                                            <button 
+                                                type="submit" 
+                                                class="p-2 rounded-full bg-red-600/80 hover:bg-red-600 text-white backdrop-blur-md transition shadow-md hover:scale-110"
+                                                title="Xóa bài viết của bạn"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    <!-- Like Button Overlay -->
+                                    <button 
+                                        type="button"
+                                        @click.stop="toggleLike({{ $post->id }}, $event)"
+                                        class="p-2 rounded-full backdrop-blur-md transition shadow-md flex items-center gap-1"
+                                        :class="likedPosts[{{ $post->id }}] ? 'bg-red-500 text-white' : 'bg-black/50 text-white hover:bg-black/70 hover:scale-110'"
+                                        title="Thả tim góc máy này"
+                                    >
+                                        <svg class="w-4 h-4 transition-transform active:scale-125" :fill="likedPosts[{{ $post->id }}] ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                        <span class="text-xs font-bold leading-none pr-0.5" x-text="likesCount[{{ $post->id }}] ?? {{ $post->likes_count }}">
+                                            {{ $post->likes_count }}
+                                        </span>
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Bottom Badge: GearHub Tagged Gear Count -->
@@ -401,6 +426,20 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                             </svg>
                                         </a>
+
+                                        <!-- Delete Post (for author or admin) -->
+                                        <template x-if="activePost.can_delete">
+                                            <button 
+                                                type="button"
+                                                @click="deleteActivePost()"
+                                                class="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 transition border border-red-200"
+                                                title="Xóa bài viết của bạn"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </template>
                                     </div>
                                 </div>
 
@@ -736,6 +775,31 @@ function communityShowcase(config) {
             } catch (err) {
                 console.error(err);
                 this.showToast('Lỗi kết nối khi thêm giỏ hàng.');
+            }
+        },
+
+        async deleteActivePost() {
+            if (!this.activePost) return;
+            if (!confirm('Bạn có chắc chắn muốn xóa bài viết góc máy này không? Toàn bộ hình ảnh và bình luận sẽ bị xóa vĩnh viễn.')) {
+                return;
+            }
+            try {
+                const response = await fetch(`/community/${this.activePost.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': this.csrfToken,
+                        'Accept': 'application/json',
+                    }
+                });
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    alert(data.message || 'Có lỗi xảy ra khi xóa bài viết. Vui lòng thử lại.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Không thể kết nối tới máy chủ.');
             }
         }
     };
