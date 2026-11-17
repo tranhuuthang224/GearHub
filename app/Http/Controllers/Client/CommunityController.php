@@ -113,22 +113,42 @@ class CommunityController extends Controller
      */
     public function create(): View
     {
-        $suggestedProducts = Product::where('is_active', true)
-            ->with(['brand', 'category'])
-            ->latest('id')
-            ->take(8)
-            ->get()
-            ->map(function ($product) {
-                return [
-                    'id'              => $product->id,
-                    'name'            => $product->name,
-                    'brand'           => $product->brand?->name ?? 'GearHub',
-                    'category'        => $product->category?->name ?? 'Gear',
-                    'thumbnail'       => $product->thumbnail ? asset($product->thumbnail) : 'https://placehold.co/400x400/png?text=GearHub',
-                    'effective_price' => $product->effective_price,
-                    'formatted_price' => number_format($product->effective_price, 0, ',', '.') . '₫',
-                ];
-            });
+        // Lấy danh mục gợi ý đa dạng: Chuột, Bàn phím, Tai nghe, Màn hình, Laptop
+        $categoryPrefixes = ['chuot', 'ban-phim', 'tai-nghe', 'man-hinh', 'laptop'];
+        $suggestedCollection = collect();
+
+        foreach ($categoryPrefixes as $prefix) {
+            $items = Product::where('is_active', true)
+                ->whereHas('category', fn ($c) => $c->where('slug', 'like', "%{$prefix}%"))
+                ->with(['brand', 'category'])
+                ->latest('id')
+                ->take(2)
+                ->get();
+            $suggestedCollection = $suggestedCollection->concat($items);
+        }
+
+        // Bù thêm sản phẩm nếu danh mục chưa đủ 10 món
+        if ($suggestedCollection->count() < 10) {
+            $extra = Product::where('is_active', true)
+                ->whereNotIn('id', $suggestedCollection->pluck('id'))
+                ->with(['brand', 'category'])
+                ->latest('id')
+                ->take(10 - $suggestedCollection->count())
+                ->get();
+            $suggestedCollection = $suggestedCollection->concat($extra);
+        }
+
+        $suggestedProducts = $suggestedCollection->map(function ($product) {
+            return [
+                'id'              => $product->id,
+                'name'            => $product->name,
+                'brand'           => $product->brand?->name ?? 'GearHub',
+                'category'        => $product->category?->name ?? 'Gear',
+                'thumbnail'       => $product->thumbnail ? asset($product->thumbnail) : 'https://placehold.co/400x400/png?text=GearHub',
+                'effective_price' => $product->effective_price,
+                'formatted_price' => number_format($product->effective_price, 0, ',', '.') . '₫',
+            ];
+        });
 
         return view('client.community.create', [
             'styles'            => CommunityPost::STYLES,
@@ -142,17 +162,58 @@ class CommunityController extends Controller
     public function searchProducts(Request $request): JsonResponse
     {
         $keyword = trim((string) $request->query('q', ''));
+        $category = trim((string) $request->query('category', ''));
 
         $query = Product::where('is_active', true)->with(['brand', 'category']);
 
-        if (! empty($keyword)) {
-            $query->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', "%{$keyword}%")
-                  ->orWhere('sku', 'like', "%{$keyword}%");
+        // Lọc nhanh theo nhóm danh mục gear (chuot, ban-phim, tai-nghe, man-hinh, laptop)
+        if (! empty($category) && $category !== 'all') {
+            $query->whereHas('category', function ($cq) use ($category) {
+                $cq->where('slug', 'like', "%{$category}%");
             });
         }
 
-        $products = $query->latest('id')->take(10)->get()->map(function ($product) {
+        if (! empty($keyword)) {
+            $synonyms = [
+                'tainghe'      => 'tai nghe',
+                'banphim'      => 'ban phim',
+                'manhinh'      => 'man hinh',
+                'lotchuot'     => 'lot chuot',
+                'chuotmaytinh' => 'chuot',
+                'mouse'        => 'chuot',
+                'keyboard'     => 'ban phim',
+                'headphone'    => 'tai nghe',
+                'headset'      => 'tai nghe',
+                'monitor'      => 'man hinh',
+                'screen'       => 'man hinh',
+            ];
+
+            $lowerKeyword = mb_strtolower($keyword);
+            $mappedKeyword = $synonyms[$lowerKeyword] ?? $keyword;
+            $slugKeyword = Str::slug($mappedKeyword);
+
+            $query->where(function ($q) use ($keyword, $mappedKeyword, $slugKeyword) {
+                $q->where('name', 'like', "%{$keyword}%")
+                  ->orWhere('name', 'like', "%{$mappedKeyword}%")
+                  ->orWhere('sku', 'like', "%{$keyword}%")
+                  ->orWhere('description', 'like', "%{$keyword}%");
+
+                if (! empty($slugKeyword)) {
+                    $q->orWhere('slug', 'like', "%{$slugKeyword}%");
+                }
+
+                $q->orWhereHas('brand', fn ($bq) => $bq->where('name', 'like', "%{$keyword}%"))
+                  ->orWhereHas('category', function ($cq) use ($keyword, $mappedKeyword, $slugKeyword) {
+                      $cq->where('name', 'like', "%{$keyword}%")
+                         ->orWhere('name', 'like', "%{$mappedKeyword}%");
+                      if (! empty($slugKeyword)) {
+                          $cq->orWhere('slug', 'like', "%{$slugKeyword}%");
+                      }
+                  });
+            });
+        }
+
+        $products = $query->latest('id')->take(15)->get()->map(function ($product) {
             return [
                 'id'              => $product->id,
                 'name'            => $product->name,
@@ -280,9 +341,11 @@ class CommunityController extends Controller
                 'is_liked'       => $isLiked,
                 'created_at'     => $post->created_at->diffForHumans(),
                 'author'         => [
+                    'id'       => $post->user_id,
                     'name'     => $post->user->name,
                     'initials' => mb_strtoupper(mb_substr($post->user->name, 0, 1)),
                 ],
+                'can_delete'     => $request->user() && ($request->user()->id === $post->user_id || $request->user()->isAdmin()),
                 'products'       => $post->products->map(function ($product) {
                     return [
                         'id'              => $product->id,
@@ -444,6 +507,36 @@ class CommunityController extends Controller
         }
 
         return back()->with('success', 'Bình luận của bạn đã được đăng tải thành công!');
+    }
+
+    /**
+     * Xóa bài viết góc máy (chỉ cho phép tác giả bài viết hoặc quản trị viên).
+     */
+    public function destroy(Request $request, string|int $post): RedirectResponse|JsonResponse
+    {
+        $communityPost = $this->resolvePost((string) $post);
+        $user = $request->user();
+
+        if (! $user || ($user->id !== $communityPost->user_id && ! $user->isAdmin())) {
+            abort(403, 'Bạn không có quyền xóa bài viết này.');
+        }
+
+        // Xóa ảnh vật lý đã lưu trên đĩa public
+        if ($communityPost->image && ! str_starts_with($communityPost->image, 'http://') && ! str_starts_with($communityPost->image, 'https://')) {
+            Storage::disk('public')->delete($communityPost->image);
+        }
+
+        $communityPost->delete();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã xóa bài viết góc máy thành công!',
+            ]);
+        }
+
+        return redirect()->route('community.index')
+            ->with('success', 'Đã xóa bài viết góc máy thành công!');
     }
 
     /** Alias for storeComment */
