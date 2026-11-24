@@ -142,11 +142,12 @@
                 <div class="bg-white rounded-3xl border border-gray-200/80 shadow-sm overflow-hidden">
                     
                     <!-- Header Bảng (Desktop) -->
-                    <div class="hidden sm:grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50/80 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        <div class="col-span-6">Sản phẩm</div>
-                        <div class="col-span-2 text-right">Đơn giá</div>
+                    <div class="hidden sm:grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50/80 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider items-center">
+                        <div class="col-span-5">Sản phẩm</div>
+                        <div class="col-span-2 text-center">Đơn giá</div>
                         <div class="col-span-2 text-center">Số lượng</div>
                         <div class="col-span-2 text-right">Thành tiền</div>
+                        <div class="col-span-1 text-center"></div>
                     </div>
 
                     <!-- Danh sách các dòng sản phẩm -->
@@ -159,8 +160,8 @@
                             @endphp
                             <div class="p-5 sm:px-6 sm:py-5 flex flex-col sm:grid sm:grid-cols-12 sm:gap-4 sm:items-center hover:bg-gray-50/40 transition">
                                 
-                                <!-- Cột 1: Thông tin sản phẩm (Ảnh + Tên + SKU + Phân loại) -->
-                                <div class="sm:col-span-6 flex items-center gap-4">
+                                <!-- Cột 1: Thông tin sản phẩm (5 cols) -->
+                                <div class="sm:col-span-5 flex items-center gap-4">
                                     <!-- Khung ảnh thumbnail -->
                                     <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#F4F5F7] p-2.5 flex items-center justify-center shrink-0 border border-gray-100 overflow-hidden group">
                                         <img 
@@ -202,8 +203,8 @@
                                     </div>
                                 </div>
 
-                                <!-- Cột 2: Đơn giá -->
-                                <div class="sm:col-span-2 text-left sm:text-right mt-3 sm:mt-0 flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center gap-1">
+                                <!-- Cột 2: Đơn giá (2 cols, text-center) -->
+                                <div class="sm:col-span-2 text-left sm:text-center mt-3 sm:mt-0 flex sm:flex-col items-baseline sm:items-center justify-between sm:justify-center gap-1">
                                     <span class="sm:hidden text-xs text-gray-400 font-medium">Đơn giá:</span>
                                     <div>
                                         <span class="text-sm font-black text-gray-900 block">
@@ -217,7 +218,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Cột 3: Bộ tăng / giảm số lượng (+ / -) có kiểm tra tồn kho -->
+                                <!-- Cột 3: Bộ tăng / giảm số lượng (2 cols, text-center) -->
                                 <div class="sm:col-span-2 flex items-center justify-between sm:justify-center mt-3 sm:mt-0">
                                     <span class="sm:hidden text-xs text-gray-400 font-medium">Số lượng:</span>
                                     
@@ -259,8 +260,8 @@
                                     </form>
                                 </div>
 
-                                <!-- Cột 4: Thành tiền từng dòng & Nút xóa món -->
-                                <div class="sm:col-span-2 flex items-center justify-between sm:justify-end gap-3 mt-3 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                                <!-- Cột 4: Thành tiền (2 cols, text-right) -->
+                                <div class="sm:col-span-2 flex items-center justify-between sm:justify-end mt-3 sm:mt-0">
                                     <span class="sm:hidden text-xs text-gray-400 font-medium">Thành tiền:</span>
                                     
                                     <div class="text-right">
@@ -268,14 +269,16 @@
                                             {{ number_format($lineTotal, 0, ',', '.') }}đ
                                         </span>
                                     </div>
+                                </div>
 
-                                    <!-- Nút xóa món -->
+                                <!-- Cột 5: Nút xóa món (1 col, text-center) -->
+                                <div class="sm:col-span-1 flex items-center justify-end sm:justify-center mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
                                     <form action="{{ route('cart.remove', $id) }}" method="POST" onsubmit="return confirm('Bạn muốn xóa sản phẩm này khỏi giỏ hàng?');">
                                         @csrf
                                         @method('DELETE')
                                         <button 
                                             type="submit" 
-                                            class="p-2 text-gray-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition duration-200" 
+                                            class="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition duration-200" 
                                             title="Xóa sản phẩm này"
                                         >
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
